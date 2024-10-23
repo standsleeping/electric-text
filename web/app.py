@@ -3,6 +3,7 @@ import asyncio
 import uuid
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, StreamingResponse
+from starlette.requests import Request
 from string import Template
 import uvicorn
 
@@ -33,14 +34,30 @@ async def homepage(request):
     return HTMLResponse(rendered_html)
 
 
-@app.route("/events", methods=["GET"])
-async def sse_endpoint(request):
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+@app.route("/submit-prompt", methods=["POST"])
+async def submit_prompt(request: Request):
+    form = await request.form()
+    prompt = form.get("prompt")
+    prompt_id = str(uuid.uuid4())
+
+    response_area = f"""
+    <div id="response-area" hx-ext="sse" sse-connect="/response-stream?prompt_id={prompt_id}" sse-swap="SomeEventName">
+        (Generating response for prompt: {prompt})
+    </div>
+    """
+
+    return HTMLResponse(response_area)
 
 
-async def event_stream():
+@app.route("/response-stream", methods=["GET"])
+async def response_stream(request):
+    prompt_id = request.query_params.get("prompt_id")
+    return StreamingResponse(event_stream(prompt_id), media_type="text/event-stream")
+
+
+async def event_stream(prompt_id):
     while True:
-        data = f"event: SomeEventName\ndata: <div style='font-family: monospace;'>({uuid.uuid4()})</div>\n\n"
+        data = f"event: SomeEventName\ndata: <div style='font-family: monospace;'>Prompt ID {prompt_id}: ({uuid.uuid4()})</div>\n\n"
         yield data
         await asyncio.sleep(0.5)
 
