@@ -8,7 +8,11 @@ from string import Template
 import uvicorn
 
 
-def get_template(template_name="index.html"):
+def render_prompt_form(*, post_url):
+    return render_template("prompt-form.html", {"post_url": post_url})
+
+
+def get_template(template_name):
     index_file_path = os.path.join(os.path.dirname(__file__), "views", template_name)
     with open(index_file_path, "r") as file:
         return file.read()
@@ -25,12 +29,13 @@ app = Starlette()
 
 
 @app.route("/")
-async def homepage(request):
+async def homepage(request: Request):
+    prompt_form = render_prompt_form(post_url="/submit-prompt")
     data = {
         "title": "Home",
-        "name": "Ryan",
+        "content": prompt_form,
     }
-    rendered_html = render_template("index.html", data)
+    rendered_html = render_template("page.html", data)
     return HTMLResponse(rendered_html)
 
 
@@ -50,7 +55,7 @@ async def submit_prompt(request: Request):
 
 
 @app.route("/response-stream", methods=["GET"])
-async def response_stream(request):
+async def response_stream(request: Request):
     prompt_id = request.query_params.get("prompt_id")
     return StreamingResponse(event_stream(prompt_id), media_type="text/event-stream")
 
