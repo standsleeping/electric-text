@@ -24,10 +24,11 @@ messages = [
 
 async def main():
     client = Client(provider_name="ollama", config={"stream": True})
-    response = await client.generate(
+    extraction_stream = client.generate(
         model="llama3", messages=messages, response_model=Translation
     )
-    print(response.model_dump_json(indent=2))
+    async for extraction in extraction_stream:
+        print(extraction.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":

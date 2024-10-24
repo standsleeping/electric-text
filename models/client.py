@@ -16,4 +16,5 @@ class Client:
         self.provider = provider_class(config)
 
     async def generate(self, model, messages, response_model):
-        return await self.provider.generate(model, messages, response_model)
+        async for chunk in self.provider.generate(model, messages, response_model):
+            yield chunk
