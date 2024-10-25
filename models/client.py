@@ -1,4 +1,5 @@
 import importlib
+from typing import AsyncGenerator
 from .provider import Provider
 
 
@@ -15,7 +16,7 @@ class Client:
 
         self.provider = provider_class(config)
 
-    async def stream(self, model, messages, response_model):
+    async def stream(self, model, messages, response_model) -> AsyncGenerator[dict, None]:
         async for chunk in self.provider.stream(model, messages, response_model):
             yield chunk
 

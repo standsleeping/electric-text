@@ -8,17 +8,17 @@ from string import Template
 import uvicorn
 
 
-def render_prompt_form(*, post_url):
+def render_prompt_form(*, post_url: str) -> str:
     return render_template("prompt-form.html", {"post_url": post_url})
 
 
-def get_template(template_name):
+def get_template(template_name: str) -> str:
     index_file_path = os.path.join(os.path.dirname(__file__), "views", template_name)
     with open(index_file_path, "r") as file:
         return file.read()
 
 
-def render_template(template_name, data):
+def render_template(template_name: str, data: dict) -> str:
     html_template = get_template(template_name)
     template = Template(html_template)
     rendered_html = template.substitute(data)

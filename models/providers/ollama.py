@@ -1,4 +1,5 @@
 import os
+from typing import AsyncGenerator
 from openai import AsyncOpenAI
 from instructor import from_openai, Mode
 from ..provider import Provider
@@ -16,7 +17,9 @@ class ProviderImplementation(Provider):
             mode=Mode.JSON,
         )
 
-    async def stream(self, model, messages, response_model):
+    async def stream(
+        self, model: str, messages: list[dict], response_model: type
+    ) -> AsyncGenerator[dict, None]:
         extraction_stream = self.client.chat.completions.create_partial(
             model=model,
             messages=messages,
@@ -27,7 +30,7 @@ class ProviderImplementation(Provider):
         async for extraction in extraction_stream:
             yield extraction
 
-    async def generate(self, model, messages, response_model):
+    async def generate(self, model: str, messages: list[dict], response_model: type):
         return await self.client.chat.completions.create(
             model=model, messages=messages, response_model=response_model
         )
