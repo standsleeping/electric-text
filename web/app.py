@@ -56,15 +56,23 @@ async def submit_prompt(request: Request):
 
 @app.route("/response-stream", methods=["GET"])
 async def response_stream(request: Request):
-    prompt_id = request.query_params.get("prompt_id")
-    return StreamingResponse(event_stream(prompt_id), media_type="text/event-stream")
+    prompt_id = request.query_params.get("prompt_id", "unknown")
+    max_events = int(request.query_params.get("max_events", 10))
+
+    return StreamingResponse(
+        event_stream(prompt_id, max_events), media_type="text/event-stream"
+    )
 
 
-async def event_stream(prompt_id):
+async def event_stream(prompt_id: str, max_events: int):
+    event_count = 0
     while True:
         data = f"event: SomeEventName\ndata: <div style='font-family: monospace;'>Prompt ID {prompt_id}: ({uuid.uuid4()})</div>\n\n"
         yield data
         await asyncio.sleep(0.5)
+        event_count += 1
+        if max_events and event_count >= max_events:
+            break
 
 
 if __name__ == "__main__":
