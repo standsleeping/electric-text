@@ -46,7 +46,7 @@ async def submit_prompt(request: Request):
     prompt_id = str(uuid.uuid4())
 
     response_area = f"""
-    <div id="response-area" hx-ext="sse" sse-connect="/response-stream?prompt_id={prompt_id}" sse-swap="SomeEventName">
+    <div id="response-area" hx-ext="sse" sse-connect="/response-stream?prompt_id={prompt_id}" sse-swap="SomeEventName" sse-close="StreamClosing">
         (Generating response for prompt: {prompt})
     </div>
     """
@@ -72,6 +72,7 @@ async def event_stream(prompt_id: str, max_events: int):
         await asyncio.sleep(0.5)
         event_count += 1
         if max_events and event_count >= max_events:
+            yield "event: StreamClosing\ndata: N/A\n\n"
             break
 
 

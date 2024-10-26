@@ -40,5 +40,11 @@ async def test_response_stream_async():
         response = await client.get(
             "/response-stream?prompt_id=test_prompt&max_events=5"
         )
-        content = await response.aread()
-        assert "Prompt ID test_prompt" in content.decode()
+        chunks = []
+        async for chunk in response.aiter_text():
+            chunks.append(chunk)
+
+        assert len(chunks) > 0
+        assert "event: SomeEventName" in "".join(chunks)
+        assert "event: StreamClosing" in chunks[-1]
+        assert "data: N/A" in chunks[-1]
