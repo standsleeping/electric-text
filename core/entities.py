@@ -6,7 +6,7 @@ class TemplateFragment(BaseModel):
     text: str
 
 
-class UserMessage(BaseModel):
+class Prompt(BaseModel):
     system_message: Optional[List[TemplateFragment]] = None
     prefix_fragments: Optional[List[TemplateFragment]] = None
     prompt: str
@@ -14,7 +14,7 @@ class UserMessage(BaseModel):
 
 
 class OutputSchema(BaseModel):
-    schema_json: str
+    output_json: str
 
 
 class ResponseItem(BaseModel):
@@ -22,6 +22,6 @@ class ResponseItem(BaseModel):
 
 
 class Response(BaseModel):
-    prompt: UserMessage
-    schema: OutputSchema
+    prompt: Prompt
+    output_schema: OutputSchema
     response_items: List[ResponseItem]

@@ -3,7 +3,7 @@ import unittest
 from core.entities import (
     ResponseItem,
     TemplateFragment,
-    UserMessage,
+    Prompt,
     OutputSchema,
     Response,
 )
@@ -15,14 +15,14 @@ class TestResponse(unittest.TestCase):
         prefix_fragments = [TemplateFragment(text="prefix-fragment")]
         suffix_fragments = [TemplateFragment(text="suffix-fragment")]
 
-        user_message = UserMessage(
+        user_message = Prompt(
             system_message=system_fragments,
             prefix_fragments=prefix_fragments,
             prompt="user-prompt",
             suffix_fragments=suffix_fragments,
         )
 
-        output_schema = OutputSchema(schema_json='{"key": "value"}')
+        output_schema = OutputSchema(output_json='{"key": "value"}')
 
         response_items = [
             ResponseItem(item_json='{"item": "response1"}'),
@@ -30,11 +30,11 @@ class TestResponse(unittest.TestCase):
         ]
 
         model_response = Response(
-            prompt=user_message, schema=output_schema, response_items=response_items
+            prompt=user_message, output_schema=output_schema, response_items=response_items
         )
 
         assert model_response.prompt == user_message
-        assert model_response.schema == output_schema
+        assert model_response.output_schema == output_schema
         assert len(model_response.response_items) == 2
         assert model_response.response_items[0].item_json == '{"item": "response1"}'
         assert model_response.response_items[1].item_json == '{"item": "response2"}'
