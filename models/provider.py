@@ -1,14 +1,12 @@
-from abc import ABC, abstractmethod
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Protocol, TypeVar
 
+T = TypeVar('T')
 
-class Provider(ABC):
-    @abstractmethod
-    async def generate(self, model: str, messages: list[dict], response_model: type):
-        pass
+class Provider(Protocol):
+    async def generate(self, model: str, messages: list[dict[str, str]], response_model: type[T]) -> T:
+        ...
 
-    @abstractmethod
-    def stream(
-        self, model: str, messages: list[dict], response_model: type
-    ) -> AsyncGenerator[dict, None]:
-        pass
+    async def stream(
+        self, model: str, messages: list[dict[str, str]], response_model: type[T]
+    ) -> AsyncGenerator[T, None]:
+        ...
