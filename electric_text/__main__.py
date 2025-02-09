@@ -1,46 +1,78 @@
 import asyncio
-from models import Client
-from typing import AsyncGenerator
-from pydantic import BaseModel
+from dataclasses import dataclass
+from models.providers.ollama import OllamaProvider
 
 
-class Translation(BaseModel):
-    language: str
-    one: str
-    two: str
-    three: str
+@dataclass
+class CountryInfo:
+    name: str
+    capital: str
+    languages: list[str]
 
 
-messages = [
-    {
-        "role": "user",
-        "content": "Create a Spanish translation for 'one, two, three, four'.",
+@dataclass
+class WeatherInfo:
+    temperature: float
+    conditions: str
+    humidity: int
+
+
+async def main() -> None:
+    country_schema = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "capital": {"type": "string"},
+            "languages": {"type": "array", "items": {"type": "string"}},
+        },
+        "required": ["name", "capital", "languages"],
     }
-]
 
-MODEL = "llama3.1:8b"  # Or "llama3.2:3b"
+    weather_schema = {
+        "type": "object",
+        "properties": {
+            "temperature": {"type": "number"},
+            "conditions": {"type": "string"},
+            "humidity": {"type": "integer"},
+        },
+        "required": ["temperature", "conditions", "humidity"],
+    }
 
+    country_provider: OllamaProvider[CountryInfo] = OllamaProvider()
+    country_provider.register_schema(CountryInfo, country_schema)
+    weather_provider: OllamaProvider[WeatherInfo] = OllamaProvider()
+    weather_provider.register_schema(WeatherInfo, weather_schema)
 
-async def first_example() -> None:
-    client = Client(provider_name="ollama")
-
-    print("Streaming:")
-
-    extraction_stream: AsyncGenerator[Translation, None] = client.stream(
-        model=MODEL, messages=messages, response_model=Translation
+    country_response = await country_provider.query_complete(
+        "Let's hear about France",
+        response_type=CountryInfo,
     )
 
-    async for extraction in extraction_stream:
-        print(extraction.model_dump_json(indent=2))
+    print(f"Complete country response: {country_response}")
 
-    print("All at once:")
+    await asyncio.sleep(1)
 
-    all_at_once = await client.generate(
-        model=MODEL, messages=messages, response_model=Translation
+    async for chunk in country_provider.query_stream(
+        "Tell me about Spain",
+        response_type=CountryInfo,
+    ):
+        print(f"Chunk: {chunk}")
+
+    weather_response = await weather_provider.query_complete(
+        "What's the forecast in Paris?",
+        response_type=WeatherInfo,
     )
 
-    print(all_at_once.model_dump_json(indent=2))
+    print(f"Complete weather response: {weather_response}")
+
+    await asyncio.sleep(1)
+
+    async for chunk in weather_provider.query_stream(
+        "What's the weather like in Tokyo?",
+        response_type=WeatherInfo,
+    ):
+        print(f"Chunk: {chunk}")
 
 
 if __name__ == "__main__":
-    asyncio.run(first_example())
+    asyncio.run(main())
