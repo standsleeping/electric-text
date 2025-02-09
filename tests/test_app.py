@@ -36,7 +36,7 @@ def test_response_stream(client):
 
 @pytest.mark.asyncio
 async def test_response_stream_async():
-    async with httpx.AsyncClient(app=app, base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get(
             "/response-stream?prompt_id=test_prompt&max_events=5"
         )
