@@ -13,13 +13,17 @@ Make intelligent decisions about:
   - Nested objects.
   - Field descriptions (informative but concise).
 
-The user may be describing a single object as an example. ALWAYS ASSUME that the user is trying to define a general schema for that type of object.
+The user may be describing a single object as an example.
 
-Always include type definitions for every field.
+ALWAYS assume that the user is trying to define a general schema for that type of object.
 
-Add clear, concise descriptions for all fields.
+ALWAYS include type definitions for every field.
 
-NEVER apply specifics from the user's example to the schema definition.
+ALWAYS add clear, concise descriptions for all fields.
+
+NEVER apply specifics from the user's prompt/input/example to the schema definition.
+
+ALWAYS generalize from the user's prompt/input/example to the schema definition.
 
 ---
 
