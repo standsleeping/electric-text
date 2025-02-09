@@ -1,5 +1,6 @@
 import asyncio
 from models import Client
+from typing import AsyncGenerator
 from pydantic import BaseModel
 
 
@@ -25,7 +26,7 @@ async def first_example() -> None:
 
     print("Streaming:")
 
-    extraction_stream = client.stream(
+    extraction_stream: AsyncGenerator[Translation, None] = client.stream(
         model=MODEL, messages=messages, response_model=Translation
     )
 
