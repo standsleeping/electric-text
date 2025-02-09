@@ -18,7 +18,7 @@ messages = [
     }
 ]
 
-MODEL = "llama3.2:3b"
+MODEL = "llama3.1:8b"  # Or "llama3.2:3b"
 
 
 async def first_example() -> None:

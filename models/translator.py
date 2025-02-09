@@ -4,7 +4,7 @@ from electric_text import (
 )
 
 
-def build_simple_prompt(system_message_text: str, user_message: str):
+def build_simple_prompt(system_message_text: str, user_message: str) -> Prompt:
     system_message = [TemplateFragment(text=system_message_text)]
     return Prompt(
         system_message=system_message,
@@ -12,7 +12,7 @@ def build_simple_prompt(system_message_text: str, user_message: str):
     )
 
 
-def convert_to_llm_messages(prompt: Prompt):
+def convert_to_llm_messages(prompt: Prompt) -> list[dict[str, str]]:
     if prompt.system_message is None:
         raise ValueError("System message is required")
 
