@@ -24,6 +24,10 @@ async def test_stream():
 async def test_generate():
     client = Client(provider_name="ollama", config={})
 
-    with patch.object(client.provider, 'generate', AsyncMock(return_value={"event": "one"})):
+    with patch.object(
+        client.provider,
+        "generate",
+        AsyncMock(return_value={"event": "one"}),
+    ):
         result = await client.generate("model", [], None)
         assert result == {"event": "one"}

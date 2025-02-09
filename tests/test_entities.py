@@ -1,6 +1,6 @@
 import unittest
 
-from core.entities import (
+from electric_text import (
     ResponseItem,
     TemplateFragment,
     Prompt,
@@ -30,7 +30,9 @@ class TestResponse(unittest.TestCase):
         ]
 
         model_response = Response(
-            prompt=user_message, output_schema=output_schema, response_items=response_items
+            prompt=user_message,
+            output_schema=output_schema,
+            response_items=response_items,
         )
 
         assert model_response.prompt == user_message

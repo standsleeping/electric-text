@@ -1,4 +1,4 @@
-from core.entities import (
+from electric_text import (
     Prompt,
     TemplateFragment,
 )
