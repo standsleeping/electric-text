@@ -18,6 +18,8 @@ class WeatherInfo:
 
 
 async def main() -> None:
+    SYSTEM_MESSAGE = {"role": "system", "content": "You are a helpful assistant."}
+
     country_schema = {
         "type": "object",
         "properties": {
@@ -43,8 +45,13 @@ async def main() -> None:
     weather_provider: OllamaProvider[WeatherInfo] = OllamaProvider()
     weather_provider.register_schema(WeatherInfo, weather_schema)
 
+    country_messages = [
+        SYSTEM_MESSAGE,
+        {"role": "user", "content": "Let's hear about France"},
+    ]
+
     country_response = await country_provider.query_complete(
-        "Let's hear about France",
+        country_messages,
         response_type=CountryInfo,
     )
 
@@ -52,14 +59,24 @@ async def main() -> None:
 
     await asyncio.sleep(1)
 
+    spain_messages = [
+        SYSTEM_MESSAGE,
+        {"role": "user", "content": "Tell me about Spain"},
+    ]
+
     async for chunk in country_provider.query_stream(
-        "Tell me about Spain",
+        spain_messages,
         response_type=CountryInfo,
     ):
         print(f"Chunk: {chunk}")
 
+    weather_messages = [
+        SYSTEM_MESSAGE,
+        {"role": "user", "content": "What's the forecast in Paris?"},
+    ]
+
     weather_response = await weather_provider.query_complete(
-        "What's the forecast in Paris?",
+        weather_messages,
         response_type=WeatherInfo,
     )
 
@@ -67,8 +84,13 @@ async def main() -> None:
 
     await asyncio.sleep(1)
 
+    tokyo_messages = [
+        SYSTEM_MESSAGE,
+        {"role": "user", "content": "What's the weather like in Tokyo?"},
+    ]
+
     async for chunk in weather_provider.query_stream(
-        "What's the weather like in Tokyo?",
+        tokyo_messages,
         response_type=WeatherInfo,
     ):
         print(f"Chunk: {chunk}")

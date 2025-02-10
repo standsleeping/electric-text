@@ -1,16 +1,9 @@
 import json
 import httpx
 from contextlib import asynccontextmanager
-from typing import (
-    Any,
-    Dict,
-    Type,
-    TypeVar,
-    Protocol,
-    Optional,
-    AsyncGenerator,
-    runtime_checkable,
-)
+from typing import Any, Dict, Type, Optional, AsyncGenerator
+
+from models.provider import ModelProvider, ResponseType
 
 
 class ModelProviderError(Exception):
@@ -31,65 +24,7 @@ class APIError(ModelProviderError):
     pass
 
 
-@runtime_checkable
-class JSONResponse(Protocol):
-    """Protocol defining the required structure for response objects."""
-
-    def __init__(self, **kwargs: Any) -> None: ...
-
-
-# Type variable for response type, bounded by JSONResponse
-T = TypeVar("T", bound="JSONResponse")
-
-
-@runtime_checkable
-class ModelProvider(Protocol[T]):
-    """Protocol defining the interface that providers will implement."""
-
-    def query_stream(
-        self,
-        prompt: str,
-        response_type: Type[T],
-        model: str | None = None,
-        **kwargs: Any,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Stream responses from the provider.
-
-        Args:
-            prompt: The input prompt
-            response_type: Expected response type
-            model: Optional model override
-            **kwargs: Additional provider-specific parameters
-
-        Yields:
-            Response chunks in the provider's format
-        """
-        ...
-
-    async def query_complete(
-        self,
-        prompt: str,
-        response_type: Type[T],
-        model: str | None = None,
-        **kwargs: Any,
-    ) -> T:
-        """
-        Get a complete response from the provider.
-
-        Args:
-            prompt: The input prompt
-            response_type: Expected response type
-            model: Optional model override
-            **kwargs: Additional provider-specific parameters
-
-        Returns:
-            Complete response in the specified type
-        """
-        ...
-
-
-class OllamaProvider(ModelProvider[T]):
+class OllamaProvider(ModelProvider[ResponseType]):
     def __init__(
         self,
         base_url: str = "http://localhost:11434/api/chat",
@@ -116,7 +51,9 @@ class OllamaProvider(ModelProvider[T]):
             **kwargs,
         }
 
-    def register_schema(self, response_type: Type[T], schema: Dict[str, Any]) -> None:
+    def register_schema(
+        self, response_type: Type[ResponseType], schema: Dict[str, Any]
+    ) -> None:
         """
         Register a JSON schema for a response type.
 
@@ -127,13 +64,17 @@ class OllamaProvider(ModelProvider[T]):
         self.format_schemas[response_type] = schema
 
     def create_payload(
-        self, prompt: str, response_type: Type[T], model: Optional[str], stream: bool
+        self,
+        messages: list[dict[str, str]],
+        response_type: Type[ResponseType],
+        model: Optional[str],
+        stream: bool,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
 
         Args:
-            prompt: The prompt to send
+            messages: The list of messages to send
             response_type: Expected response type
             model: Model override (optional)
             stream: Whether to stream the response
@@ -149,7 +90,7 @@ class OllamaProvider(ModelProvider[T]):
 
         return {
             "model": model or self.default_model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
             "stream": stream,
             "format": self.format_schemas[response_type],
         }
@@ -162,8 +103,8 @@ class OllamaProvider(ModelProvider[T]):
 
     async def query_stream(
         self,
-        prompt: str,
-        response_type: Type[T],
+        messages: list[dict[str, str]],
+        response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
     ) -> AsyncGenerator[Dict[str, Any], None]:
@@ -171,7 +112,7 @@ class OllamaProvider(ModelProvider[T]):
         Stream responses from Ollama.
 
         Args:
-            prompt: The input prompt
+            messages: The list of messages to send
             response_type: Expected response type
             model: Optional model override
             **kwargs: Additional query-specific parameters
@@ -183,7 +124,7 @@ class OllamaProvider(ModelProvider[T]):
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
-        payload = self.create_payload(prompt, response_type, model, stream=True)
+        payload = self.create_payload(messages, response_type, model, stream=True)
 
         try:
             async with self.get_client() as client:
@@ -209,16 +150,16 @@ class OllamaProvider(ModelProvider[T]):
 
     async def query_complete(
         self,
-        prompt: str,
-        response_type: Type[T],
+        messages: list[dict[str, str]],
+        response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
-    ) -> T:
+    ) -> ResponseType:
         """
         Get a complete response from Ollama.
 
         Args:
-            prompt: The input prompt
+            messages: The list of messages to send
             response_type: Expected response type
             model: Optional model override
             **kwargs: Additional query-specific parameters
@@ -230,7 +171,7 @@ class OllamaProvider(ModelProvider[T]):
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
-        payload = self.create_payload(prompt, response_type, model, stream=False)
+        payload = self.create_payload(messages, response_type, model, stream=False)
 
         try:
             async with self.get_client() as client:

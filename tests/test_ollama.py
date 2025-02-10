@@ -51,8 +51,13 @@ def test_create_payload_with_registered_schema(test_schema):
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
 
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ]
+
     payload = provider.create_payload(
-        "test prompt",
+        messages,
         TestResponse,
         None,
         False,
@@ -60,7 +65,7 @@ def test_create_payload_with_registered_schema(test_schema):
 
     assert payload == {
         "model": "llama3.1:8b",
-        "messages": [{"role": "user", "content": "test prompt"}],
+        "messages": messages,
         "stream": False,
         "format": test_schema,
     }
@@ -211,6 +216,11 @@ async def test_query_stream_yields_chunks(test_schema):
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
 
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ]
+
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
         200,
@@ -218,14 +228,12 @@ async def test_query_stream_yields_chunks(test_schema):
         request=mock_request,
     )
 
-    # Create async generator for response streaming
     async def mock_aiter_lines():
         yield '{"message": {"content": "chunk1"}}'
         yield '{"message": {"content": "chunk2"}}'
 
     mock_response.aiter_lines = mock_aiter_lines
 
-    # Create a proper async context manager mock
     class AsyncContextManagerMock:
         async def __aenter__(self):
             return mock_response
@@ -237,7 +245,7 @@ async def test_query_stream_yields_chunks(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         chunks = []
 
-        async for chunk in provider.query_stream("test prompt", TestResponse):
+        async for chunk in provider.query_stream(messages, TestResponse):
             chunks.append(chunk)
 
         assert len(chunks) == 2
