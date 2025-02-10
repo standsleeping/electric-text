@@ -126,7 +126,7 @@ class OllamaProvider(ModelProvider[T]):
         """
         self.format_schemas[response_type] = schema
 
-    def _create_payload(
+    def create_payload(
         self, prompt: str, response_type: Type[T], model: Optional[str], stream: bool
     ) -> Dict[str, Any]:
         """
@@ -155,7 +155,7 @@ class OllamaProvider(ModelProvider[T]):
         }
 
     @asynccontextmanager
-    async def _get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
+    async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
         """Context manager for httpx client."""
         async with httpx.AsyncClient(**self.client_kwargs) as client:
             yield client
@@ -183,10 +183,10 @@ class OllamaProvider(ModelProvider[T]):
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
-        payload = self._create_payload(prompt, response_type, model, stream=True)
+        payload = self.create_payload(prompt, response_type, model, stream=True)
 
         try:
-            async with self._get_client() as client:
+            async with self.get_client() as client:
                 async with client.stream(
                     "POST",
                     f"{self.base_url}",
@@ -230,10 +230,10 @@ class OllamaProvider(ModelProvider[T]):
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
-        payload = self._create_payload(prompt, response_type, model, stream=False)
+        payload = self.create_payload(prompt, response_type, model, stream=False)
 
         try:
-            async with self._get_client() as client:
+            async with self.get_client() as client:
                 response = await client.post(f"{self.base_url}", json=payload)
                 response.raise_for_status()
 
