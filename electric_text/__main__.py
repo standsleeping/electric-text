@@ -1,49 +1,28 @@
 import asyncio
-from dataclasses import dataclass
+from pydantic import BaseModel, Field
 from models.providers.ollama import OllamaProvider
 
 
-@dataclass
-class CountryInfo:
-    name: str
-    capital: str
-    languages: list[str]
+class CountryInfo(BaseModel):
+    name: str = Field(description="The name of the country")
+    capital: str = Field(description="The capital city of the country")
+    languages: list[str] = Field(description="Official languages spoken in the country")
 
 
-@dataclass
-class WeatherInfo:
-    temperature: float
-    conditions: str
-    humidity: int
+class WeatherInfo(BaseModel):
+    temperature: float = Field(description="Current temperature")
+    conditions: str = Field(description="Weather conditions (e.g., sunny, rainy)")
+    humidity: int = Field(description="Current humidity percentage")
 
 
 async def main() -> None:
     SYSTEM_MESSAGE = {"role": "system", "content": "You are a helpful assistant."}
 
-    country_schema = {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "capital": {"type": "string"},
-            "languages": {"type": "array", "items": {"type": "string"}},
-        },
-        "required": ["name", "capital", "languages"],
-    }
-
-    weather_schema = {
-        "type": "object",
-        "properties": {
-            "temperature": {"type": "number"},
-            "conditions": {"type": "string"},
-            "humidity": {"type": "integer"},
-        },
-        "required": ["temperature", "conditions", "humidity"],
-    }
-
     country_provider: OllamaProvider[CountryInfo] = OllamaProvider()
-    country_provider.register_schema(CountryInfo, country_schema)
+    country_provider.register_schema(CountryInfo, CountryInfo.model_json_schema())
+
     weather_provider: OllamaProvider[WeatherInfo] = OllamaProvider()
-    weather_provider.register_schema(WeatherInfo, weather_schema)
+    weather_provider.register_schema(WeatherInfo, WeatherInfo.model_json_schema())
 
     country_messages = [
         SYSTEM_MESSAGE,
