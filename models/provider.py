@@ -21,8 +21,17 @@ ResponseType = TypeVar("ResponseType", bound="JSONResponse")
 
 
 @runtime_checkable
+class StreamHistory(Protocol):
+    """Protocol for tracking stream history."""
+
+    def get_full_content(self) -> str: ...
+
+
+@runtime_checkable
 class ModelProvider(Protocol[ResponseType]):
     """Protocol defining the interface that providers will implement."""
+
+    stream_history: StreamHistory
 
     def register_schema(
         self, response_type: Type[ResponseType], schema: Dict[str, Any]
