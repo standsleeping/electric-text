@@ -45,7 +45,7 @@ class ModelProvider(Protocol[ResponseType]):
         """
         ...
 
-    def query_stream(
+    def generate_stream(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],
@@ -66,7 +66,7 @@ class ModelProvider(Protocol[ResponseType]):
         """
         ...
 
-    async def query_complete(
+    async def generate_completion(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],

@@ -38,7 +38,7 @@ class Client(Generic[ResponseType]):
         messages: list[dict[str, str]],
         response_model: type[ResponseType],
     ) -> AsyncGenerator[ParseResult[ResponseType], None]:
-        async for history in self.provider.query_stream(
+        async for history in self.provider.generate_stream(
             messages, response_model, model
         ):
             content = history.get_full_content()
@@ -70,4 +70,4 @@ class Client(Generic[ResponseType]):
         messages: list[dict[str, str]],
         response_model: type[ResponseType],
     ) -> ResponseType:
-        return await self.provider.query_complete(messages, response_model, model)
+        return await self.provider.generate_completion(messages, response_model, model)

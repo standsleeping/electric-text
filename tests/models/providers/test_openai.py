@@ -42,7 +42,7 @@ async def test_stream_empty_line():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -99,7 +99,7 @@ async def test_stream_done_marker():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -156,7 +156,7 @@ async def test_stream_invalid_prefix():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -212,7 +212,7 @@ async def test_stream_json_decode_error():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get one history object with the error chunk
@@ -267,7 +267,7 @@ async def test_stream_no_choices():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -325,7 +325,7 @@ async def test_stream_no_content():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -362,5 +362,5 @@ async def test_stream_http_error():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Test error")
         with pytest.raises(APIError):
-            async for _ in provider.query_stream([], TestResponse):
+            async for _ in provider.generate_stream([], TestResponse):
                 pass

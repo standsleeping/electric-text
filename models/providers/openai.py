@@ -5,7 +5,6 @@ from typing import Any, Dict, Type, Optional, AsyncGenerator
 
 from models.provider import ModelProvider, ResponseType
 from models.stream_history import (
-    StreamChunkType,
     StreamHistory,
     categorize_stream_line,
 )
@@ -118,7 +117,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
         async with httpx.AsyncClient(**self.client_kwargs) as client:
             yield client
 
-    async def query_stream(
+    async def generate_stream(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],
@@ -160,7 +159,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
         except httpx.HTTPError as e:
             raise APIError(f"Stream request failed: {e}")
 
-    async def query_complete(
+    async def generate_completion(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],

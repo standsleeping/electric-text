@@ -103,7 +103,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
         async with httpx.AsyncClient(**self.client_kwargs) as client:
             yield client
 
-    async def query_stream(
+    async def generate_stream(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],
@@ -171,7 +171,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
             # TODO: don't raise, just return history
             raise APIError(f"Stream request failed: {e}")
 
-    async def query_complete(
+    async def generate_completion(
         self,
         messages: list[dict[str, str]],
         response_type: Type[ResponseType],

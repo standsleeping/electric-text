@@ -34,7 +34,7 @@ async def test_stream():
         MockStreamHistory('{"event": "two"}'),
     ]
 
-    with patch.object(client.provider, "query_stream", return_value=mock_stream):
+    with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
         async for result in client.stream("model", messages, MockResponse):
             results.append(result)
@@ -58,7 +58,7 @@ async def test_stream_invalid_json():
         MockStreamHistory("invalid json"),
     ]
 
-    with patch.object(client.provider, "query_stream", return_value=mock_stream):
+    with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
         async for result in client.stream("model", messages, MockResponse):
             results.append(result)
@@ -82,7 +82,7 @@ async def test_stream_validation_error():
         MockStreamHistory('{"wrong_field": "value"}'),
     ]
 
-    with patch.object(client.provider, "query_stream", return_value=mock_stream):
+    with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
         async for result in client.stream("model", messages, MockResponse):
             results.append(result)
@@ -106,7 +106,7 @@ async def test_generate():
 
     with patch.object(
         client.provider,
-        "query_complete",
+        "generate_completion",
         AsyncMock(return_value=MockResponse(event="one")),
     ):
         result = await client.generate("model", messages, MockResponse)

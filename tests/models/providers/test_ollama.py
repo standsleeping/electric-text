@@ -131,7 +131,7 @@ async def test_get_client_closes_after_context():
 
 
 @pytest.mark.asyncio
-async def test_query_complete_successful_response(test_schema):
+async def test_generate_completion_successful_response(test_schema):
     """Successfully parses a complete response from the API."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -151,14 +151,14 @@ async def test_query_complete_successful_response(test_schema):
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        result = await provider.query_complete("test prompt", TestResponse)
+        result = await provider.generate_completion("test prompt", TestResponse)
 
         assert isinstance(result, TestResponse)
         assert result.value == RESULT["value"]
 
 
 @pytest.mark.asyncio
-async def test_query_complete_http_error(test_schema):
+async def test_generate_completion_http_error(test_schema):
     """Raises APIError when HTTP request fails."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -169,11 +169,11 @@ async def test_query_complete_http_error(test_schema):
         with pytest.raises(
             APIError, match="Complete request failed: Connection failed"
         ):
-            await provider.query_complete("test prompt", TestResponse)
+            await provider.generate_completion("test prompt", TestResponse)
 
 
 @pytest.mark.asyncio
-async def test_query_complete_invalid_json_response(test_schema):
+async def test_generate_completion_invalid_json_response(test_schema):
     """Raises FormatError when response JSON is invalid."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -187,11 +187,11 @@ async def test_query_complete_invalid_json_response(test_schema):
         mock_post.return_value = mock_response
 
         with pytest.raises(FormatError, match="Failed to parse response:"):
-            await provider.query_complete("test prompt", TestResponse)
+            await provider.generate_completion("test prompt", TestResponse)
 
 
 @pytest.mark.asyncio
-async def test_query_complete_missing_content(test_schema):
+async def test_generate_completion_missing_content(test_schema):
     """Raises FormatError when response is missing required content."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -209,11 +209,11 @@ async def test_query_complete_missing_content(test_schema):
         mock_post.return_value = mock_response
 
         with pytest.raises(FormatError, match="Failed to parse response:"):
-            await provider.query_complete("test prompt", TestResponse)
+            await provider.generate_completion("test prompt", TestResponse)
 
 
 @pytest.mark.asyncio
-async def test_query_stream_yields_chunks(test_schema):
+async def test_generate_stream_yields_chunks(test_schema):
     """Yields stream history objects containing accumulated chunks."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -247,7 +247,7 @@ async def test_query_stream_yields_chunks(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream(messages, TestResponse):
+        async for history in provider.generate_stream(messages, TestResponse):
             histories.append(history)
 
         assert len(histories) == 2
@@ -265,7 +265,7 @@ async def test_query_stream_yields_chunks(test_schema):
 
 
 @pytest.mark.asyncio
-async def test_query_stream_http_error(test_schema):
+async def test_generate_stream_http_error(test_schema):
     """Raises APIError when streaming request fails."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -274,12 +274,12 @@ async def test_query_stream_http_error(test_schema):
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
         with pytest.raises(APIError, match="Stream request failed: Stream failed"):
-            async for _ in provider.query_stream("test prompt", TestResponse):
+            async for _ in provider.generate_stream("test prompt", TestResponse):
                 pass
 
 
 @pytest.mark.asyncio
-async def test_query_stream_invalid_json(test_schema):
+async def test_generate_stream_invalid_json(test_schema):
     """Records invalid JSON in stream history instead of raising."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -303,7 +303,7 @@ async def test_query_stream_invalid_json(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream("test prompt", TestResponse):
+        async for history in provider.generate_stream("test prompt", TestResponse):
             histories.append(history)
 
         # Should get one history object with the error chunk
@@ -315,7 +315,7 @@ async def test_query_stream_invalid_json(test_schema):
 
 
 @pytest.mark.asyncio
-async def test_query_stream_empty_chunks(test_schema):
+async def test_generate_stream_empty_chunks(test_schema):
     """Records empty lines in stream history."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
@@ -341,7 +341,7 @@ async def test_query_stream_empty_chunks(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream("test prompt", TestResponse):
+        async for history in provider.generate_stream("test prompt", TestResponse):
             histories.append(history)
 
         # We should get three history objects (same object, updated)
@@ -392,7 +392,7 @@ async def test_stream_history_accumulation():
         mock_stream.return_value = AsyncContextManagerMock()
         chunks = []
 
-        async for chunk in provider.query_stream([], TestResponse):
+        async for chunk in provider.generate_stream([], TestResponse):
             chunks.append(chunk)
 
         assert len(chunks) == 2
@@ -426,7 +426,7 @@ async def test_stream_history_parse_error():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # Should get one history object with the error chunk
@@ -469,7 +469,7 @@ async def test_stream_history_get_full_content():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
 
-        async for _ in provider.query_stream([], TestResponse):
+        async for _ in provider.generate_stream([], TestResponse):
             pass
 
         assert provider.stream_history.get_full_content() == "Hello world!"
@@ -502,7 +502,7 @@ async def test_stream_empty_line_history():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.query_stream([], TestResponse):
+        async for history in provider.generate_stream([], TestResponse):
             histories.append(history)
 
         # We should get three history objects (same object, updated)
