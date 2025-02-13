@@ -139,6 +139,11 @@ class OllamaProvider(ModelProvider[ResponseType]):
 
                     async for line in response.aiter_lines():
                         if not line:
+                            stream_chunk = StreamChunk(
+                                type=StreamChunkType.EMPTY_LINE,
+                                raw_line=line,
+                            )
+                            self.stream_history.add_chunk(stream_chunk)
                             continue
 
                         try:

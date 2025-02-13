@@ -334,7 +334,7 @@ async def test_query_stream_empty_chunks(test_schema):
 
 @pytest.mark.asyncio
 async def test_stream_history_accumulation():
-    """Verifies that stream history is accumulated correctly."""
+    """Accumulates stream history correctly."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, {"type": "object"})
 
@@ -369,7 +369,7 @@ async def test_stream_history_accumulation():
 
 @pytest.mark.asyncio
 async def test_stream_history_parse_error():
-    """Verifies that parse errors are recorded in stream history."""
+    """Records parse errors in stream history."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, {"type": "object"})
 
@@ -402,7 +402,7 @@ async def test_stream_history_parse_error():
 
 @pytest.mark.asyncio
 async def test_stream_history_get_full_content():
-    """Tests rebuilding full content from stream history."""
+    """Rebuilds full content from stream history."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, {"type": "object"})
 
@@ -430,3 +430,44 @@ async def test_stream_history_get_full_content():
             pass
 
         assert provider.stream_history.get_full_content() == "Hello world!"
+
+
+@pytest.mark.asyncio
+async def test_stream_empty_line_history():
+    """Records empty lines in stream history."""
+    provider = OllamaProvider()
+    provider.register_schema(TestResponse, {"type": "object"})
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(200, request=mock_request)
+
+    async def mock_aiter_lines():
+        yield ""
+        yield '{"message": {"content": "valid chunk"}}'
+        yield ""
+
+    mock_response.aiter_lines = mock_aiter_lines
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_response
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("httpx.AsyncClient.stream") as mock_stream:
+        mock_stream.return_value = AsyncContextManagerMock()
+        chunks = []
+
+        async for chunk in provider.query_stream([], TestResponse):
+            chunks.append(chunk)
+
+        # Verify chunks yielded
+        assert len(chunks) == 1
+        assert chunks[0]["message"]["content"] == "valid chunk"
+
+        # Verify stream history
+        assert len(provider.stream_history.chunks) == 3
+        assert provider.stream_history.chunks[0].type == StreamChunkType.EMPTY_LINE
+        assert provider.stream_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
+        assert provider.stream_history.chunks[2].type == StreamChunkType.EMPTY_LINE
