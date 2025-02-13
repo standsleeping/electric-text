@@ -5,7 +5,9 @@ from typing import Any, Dict, Type, Optional, AsyncGenerator
 
 from models.provider import ModelProvider, ResponseType
 from models.stream_history import (
+    StreamChunk,
     StreamHistory,
+    StreamChunkType,
     categorize_stream_line,
 )
 
@@ -165,7 +167,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
         response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
-    ) -> ResponseType:
+    ) -> StreamHistory:
         """
         Get a complete response from OpenAI.
 
@@ -176,13 +178,14 @@ class OpenaiProvider(ModelProvider[ResponseType]):
             **kwargs: Additional query-specific parameters
 
         Returns:
-            Complete response in the specified type
+            StreamHistory containing the complete response
 
         Raises:
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=False)
+        history = StreamHistory()
 
         try:
             async with self.get_client() as client:
@@ -191,8 +194,17 @@ class OpenaiProvider(ModelProvider[ResponseType]):
 
                 try:
                     data = response.json()
-                    content = json.loads(data["choices"][0]["message"]["content"])
-                    return response_type(**content)
+                    raw_content = data["choices"][0]["message"]["content"]
+
+                    chunk = StreamChunk(
+                        type=StreamChunkType.COMPLETE_RESPONSE,
+                        raw_line=json.dumps(data),
+                        parsed_data=data,
+                        content=raw_content,
+                    )
+
+                    history.add_chunk(chunk)
+                    return history
 
                 except (KeyError, json.JSONDecodeError) as e:
                     raise FormatError(f"Failed to parse response: {e}")

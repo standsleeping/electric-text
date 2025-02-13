@@ -19,7 +19,7 @@ class ParseResult[T]:
 
     @property
     def is_valid(self) -> bool:
-        """Check if the parse result contains a valid model."""
+        """Checks for a valid model."""
         return self.model is not None
 
 
@@ -69,5 +69,39 @@ class Client(Generic[ResponseType]):
         model: str,
         messages: list[dict[str, str]],
         response_model: type[ResponseType],
-    ) -> ResponseType:
-        return await self.provider.generate_completion(messages, response_model, model)
+    ) -> ParseResult[ResponseType]:
+        """
+        Generate a complete response and return it wrapped in a ParseResult.
+
+        Args:
+            model: The model to use for generation
+            messages: The messages to generate from
+            response_model: The type to parse the response into
+
+        Returns:
+            ParseResult containing the raw content, parsed content, and model instance if valid
+        """
+        history = await self.provider.generate_completion(messages, response_model, model)
+        content = history.get_full_content()
+        
+        try:
+            parsed_content = parse_partial_response(content)
+            try:
+                model_instance = response_model(**parsed_content)
+                return ParseResult(
+                    raw_content=content,
+                    parsed_content=parsed_content,
+                    model=model_instance,
+                )
+            except (ValidationError, TypeError) as error:
+                return ParseResult(
+                    raw_content=content,
+                    parsed_content=parsed_content,
+                    validation_error=error,
+                )
+        except json.JSONDecodeError as error:
+            return ParseResult(
+                raw_content=content,
+                parsed_content={},
+                json_error=error,
+            )

@@ -177,7 +177,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
         response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
-    ) -> ResponseType:
+    ) -> StreamHistory:
         """
         Get a complete response from Ollama.
 
@@ -188,13 +188,14 @@ class OllamaProvider(ModelProvider[ResponseType]):
             **kwargs: Additional query-specific parameters
 
         Returns:
-            Complete response in the specified type
+            StreamHistory containing the complete response
 
         Raises:
             APIError: If the API request fails
             FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=False)
+        history = StreamHistory()
 
         try:
             async with self.get_client() as client:
@@ -203,8 +204,17 @@ class OllamaProvider(ModelProvider[ResponseType]):
 
                 try:
                     data = response.json()
-                    content = json.loads(data["message"]["content"])
-                    return response_type(**content)
+                    raw_content = data["message"]["content"]
+
+                    # Create a complete response chunk
+                    chunk = StreamChunk(
+                        type=StreamChunkType.COMPLETE_RESPONSE,
+                        raw_line=json.dumps(data),
+                        parsed_data=data,
+                        content=raw_content,
+                    )
+                    history.add_chunk(chunk)
+                    return history
 
                 except (KeyError, json.JSONDecodeError) as e:
                     raise FormatError(f"Failed to parse response: {e}")

@@ -5,7 +5,7 @@ from models.providers.openai import OpenaiProvider, APIError
 from models.stream_history import StreamChunkType
 
 
-class TestResponse:
+class FakeResponse:
     """Test response type for schema validation."""
 
     def __init__(self, **kwargs):
@@ -16,7 +16,7 @@ class TestResponse:
 async def test_stream_empty_line():
     """Records empty lines and data markers in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -42,7 +42,7 @@ async def test_stream_empty_line():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -72,7 +72,7 @@ async def test_stream_empty_line():
 async def test_stream_done_marker():
     """Records [DONE] markers and content in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
 
@@ -99,7 +99,7 @@ async def test_stream_done_marker():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -130,7 +130,7 @@ async def test_stream_done_marker():
 async def test_stream_invalid_prefix():
     """Records lines without data: prefix in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -156,7 +156,7 @@ async def test_stream_invalid_prefix():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -187,7 +187,7 @@ async def test_stream_invalid_prefix():
 async def test_stream_json_decode_error():
     """Records JSON decode errors in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -212,7 +212,7 @@ async def test_stream_json_decode_error():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get one history object with the error chunk
@@ -241,7 +241,7 @@ async def test_stream_json_decode_error():
 async def test_stream_no_choices():
     """Records chunks without choices in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -267,7 +267,7 @@ async def test_stream_no_choices():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -299,7 +299,7 @@ async def test_stream_no_choices():
 async def test_stream_no_content():
     """Records chunks without content in delta in stream history."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -325,7 +325,7 @@ async def test_stream_no_content():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get two history objects (same object, updated)
@@ -357,10 +357,10 @@ async def test_stream_no_content():
 async def test_stream_http_error():
     """Raises APIError on HTTP errors."""
     provider = OpenaiProvider(api_key="test")
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Test error")
         with pytest.raises(APIError):
-            async for _ in provider.generate_stream([], TestResponse):
+            async for _ in provider.generate_stream([], FakeResponse):
                 pass

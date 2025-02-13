@@ -8,6 +8,8 @@ from typing import (
     runtime_checkable,
 )
 
+from models.stream_history import StreamHistory
+
 
 @runtime_checkable
 class JSONResponse(Protocol):
@@ -17,14 +19,7 @@ class JSONResponse(Protocol):
 
 
 # Type variable for response type, bounded by JSONResponse
-ResponseType = TypeVar("ResponseType", bound="JSONResponse")
-
-
-@runtime_checkable
-class StreamHistory(Protocol):
-    """Protocol for tracking stream history."""
-
-    def get_full_content(self) -> str: ...
+ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
 
 
 @runtime_checkable
@@ -72,17 +67,17 @@ class ModelProvider(Protocol[ResponseType]):
         response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
-    ) -> ResponseType:
+    ) -> StreamHistory:
         """
         Get a complete response from the provider.
 
         Args:
             messages: The list of messages
-            response_type: Expected response type
+            response_type: Expected response type (used for validation)
             model: Optional model override
             **kwargs: Additional provider-specific parameters
 
         Returns:
-            Complete response in the specified type
+            StreamHistory containing the complete response
         """
         ...

@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from models.providers.ollama import OllamaProvider, FormatError, APIError
-from models.stream_history import StreamChunkType
+from models.stream_history import StreamChunkType, StreamHistory
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def test_schema():
     return {"type": "object", "properties": {"value": {"type": "string"}}}
 
 
-class TestResponse:
+class FakeResponse:
     def __init__(self, **kwargs: Any) -> None:
         self.value = kwargs.get("value")
 
@@ -23,9 +23,9 @@ def test_register_schema_stores_schema(test_schema):
     """A schema can be registered and stored for a response type."""
     provider = OllamaProvider()
 
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
-    assert provider.format_schemas[TestResponse] == test_schema
+    assert provider.format_schemas[FakeResponse] == test_schema
 
 
 def test_register_schema_multiple_types():
@@ -34,24 +34,24 @@ def test_register_schema_multiple_types():
     schema1 = {"type": "object", "properties": {"test1": {"type": "string"}}}
     schema2 = {"type": "object", "properties": {"test2": {"type": "number"}}}
 
-    class TestResponse1:
+    class FakeResponse1:
         def __init__(self, **kwargs: Any) -> None:
             pass
 
-    class TestResponse2:
+    class FakeResponse2:
         def __init__(self, **kwargs: Any) -> None:
             pass
 
-    provider.register_schema(TestResponse1, schema1)
-    provider.register_schema(TestResponse2, schema2)
+    provider.register_schema(FakeResponse1, schema1)
+    provider.register_schema(FakeResponse2, schema2)
 
-    assert provider.format_schemas[TestResponse2] == schema2
+    assert provider.format_schemas[FakeResponse2] == schema2
 
 
 def test_create_payload_with_registered_schema(test_schema):
     """Creates a payload with a registered schema."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
@@ -60,7 +60,7 @@ def test_create_payload_with_registered_schema(test_schema):
 
     payload = provider.create_payload(
         messages,
-        TestResponse,
+        FakeResponse,
         None,
         False,
     )
@@ -76,11 +76,11 @@ def test_create_payload_with_registered_schema(test_schema):
 def test_create_payload_with_model_override(test_schema):
     """Creates a payload with a custom model specified."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     payload = provider.create_payload(
         "test prompt",
-        TestResponse,
+        FakeResponse,
         "custom-model",
         True,
     )
@@ -92,8 +92,8 @@ def test_create_payload_without_schema_raises_error():
     """Creating a payload without a registered schema raises FormatError."""
     provider = OllamaProvider()
 
-    with pytest.raises(FormatError, match="No schema registered for type TestResponse"):
-        provider.create_payload("test prompt", TestResponse, None, False)
+    with pytest.raises(FormatError, match="No schema registered for type FakeResponse"):
+        provider.create_payload("test prompt", FakeResponse, None, False)
 
 
 @pytest.mark.asyncio
@@ -134,7 +134,7 @@ async def test_get_client_closes_after_context():
 async def test_generate_completion_successful_response(test_schema):
     """Successfully parses a complete response from the API."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     RESULT = {"value": "test result"}
 
@@ -151,17 +151,20 @@ async def test_generate_completion_successful_response(test_schema):
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        result = await provider.generate_completion("test prompt", TestResponse)
+        result = await provider.generate_completion("test prompt", FakeResponse)
 
-        assert isinstance(result, TestResponse)
-        assert result.value == RESULT["value"]
+        assert isinstance(result, StreamHistory)
+        assert len(result.chunks) == 1
+        assert result.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
+        assert result.chunks[0].content == json.dumps(RESULT)
+        assert result.get_full_content() == json.dumps(RESULT)
 
 
 @pytest.mark.asyncio
 async def test_generate_completion_http_error(test_schema):
     """Raises APIError when HTTP request fails."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
@@ -169,14 +172,14 @@ async def test_generate_completion_http_error(test_schema):
         with pytest.raises(
             APIError, match="Complete request failed: Connection failed"
         ):
-            await provider.generate_completion("test prompt", TestResponse)
+            await provider.generate_completion("test prompt", FakeResponse)
 
 
 @pytest.mark.asyncio
 async def test_generate_completion_invalid_json_response(test_schema):
-    """Raises FormatError when response JSON is invalid."""
+    """Records invalid JSON in stream history."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -185,16 +188,20 @@ async def test_generate_completion_invalid_json_response(test_schema):
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
+        result = await provider.generate_completion("test prompt", FakeResponse)
 
-        with pytest.raises(FormatError, match="Failed to parse response:"):
-            await provider.generate_completion("test prompt", TestResponse)
+        assert isinstance(result, StreamHistory)
+        assert len(result.chunks) == 1
+        assert result.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
+        assert result.chunks[0].content == "invalid json"
+        assert result.get_full_content() == "invalid json"
 
 
 @pytest.mark.asyncio
 async def test_generate_completion_missing_content(test_schema):
     """Raises FormatError when response is missing required content."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -209,14 +216,14 @@ async def test_generate_completion_missing_content(test_schema):
         mock_post.return_value = mock_response
 
         with pytest.raises(FormatError, match="Failed to parse response:"):
-            await provider.generate_completion("test prompt", TestResponse)
+            await provider.generate_completion("test prompt", FakeResponse)
 
 
 @pytest.mark.asyncio
 async def test_generate_stream_yields_chunks(test_schema):
     """Yields stream history objects containing accumulated chunks."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
@@ -247,7 +254,7 @@ async def test_generate_stream_yields_chunks(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream(messages, TestResponse):
+        async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
         assert len(histories) == 2
@@ -268,13 +275,13 @@ async def test_generate_stream_yields_chunks(test_schema):
 async def test_generate_stream_http_error(test_schema):
     """Raises APIError when streaming request fails."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
         with pytest.raises(APIError, match="Stream request failed: Stream failed"):
-            async for _ in provider.generate_stream("test prompt", TestResponse):
+            async for _ in provider.generate_stream("test prompt", FakeResponse):
                 pass
 
 
@@ -282,7 +289,7 @@ async def test_generate_stream_http_error(test_schema):
 async def test_generate_stream_invalid_json(test_schema):
     """Records invalid JSON in stream history instead of raising."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -303,7 +310,7 @@ async def test_generate_stream_invalid_json(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream("test prompt", TestResponse):
+        async for history in provider.generate_stream("test prompt", FakeResponse):
             histories.append(history)
 
         # Should get one history object with the error chunk
@@ -318,7 +325,7 @@ async def test_generate_stream_invalid_json(test_schema):
 async def test_generate_stream_empty_chunks(test_schema):
     """Records empty lines in stream history."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, test_schema)
+    provider.register_schema(FakeResponse, test_schema)
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -341,7 +348,7 @@ async def test_generate_stream_empty_chunks(test_schema):
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream("test prompt", TestResponse):
+        async for history in provider.generate_stream("test prompt", FakeResponse):
             histories.append(history)
 
         # We should get three history objects (same object, updated)
@@ -370,7 +377,7 @@ async def test_generate_stream_empty_chunks(test_schema):
 async def test_stream_history_accumulation():
     """Accumulates stream history correctly."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -392,7 +399,7 @@ async def test_stream_history_accumulation():
         mock_stream.return_value = AsyncContextManagerMock()
         chunks = []
 
-        async for chunk in provider.generate_stream([], TestResponse):
+        async for chunk in provider.generate_stream([], FakeResponse):
             chunks.append(chunk)
 
         assert len(chunks) == 2
@@ -405,7 +412,7 @@ async def test_stream_history_accumulation():
 async def test_stream_history_parse_error():
     """Records parse errors in stream history without raising."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -426,7 +433,7 @@ async def test_stream_history_parse_error():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # Should get one history object with the error chunk
@@ -447,7 +454,7 @@ async def test_stream_history_parse_error():
 async def test_stream_history_get_full_content():
     """Rebuilds full content from stream history."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -469,7 +476,7 @@ async def test_stream_history_get_full_content():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
 
-        async for _ in provider.generate_stream([], TestResponse):
+        async for _ in provider.generate_stream([], FakeResponse):
             pass
 
         assert provider.stream_history.get_full_content() == "Hello world!"
@@ -479,7 +486,7 @@ async def test_stream_history_get_full_content():
 async def test_stream_empty_line_history():
     """Records empty lines in stream history."""
     provider = OllamaProvider()
-    provider.register_schema(TestResponse, {"type": "object"})
+    provider.register_schema(FakeResponse, {"type": "object"})
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(200, request=mock_request)
@@ -502,7 +509,7 @@ async def test_stream_empty_line_history():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream([], TestResponse):
+        async for history in provider.generate_stream([], FakeResponse):
             histories.append(history)
 
         # We should get three history objects (same object, updated)

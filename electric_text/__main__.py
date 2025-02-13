@@ -25,11 +25,13 @@ async def main() -> None:
 
     # Step 2: Register schemas with the providers
     country_client.provider.register_schema(
-        CountryInfo, CountryInfo.model_json_schema()
+        CountryInfo,
+        CountryInfo.model_json_schema(),
     )
 
     weather_client.provider.register_schema(
-        WeatherInfo, WeatherInfo.model_json_schema()
+        WeatherInfo,
+        WeatherInfo.model_json_schema(),
     )
 
     # Step 3: Query about France
@@ -38,13 +40,16 @@ async def main() -> None:
         {"role": "user", "content": "Let's hear about France"},
     ]
 
-    country_response = await country_client.generate(
+    country_result = await country_client.generate(
         model="llama3.1:8b",
         messages=country_messages,
         response_model=CountryInfo,
     )
 
-    print(f"Complete country response: {country_response}")
+    if country_result.is_valid:
+        print(f"Complete country response: {country_result.model}")
+    else:
+        print(f"Raw content: {country_result.raw_content}")
 
     await asyncio.sleep(1)
 
@@ -59,7 +64,10 @@ async def main() -> None:
         messages=spain_messages,
         response_model=CountryInfo,
     ):
-        print(f"Chunk: {chunk}")
+        if chunk.is_valid:
+            print(f"Valid chunk: {chunk.model}")
+        else:
+            print(f"Raw chunk content: {chunk.raw_content}")
 
     # Step 5: Query weather in Paris
     weather_messages = [
@@ -67,13 +75,16 @@ async def main() -> None:
         {"role": "user", "content": "What's the forecast in Paris?"},
     ]
 
-    weather_response = await weather_client.generate(
+    weather_result = await weather_client.generate(
         model="llama3.1:8b",
         messages=weather_messages,
         response_model=WeatherInfo,
     )
 
-    print(f"Complete weather response: {weather_response}")
+    if weather_result.is_valid:
+        print(f"Complete weather response: {weather_result.model}")
+    else:
+        print(f"Raw content: {weather_result.raw_content}")
 
     await asyncio.sleep(1)
 
@@ -92,7 +103,10 @@ async def main() -> None:
     )
 
     async for weather_chunk in stream:
-        print(f"Chunk: {weather_chunk}\n\n")
+        if weather_chunk.is_valid:
+            print(f"Valid weather chunk: {weather_chunk.model}")
+        else:
+            print(f"Raw chunk content: {weather_chunk.raw_content}")
 
 
 if __name__ == "__main__":

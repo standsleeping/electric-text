@@ -104,11 +104,14 @@ async def test_generate():
         {"role": "user", "content": "Hello"},
     ]
 
+    mock_history = MockStreamHistory('{"event": "one"}')
+    
     with patch.object(
         client.provider,
         "generate_completion",
-        AsyncMock(return_value=MockResponse(event="one")),
+        AsyncMock(return_value=mock_history),
     ):
         result = await client.generate("model", messages, MockResponse)
-        assert isinstance(result, MockResponse)
-        assert result.event == "one"
+        assert isinstance(result, ParseResult)
+        assert result.is_valid
+        assert result.model.event == "one"
