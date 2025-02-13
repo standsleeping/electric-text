@@ -1,9 +1,11 @@
+import json
+import httpx
 import pytest
 from typing import Any
-from models.providers.ollama import OllamaProvider, FormatError, APIError
-import httpx
-import json
 from unittest.mock import AsyncMock, patch
+
+from models.providers.ollama import OllamaProvider, FormatError, APIError
+from models.stream_history import StreamChunkType
 
 
 @pytest.fixture
@@ -328,3 +330,103 @@ async def test_query_stream_empty_chunks(test_schema):
 
         assert len(chunks) == 1
         assert chunks[0]["message"]["content"] == "valid chunk"
+
+
+@pytest.mark.asyncio
+async def test_stream_history_accumulation():
+    """Verifies that stream history is accumulated correctly."""
+    provider = OllamaProvider()
+    provider.register_schema(TestResponse, {"type": "object"})
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(200, request=mock_request)
+
+    async def mock_aiter_lines():
+        yield '{"message": {"content": "chunk1"}}'
+        yield '{"message": {"content": "chunk2"}}'
+
+    mock_response.aiter_lines = mock_aiter_lines
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_response
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("httpx.AsyncClient.stream") as mock_stream:
+        mock_stream.return_value = AsyncContextManagerMock()
+        chunks = []
+
+        async for chunk in provider.query_stream([], TestResponse):
+            chunks.append(chunk)
+
+        assert len(chunks) == 2
+        assert len(provider.stream_history.chunks) == 2
+        assert provider.stream_history.chunks[0].content == "chunk1"
+        assert provider.stream_history.chunks[1].content == "chunk2"
+
+
+@pytest.mark.asyncio
+async def test_stream_history_parse_error():
+    """Verifies that parse errors are recorded in stream history."""
+    provider = OllamaProvider()
+    provider.register_schema(TestResponse, {"type": "object"})
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(200, request=mock_request)
+
+    async def mock_aiter_lines():
+        yield "invalid json"
+
+    mock_response.aiter_lines = mock_aiter_lines
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_response
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("httpx.AsyncClient.stream") as mock_stream:
+        mock_stream.return_value = AsyncContextManagerMock()
+
+        with pytest.raises(FormatError):
+            async for _ in provider.query_stream([], TestResponse):
+                pass
+
+        assert len(provider.stream_history.chunks) == 1
+        assert provider.stream_history.chunks[0].type == StreamChunkType.PARSE_ERROR
+        assert provider.stream_history.chunks[0].error is not None
+
+
+@pytest.mark.asyncio
+async def test_stream_history_get_full_content():
+    """Tests rebuilding full content from stream history."""
+    provider = OllamaProvider()
+    provider.register_schema(TestResponse, {"type": "object"})
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(200, request=mock_request)
+
+    async def mock_aiter_lines():
+        yield '{"message": {"content": "Hello"}}'
+        yield '{"message": {"content": " world"}}'
+        yield '{"message": {"content": "!"}}'
+
+    mock_response.aiter_lines = mock_aiter_lines
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_response
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("httpx.AsyncClient.stream") as mock_stream:
+        mock_stream.return_value = AsyncContextManagerMock()
+
+        async for _ in provider.query_stream([], TestResponse):
+            pass
+
+        assert provider.stream_history.get_full_content() == "Hello world!"

@@ -52,6 +52,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
         self.default_model = default_model
         self.timeout = timeout
         self.format_schemas: Dict[Type[Any], Dict[str, Any]] = {}
+        self.stream_history = StreamHistory()
         self.client_kwargs = {
             "timeout": timeout,
             "headers": {
@@ -60,7 +61,6 @@ class OpenaiProvider(ModelProvider[ResponseType]):
             },
             **kwargs,
         }
-        self.stream_history = StreamHistory()
 
     def register_schema(
         self, response_type: Type[ResponseType], schema: Dict[str, Any]

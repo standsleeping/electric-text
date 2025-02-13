@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Type, Optional, AsyncGenerator
 
 from models.provider import ModelProvider, ResponseType
+from models.stream_history import StreamHistory, StreamChunk, StreamChunkType
 
 
 class ModelProviderError(Exception):
@@ -45,6 +46,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
         self.default_model = default_model
         self.timeout = timeout
         self.format_schemas: Dict[Type[Any], Dict[str, Any]] = {}
+        self.stream_history = StreamHistory()
         self.client_kwargs = {
             "timeout": timeout,
             "headers": {"Content-Type": "application/json"},
@@ -141,8 +143,21 @@ class OllamaProvider(ModelProvider[ResponseType]):
 
                         try:
                             chunk = json.loads(line)
+                            stream_chunk = StreamChunk(
+                                type=StreamChunkType.CONTENT_CHUNK,
+                                raw_line=line,
+                                parsed_data=chunk,
+                                content=chunk.get("message", {}).get("content"),
+                            )
+                            self.stream_history.add_chunk(stream_chunk)
                             yield chunk
                         except json.JSONDecodeError as e:
+                            error_chunk = StreamChunk(
+                                type=StreamChunkType.PARSE_ERROR,
+                                raw_line=line,
+                                error=str(e),
+                            )
+                            self.stream_history.add_chunk(error_chunk)
                             raise FormatError(f"Failed to parse chunk: {e}")
 
         except httpx.HTTPError as e:
