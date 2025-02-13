@@ -20,8 +20,11 @@ class Client(Generic[ResponseType]):
         response_model: type[ResponseType],
     ) -> AsyncGenerator[ResponseType, None]:
         async for chunk in self.provider.query_stream(messages, response_model, model):
-            content = json.loads(chunk["message"]["content"])
-            yield response_model(**content)
+            try:
+                content = json.loads(chunk["message"]["content"])
+                yield response_model(**content)
+            except json.JSONDecodeError:
+                continue
 
     async def generate(
         self,
