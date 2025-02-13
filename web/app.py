@@ -4,7 +4,9 @@ import uuid
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, StreamingResponse
 from starlette.requests import Request
+from starlette.routing import Route
 from string import Template
+from typing import Any, AsyncGenerator
 import uvicorn
 
 
@@ -18,18 +20,14 @@ def get_template(template_name: str) -> str:
         return file.read()
 
 
-def render_template(template_name: str, data: dict) -> str:
+def render_template(template_name: str, data: dict[str, Any]) -> str:
     html_template = get_template(template_name)
     template = Template(html_template)
     rendered_html = template.substitute(data)
     return rendered_html
 
 
-app = Starlette()
-
-
-@app.route("/")
-async def homepage(request: Request):
+async def homepage(request: Request) -> HTMLResponse:
     prompt_form = render_prompt_form(post_url="/submit-prompt")
     data = {
         "title": "Home",
@@ -39,8 +37,7 @@ async def homepage(request: Request):
     return HTMLResponse(rendered_html)
 
 
-@app.route("/submit-prompt", methods=["POST"])
-async def submit_prompt(request: Request):
+async def submit_prompt(request: Request) -> HTMLResponse:
     form = await request.form()
     prompt = form.get("prompt")
     prompt_id = str(uuid.uuid4())
@@ -54,8 +51,7 @@ async def submit_prompt(request: Request):
     return HTMLResponse(response_area)
 
 
-@app.route("/response-stream", methods=["GET"])
-async def response_stream(request: Request):
+async def response_stream(request: Request) -> StreamingResponse:
     prompt_id = request.query_params.get("prompt_id", "unknown")
     max_events = int(request.query_params.get("max_events", 10))
 
@@ -64,7 +60,7 @@ async def response_stream(request: Request):
     )
 
 
-async def event_stream(prompt_id: str, max_events: int):
+async def event_stream(prompt_id: str, max_events: int) -> AsyncGenerator[str, None]:
     event_count = 0
     while True:
         data = f"event: SomeEventName\ndata: <div style='font-family: monospace;'>Prompt ID {prompt_id}: ({uuid.uuid4()})</div>\n\n"
@@ -74,6 +70,15 @@ async def event_stream(prompt_id: str, max_events: int):
         if max_events and event_count >= max_events:
             yield "event: StreamClosing\ndata: N/A\n\n"
             break
+
+
+routes = [
+    Route("/", homepage),
+    Route("/submit-prompt", submit_prompt, methods=["POST"]),
+    Route("/response-stream", response_stream, methods=["GET"]),
+]
+
+app = Starlette(routes=routes)
 
 
 if __name__ == "__main__":
