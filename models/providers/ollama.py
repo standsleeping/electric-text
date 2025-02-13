@@ -109,7 +109,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
         response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Ollama.
 
@@ -120,7 +120,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
             **kwargs: Additional query-specific parameters
 
         Yields:
-            Response chunks in Ollama's format
+            StreamHistory object containing the full stream history after each chunk
 
         Raises:
             APIError: If the API request fails
@@ -144,6 +144,7 @@ class OllamaProvider(ModelProvider[ResponseType]):
                                 raw_line=line,
                             )
                             self.stream_history.add_chunk(stream_chunk)
+                            yield self.stream_history
                             continue
 
                         try:
@@ -155,7 +156,8 @@ class OllamaProvider(ModelProvider[ResponseType]):
                                 content=chunk.get("message", {}).get("content"),
                             )
                             self.stream_history.add_chunk(stream_chunk)
-                            yield chunk
+                            yield self.stream_history
+
                         except json.JSONDecodeError as e:
                             error_chunk = StreamChunk(
                                 type=StreamChunkType.PARSE_ERROR,
@@ -163,9 +165,10 @@ class OllamaProvider(ModelProvider[ResponseType]):
                                 error=str(e),
                             )
                             self.stream_history.add_chunk(error_chunk)
-                            raise FormatError(f"Failed to parse chunk: {e}")
+                            yield self.stream_history
 
         except httpx.HTTPError as e:
+            # TODO: don't raise, just return history
             raise APIError(f"Stream request failed: {e}")
 
     async def query_complete(

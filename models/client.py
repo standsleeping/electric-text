@@ -1,7 +1,26 @@
 import importlib
 import json
-from typing import AsyncGenerator, Generic
+from typing import AsyncGenerator, Generic, Any, Optional, Union
 from models.provider import ModelProvider, ResponseType
+from models.parse_partial_response import parse_partial_response
+from pydantic import ValidationError
+from dataclasses import dataclass
+
+
+@dataclass
+class ParseResult[T]:
+    """Wrapper for parsed response data that may be incomplete."""
+
+    raw_content: str
+    parsed_content: dict[str, Any]
+    model: Optional[T] = None
+    validation_error: Optional[Union[ValidationError, TypeError]] = None
+    json_error: Optional[json.JSONDecodeError] = None
+
+    @property
+    def is_valid(self) -> bool:
+        """Check if the parse result contains a valid model."""
+        return self.model is not None
 
 
 class Client(Generic[ResponseType]):
@@ -18,13 +37,32 @@ class Client(Generic[ResponseType]):
         model: str,
         messages: list[dict[str, str]],
         response_model: type[ResponseType],
-    ) -> AsyncGenerator[ResponseType, None]:
-        async for chunk in self.provider.query_stream(messages, response_model, model):
+    ) -> AsyncGenerator[ParseResult[ResponseType], None]:
+        async for history in self.provider.query_stream(
+            messages, response_model, model
+        ):
+            content = history.get_full_content()
             try:
-                content = json.loads(chunk["message"]["content"])
-                yield response_model(**content)
-            except json.JSONDecodeError:
-                continue
+                parsed_content = parse_partial_response(content)
+                try:
+                    model_instance = response_model(**parsed_content)
+                    yield ParseResult(
+                        raw_content=content,
+                        parsed_content=parsed_content,
+                        model=model_instance,
+                    )
+                except (ValidationError, TypeError) as error:
+                    yield ParseResult(
+                        raw_content=content,
+                        parsed_content=parsed_content,
+                        validation_error=error,
+                    )
+            except json.JSONDecodeError as error:
+                yield ParseResult(
+                    raw_content=content,
+                    parsed_content={},
+                    json_error=error,
+                )
 
     async def generate(
         self,

@@ -51,7 +51,7 @@ class ModelProvider(Protocol[ResponseType]):
         response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from the provider.
 
@@ -62,7 +62,7 @@ class ModelProvider(Protocol[ResponseType]):
             **kwargs: Additional provider-specific parameters
 
         Yields:
-            Response chunks in the provider's format
+            StreamHistory object containing the full stream history after each chunk
         """
         ...
 

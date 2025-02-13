@@ -124,7 +124,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
         response_type: Type[ResponseType],
         model: Optional[str] = None,
         **kwargs: Any,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from OpenAI.
 
@@ -135,7 +135,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
             **kwargs: Additional query-specific parameters
 
         Yields:
-            Response chunks in OpenAI's format
+            StreamHistory object containing the full stream history after each chunk
 
         Raises:
             APIError: If the API request fails
@@ -155,14 +155,7 @@ class OpenaiProvider(ModelProvider[ResponseType]):
                     async for line in response.aiter_lines():
                         chunk = categorize_stream_line(line)
                         self.stream_history.add_chunk(chunk)
-
-                        is_content = (
-                            chunk.type == StreamChunkType.CONTENT_CHUNK
-                            and chunk.content
-                        )
-
-                        if is_content:
-                            yield {"message": {"content": chunk.content}}
+                        yield self.stream_history
 
         except httpx.HTTPError as e:
             raise APIError(f"Stream request failed: {e}")

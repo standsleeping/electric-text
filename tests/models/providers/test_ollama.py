@@ -214,7 +214,7 @@ async def test_query_complete_missing_content(test_schema):
 
 @pytest.mark.asyncio
 async def test_query_stream_yields_chunks(test_schema):
-    """Yields parsed chunks from a streaming response."""
+    """Yields stream history objects containing accumulated chunks."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
 
@@ -245,14 +245,23 @@ async def test_query_stream_yields_chunks(test_schema):
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
-        chunks = []
+        histories = []
 
-        async for chunk in provider.query_stream(messages, TestResponse):
-            chunks.append(chunk)
+        async for history in provider.query_stream(messages, TestResponse):
+            histories.append(history)
 
-        assert len(chunks) == 2
-        assert chunks[0]["message"]["content"] == "chunk1"
-        assert chunks[1]["message"]["content"] == "chunk2"
+        assert len(histories) == 2
+
+        # Each history is the same object with more chunks
+        assert histories[0] is histories[1]  # Same object
+        assert len(histories[0].chunks) == 2  # Both chunks present
+
+        # Verify the chunks are correct
+        assert histories[0].chunks[0].content == "chunk1"
+        assert histories[0].chunks[1].content == "chunk2"
+
+        # Verify the accumulated content
+        assert histories[0].get_full_content() == "chunk1chunk2"
 
 
 @pytest.mark.asyncio
@@ -271,7 +280,7 @@ async def test_query_stream_http_error(test_schema):
 
 @pytest.mark.asyncio
 async def test_query_stream_invalid_json(test_schema):
-    """Raises FormatError when chunk contains invalid JSON."""
+    """Records invalid JSON in stream history instead of raising."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
 
@@ -292,15 +301,22 @@ async def test_query_stream_invalid_json(test_schema):
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
+        histories = []
 
-        with pytest.raises(FormatError, match="Failed to parse chunk:"):
-            async for _ in provider.query_stream("test prompt", TestResponse):
-                pass
+        async for history in provider.query_stream("test prompt", TestResponse):
+            histories.append(history)
+
+        # Should get one history object with the error chunk
+        assert len(histories) == 1
+        assert len(histories[0].chunks) == 1
+        assert histories[0].chunks[0].type == StreamChunkType.PARSE_ERROR
+        assert histories[0].chunks[0].raw_line == "invalid json"
+        assert histories[0].chunks[0].error is not None
 
 
 @pytest.mark.asyncio
 async def test_query_stream_empty_chunks(test_schema):
-    """Skips empty chunks in the stream."""
+    """Records empty lines in stream history."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, test_schema)
 
@@ -323,13 +339,31 @@ async def test_query_stream_empty_chunks(test_schema):
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
-        chunks = []
+        histories = []
 
-        async for chunk in provider.query_stream("test prompt", TestResponse):
-            chunks.append(chunk)
+        async for history in provider.query_stream("test prompt", TestResponse):
+            histories.append(history)
 
-        assert len(chunks) == 1
-        assert chunks[0]["message"]["content"] == "valid chunk"
+        # We should get three history objects (same object, updated)
+        assert len(histories) == 3
+        assert histories[0] is histories[1] is histories[2]  # All same object
+
+        # Final history should have all three chunks in order
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 3
+
+        # Verify chunk types and content
+        assert final_history.chunks[0].type == StreamChunkType.EMPTY_LINE
+        assert final_history.chunks[0].raw_line == ""
+
+        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[1].content == "valid chunk"
+
+        assert final_history.chunks[2].type == StreamChunkType.EMPTY_LINE
+        assert final_history.chunks[2].raw_line == ""
+
+        # Verify final accumulated content
+        assert final_history.get_full_content() == "valid chunk"
 
 
 @pytest.mark.asyncio
@@ -369,7 +403,7 @@ async def test_stream_history_accumulation():
 
 @pytest.mark.asyncio
 async def test_stream_history_parse_error():
-    """Records parse errors in stream history."""
+    """Records parse errors in stream history without raising."""
     provider = OllamaProvider()
     provider.register_schema(TestResponse, {"type": "object"})
 
@@ -390,14 +424,23 @@ async def test_stream_history_parse_error():
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
+        histories = []
 
-        with pytest.raises(FormatError):
-            async for _ in provider.query_stream([], TestResponse):
-                pass
+        async for history in provider.query_stream([], TestResponse):
+            histories.append(history)
 
-        assert len(provider.stream_history.chunks) == 1
-        assert provider.stream_history.chunks[0].type == StreamChunkType.PARSE_ERROR
-        assert provider.stream_history.chunks[0].error is not None
+        # Should get one history object with the error chunk
+        assert len(histories) == 1
+        assert len(histories[0].chunks) == 1
+        assert histories[0].chunks[0].type == StreamChunkType.PARSE_ERROR
+        assert histories[0].chunks[0].raw_line == "invalid json"
+
+        # Verify error details
+        assert histories[0].chunks[0].error is not None
+        assert isinstance(histories[0].chunks[0].error, str)
+        # The error should indicate it's a parsing error at the start of the input
+        assert "line 1" in histories[0].chunks[0].error
+        assert "column 1" in histories[0].chunks[0].error
 
 
 @pytest.mark.asyncio
@@ -457,17 +500,32 @@ async def test_stream_empty_line_history():
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.return_value = AsyncContextManagerMock()
-        chunks = []
+        histories = []
 
-        async for chunk in provider.query_stream([], TestResponse):
-            chunks.append(chunk)
+        async for history in provider.query_stream([], TestResponse):
+            histories.append(history)
 
-        # Verify chunks yielded
-        assert len(chunks) == 1
-        assert chunks[0]["message"]["content"] == "valid chunk"
+        # We should get three history objects (same object, updated)
+        assert len(histories) == 3
+        assert histories[0] is histories[1] is histories[2]  # Identical objects
 
-        # Verify stream history
-        assert len(provider.stream_history.chunks) == 3
-        assert provider.stream_history.chunks[0].type == StreamChunkType.EMPTY_LINE
-        assert provider.stream_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-        assert provider.stream_history.chunks[2].type == StreamChunkType.EMPTY_LINE
+        # Final history should have all three chunks in order
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 3
+
+        # First chunk should be an empty line
+        assert final_history.chunks[0].type == StreamChunkType.EMPTY_LINE
+        assert final_history.chunks[0].raw_line == ""
+        assert final_history.chunks[0].content is None
+
+        # Second chunk should be the valid content
+        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[1].content == "valid chunk"
+
+        # Third chunk should be another empty line
+        assert final_history.chunks[2].type == StreamChunkType.EMPTY_LINE
+        assert final_history.chunks[2].raw_line == ""
+        assert final_history.chunks[2].content is None
+
+        # Verify the accumulated content only includes actual content
+        assert final_history.get_full_content() == "valid chunk"
