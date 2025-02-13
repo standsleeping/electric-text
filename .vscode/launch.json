@@ -8,6 +8,14 @@
             "program": "${workspaceFolder}/scratch_paper.py",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Python: Electric Text",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "electric_text",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
-} 
+}
