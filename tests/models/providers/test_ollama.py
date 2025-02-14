@@ -4,7 +4,7 @@ import pytest
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from models.providers.ollama import OllamaProvider, FormatError, APIError
+from models.providers.ollama import OllamaProvider, FormatError
 from models.stream_history import StreamChunkType, StreamHistory
 
 
@@ -162,17 +162,20 @@ async def test_generate_completion_successful_response(test_schema):
 
 @pytest.mark.asyncio
 async def test_generate_completion_http_error(test_schema):
-    """Raises APIError when HTTP request fails."""
+    """Returns StreamHistory with HTTP_ERROR chunk when HTTP request fails."""
     provider = OllamaProvider()
     provider.register_schema(FakeResponse, test_schema)
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
-        with pytest.raises(
-            APIError, match="Complete request failed: Connection failed"
-        ):
-            await provider.generate_completion("test prompt", FakeResponse)
+        result = await provider.generate_completion("test prompt", FakeResponse)
+
+        assert isinstance(result, StreamHistory)
+        assert len(result.chunks) == 1
+        assert result.chunks[0].type == StreamChunkType.HTTP_ERROR
+        assert result.chunks[0].error == "Complete request failed: Connection failed"
+        assert result.chunks[0].raw_line == ""
 
 
 @pytest.mark.asyncio
@@ -273,16 +276,23 @@ async def test_generate_stream_yields_chunks(test_schema):
 
 @pytest.mark.asyncio
 async def test_generate_stream_http_error(test_schema):
-    """Raises APIError when streaming request fails."""
+    """Yields StreamHistory with HTTP_ERROR chunk when streaming request fails."""
     provider = OllamaProvider()
     provider.register_schema(FakeResponse, test_schema)
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
-        with pytest.raises(APIError, match="Stream request failed: Stream failed"):
-            async for _ in provider.generate_stream("test prompt", FakeResponse):
-                pass
+        histories = []
+        async for history in provider.generate_stream("test prompt", FakeResponse):
+            histories.append(history)
+
+        assert len(histories) == 1
+        assert isinstance(histories[0], StreamHistory)
+        assert len(histories[0].chunks) == 1
+        assert histories[0].chunks[0].type == StreamChunkType.HTTP_ERROR
+        assert histories[0].chunks[0].error == "Stream request failed: Stream failed"
+        assert histories[0].chunks[0].raw_line == ""
 
 
 @pytest.mark.asyncio

@@ -13,7 +13,8 @@ class StreamChunkType(Enum):
     INVALID_FORMAT = "invalid_format"  # Does not start with "data: "
     NO_CHOICES = "no_choices"  # Missing choices array
     PARSE_ERROR = "parse_error"  # JSON parse error
-    COMPLETE_RESPONSE = "complete_response"  # Non-streaming complete response
+    COMPLETE_RESPONSE = "COMPLETE_RESPONSE"
+    HTTP_ERROR = "HTTP_ERROR"
 
 
 @dataclass
@@ -42,7 +43,11 @@ class StreamHistory:
         """
         content_parts = []
         for chunk in self.chunks:
-            if chunk.type in [StreamChunkType.CONTENT_CHUNK, StreamChunkType.COMPLETE_RESPONSE] and chunk.content:
+            if (
+                chunk.type
+                in [StreamChunkType.CONTENT_CHUNK, StreamChunkType.COMPLETE_RESPONSE]
+                and chunk.content
+            ):
                 content_parts.append(chunk.content)
         return "".join(content_parts)
 
@@ -58,12 +63,12 @@ class StreamHistory:
             StreamHistory containing the complete response as a single chunk
         """
         history = cls()
-        
+
         if not response_data.get("choices"):
             chunk = StreamChunk(
                 StreamChunkType.NO_CHOICES,
                 raw_line=json.dumps(response_data),
-                parsed_data=response_data
+                parsed_data=response_data,
             )
         else:
             message = response_data["choices"][0]["message"]
@@ -71,9 +76,9 @@ class StreamHistory:
                 StreamChunkType.COMPLETE_RESPONSE,
                 raw_line=json.dumps(response_data),
                 parsed_data=response_data,
-                content=message.get("content", "")
+                content=message.get("content", ""),
             )
-            
+
         history.add_chunk(chunk)
         return history
 

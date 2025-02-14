@@ -24,12 +24,6 @@ class FormatError(ModelProviderError):
     pass
 
 
-class APIError(ModelProviderError):
-    """Raised when the API request fails."""
-
-    pass
-
-
 class OpenaiProvider(ModelProvider[ResponseType]):
     def __init__(
         self,
@@ -139,7 +133,6 @@ class OpenaiProvider(ModelProvider[ResponseType]):
             StreamHistory object containing the full stream history after each chunk
 
         Raises:
-            APIError: If the API request fails
             FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=True)
@@ -159,7 +152,13 @@ class OpenaiProvider(ModelProvider[ResponseType]):
                         yield self.stream_history
 
         except httpx.HTTPError as e:
-            raise APIError(f"Stream request failed: {e}")
+            error_chunk = StreamChunk(
+                type=StreamChunkType.HTTP_ERROR,
+                raw_line="",
+                error=f"Stream request failed: {e}",
+            )
+            self.stream_history.add_chunk(error_chunk)
+            yield self.stream_history
 
     async def generate_completion(
         self,
@@ -181,7 +180,6 @@ class OpenaiProvider(ModelProvider[ResponseType]):
             StreamHistory containing the complete response
 
         Raises:
-            APIError: If the API request fails
             FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=False)
@@ -212,4 +210,10 @@ class OpenaiProvider(ModelProvider[ResponseType]):
                     raise FormatError(f"Response doesn't match expected type: {e}")
 
         except httpx.HTTPError as e:
-            raise APIError(f"Complete request failed: {e}")
+            error_chunk = StreamChunk(
+                type=StreamChunkType.HTTP_ERROR,
+                raw_line="",
+                error=f"Complete request failed: {e}",
+            )
+            history.add_chunk(error_chunk)
+            return history

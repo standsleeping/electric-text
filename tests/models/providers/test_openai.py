@@ -1,8 +1,8 @@
 import pytest
 import httpx
 from unittest.mock import patch
-from models.providers.openai import OpenaiProvider, APIError
-from models.stream_history import StreamChunkType
+from models.providers.openai import OpenaiProvider, FormatError
+from models.stream_history import StreamChunkType, StreamHistory
 
 
 class FakeResponse:
@@ -355,12 +355,20 @@ async def test_stream_no_content():
 
 @pytest.mark.asyncio
 async def test_stream_http_error():
-    """Raises APIError on HTTP errors."""
+    """Yields StreamHistory with HTTP_ERROR chunk when streaming request fails."""
     provider = OpenaiProvider(api_key="test")
     provider.register_schema(FakeResponse, {"type": "object"})
 
     with patch("httpx.AsyncClient.stream") as mock_stream:
-        mock_stream.side_effect = httpx.HTTPError("Test error")
-        with pytest.raises(APIError):
-            async for _ in provider.generate_stream([], FakeResponse):
-                pass
+        mock_stream.side_effect = httpx.HTTPError("Stream failed")
+        histories = []
+
+        async for history in provider.generate_stream([], FakeResponse):
+            histories.append(history)
+
+        assert len(histories) == 1
+        assert isinstance(histories[0], StreamHistory)
+        assert len(histories[0].chunks) == 1
+        assert histories[0].chunks[0].type == StreamChunkType.HTTP_ERROR
+        assert histories[0].chunks[0].error == "Stream request failed: Stream failed"
+        assert histories[0].chunks[0].raw_line == ""
