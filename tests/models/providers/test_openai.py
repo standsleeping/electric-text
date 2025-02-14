@@ -1,6 +1,6 @@
 import pytest
 import httpx
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 from models.providers.openai import OpenaiProvider, FormatError
 from models.stream_history import StreamChunkType, StreamHistory
 
@@ -10,6 +10,14 @@ class FakeResponse:
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+def test_create_payload_without_schema_raises_error():
+    """Creating a payload without a registered schema raises FormatError."""
+    provider = OpenaiProvider(api_key="test")
+
+    with pytest.raises(FormatError, match="No schema registered for type FakeResponse"):
+        provider.create_payload("test prompt", FakeResponse, None, False)
 
 
 @pytest.mark.asyncio
@@ -372,3 +380,31 @@ async def test_stream_http_error():
         assert histories[0].chunks[0].type == StreamChunkType.HTTP_ERROR
         assert histories[0].chunks[0].error == "Stream request failed: Stream failed"
         assert histories[0].chunks[0].raw_line == ""
+
+
+@pytest.mark.asyncio
+async def test_generate_completion_missing_content():
+    """Returns StreamHistory with FORMAT_ERROR chunk when response is missing required content."""
+    provider = OpenaiProvider(api_key="test")
+    provider.register_schema(FakeResponse, {"type": "object"})
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(
+        200,
+        json={
+            "choices": [{"message": {}}]  # Missing content field
+        },
+        request=mock_request,
+    )
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = mock_response
+
+        messages = [{"role": "user", "content": "test prompt"}]
+        result = await provider.generate_completion(messages, FakeResponse)
+
+        assert isinstance(result, StreamHistory)
+        assert len(result.chunks) == 1
+        assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
+        assert "Failed to parse response" in result.chunks[0].error
+        assert result.chunks[0].raw_line == '{"choices":[{"message":{}}]}'

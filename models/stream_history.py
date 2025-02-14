@@ -13,8 +13,9 @@ class StreamChunkType(Enum):
     INVALID_FORMAT = "invalid_format"  # Does not start with "data: "
     NO_CHOICES = "no_choices"  # Missing choices array
     PARSE_ERROR = "parse_error"  # JSON parse error
-    COMPLETE_RESPONSE = "COMPLETE_RESPONSE"
-    HTTP_ERROR = "HTTP_ERROR"
+    COMPLETE_RESPONSE = "COMPLETE_RESPONSE"  # Non-streaming response
+    HTTP_ERROR = "HTTP_ERROR"  # HTTP error
+    FORMAT_ERROR = "FORMAT_ERROR"  # Response format doesn't match expected schema
 
 
 @dataclass

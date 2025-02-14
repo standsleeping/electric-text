@@ -202,7 +202,7 @@ async def test_generate_completion_invalid_json_response(test_schema):
 
 @pytest.mark.asyncio
 async def test_generate_completion_missing_content(test_schema):
-    """Raises FormatError when response is missing required content."""
+    """Returns StreamHistory with FORMAT_ERROR chunk when response is missing required content."""
     provider = OllamaProvider()
     provider.register_schema(FakeResponse, test_schema)
 
@@ -218,8 +218,13 @@ async def test_generate_completion_missing_content(test_schema):
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
 
-        with pytest.raises(FormatError, match="Failed to parse response:"):
-            await provider.generate_completion("test prompt", FakeResponse)
+        result = await provider.generate_completion("test prompt", FakeResponse)
+
+        assert isinstance(result, StreamHistory)
+        assert len(result.chunks) == 1
+        assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
+        assert "Failed to parse response" in result.chunks[0].error
+        assert result.chunks[0].raw_line == '{"message":{}}'
 
 
 @pytest.mark.asyncio

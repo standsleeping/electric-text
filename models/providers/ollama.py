@@ -115,9 +115,6 @@ class OllamaProvider(ModelProvider[ResponseType]):
 
         Yields:
             StreamHistory object containing the full stream history after each chunk
-
-        Raises:
-            FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=True)
 
@@ -187,9 +184,6 @@ class OllamaProvider(ModelProvider[ResponseType]):
 
         Returns:
             StreamHistory containing the complete response
-
-        Raises:
-            FormatError: If response parsing fails
         """
         payload = self.create_payload(messages, response_type, model, stream=False)
         history = StreamHistory()
@@ -214,9 +208,21 @@ class OllamaProvider(ModelProvider[ResponseType]):
                     return history
 
                 except (KeyError, json.JSONDecodeError) as e:
-                    raise FormatError(f"Failed to parse response: {e}")
+                    error_chunk = StreamChunk(
+                        type=StreamChunkType.FORMAT_ERROR,
+                        raw_line=response.text,
+                        error=f"Failed to parse response: {e}",
+                    )
+                    history.add_chunk(error_chunk)
+                    return history
                 except TypeError as e:
-                    raise FormatError(f"Response doesn't match expected type: {e}")
+                    error_chunk = StreamChunk(
+                        type=StreamChunkType.FORMAT_ERROR,
+                        raw_line=response.text,
+                        error=f"Response doesn't match expected type: {e}",
+                    )
+                    history.add_chunk(error_chunk)
+                    return history
 
         except httpx.HTTPError as e:
             error_chunk = StreamChunk(
