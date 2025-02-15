@@ -1,0 +1,335 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1, h2, h3, h4, h5, h6,
+body,
+p {
+  margin-block-end: 0;
+}
+
+h1, h2, h3, h4, h5, h6,
+button,
+input,
+label {
+  line-height: 1.1;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+:root {
+  /* Colors */
+  --blue-700: #1d4ed8;
+  --blue-900: #1e3a8a;
+  --green-700: #15803d;
+  --red-700: #b91c1c;
+  --stone-50: #fafaf9;
+  --stone-200: #e7e5e4;
+  --stone-500: #78716c;
+  --stone-800: #292524;
+  --color-primary: var(--blue-700);
+  --color-primary-dark: var(--blue-900);
+  --color-success: var(--green-700);
+  --color-danger: var(--red-700);
+  --color-background: var(--stone-50);
+  --color-text: var(--stone-800);
+  --color-text-light: var(--stone-500);
+  --color-border: var(--stone-200);
+
+  /* Typography */
+  --font-family-logo: "Kode Mono", monospace;
+  --font-family-mono: monospace;
+  --logo-letter-spacing: 0.1rem;
+  --font-family: "Lato", sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+
+  /* Borders */
+  --border-radius: 0.5rem;
+
+  /* Accent Colors */
+  accent-color: var(--color-primary);
+}
+
+/* Base Styles */
+
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  margin: 0;
+  padding: 0;
+}
+
+input[type=text],
+input[type=url],
+input[type=tel],
+input[type=number],
+input[type=color],
+input[type=password],
+input[type=email],
+input[type=date] {
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius);
+  outline: none;
+  border: 1px solid var(--color-border);
+}
+
+p {
+  margin-block-start: 0;
+}
+
+/* Containers (note: also see container.py) */
+
+.border-container {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.border-container-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+.center-column-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+}
+
+.horizontal-wrap-list {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--spacing-2);
+}
+
+/* Typography */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 600;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.mono-heading {
+  font-family: var(--font-family-mono);
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.05rem;
+}
+
+.color-text-light {
+  color: var(--color-text-light);
+}
+
+.little-header {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+  font-weight: 400;
+  letter-spacing: 0.05rem;
+}
+
+/* Links */
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:not([class]) {
+  text-underline-offset: 0.25em;
+}
+
+/* Buttons */
+
+.btn {
+  display: inline-block;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  text-align: center;
+  cursor: pointer;
+}
+
+.btn:hover {
+  text-decoration: none; /* for links styled as buttons */
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: white;
+}
+
+.btn-minor {
+  background-color: transparent;
+  border: none;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+/* Forms */
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Code */
+
+pre {
+  border-radius: var(--border-radius);
+  background-color: var(--stone-200);
+  font-size: var(--font-size-sm);
+}
+
+/* Layout Utilities */
+
+.p-4 {
+  padding: var(--spacing-4);
+}
+
+.pt-4 {
+  padding-top: var(--spacing-4);
+}
+
+.pb-4 {
+  padding-bottom: var(--spacing-4);
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.gap-1 {
+  gap: var(--spacing-1);
+}
+
+.gap-2 {
+  gap: var(--spacing-2);
+}
+
+.gap-4 {
+  gap: var(--spacing-4);
+}
+
+.max-width-xs {
+  max-width: 20rem;
+}
+
+.max-width-sm {
+  max-width: 24rem;
+}
+
+.max-width-md {
+  max-width: 28rem;
+}
+
+.max-width-lg {
+  max-width: 32rem;
+}
+
+.max-width-xl {
+  max-width: 36rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.field-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-2);
+}
+
+/* Components */
+
+.type-anything-textarea {
+  width: 100%;
+  height: 6rem;
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-4);
+  resize: none;
+  outline-style: none;
+}
