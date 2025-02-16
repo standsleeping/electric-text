@@ -1,5 +1,106 @@
-<form hx-post="${post_url}" hx-trigger="submit" hx-swap="outerHTML">
+<form id="${form_id}">
+  <input type="hidden" name="prompt_id" id="prompt_id">
   <div class="flex flex-col gap-1" style="flex-grow: 1;">
-    <textarea id="prompt" name="prompt" required autofocus class="type-anything-textarea" placeholder="Type anything"></textarea>
+    <textarea id="prompt" name="prompt" required autofocus class="type-anything-textarea"
+      placeholder="Type anything"></textarea>
   </div>
+  <div id="response-container"></div>
 </form>
+
+<script>
+  class PromptForm {
+    constructor(formId, postUrl, debounceMs = 300) {
+      console.log('Initializing PromptForm:', { formId, postUrl, debounceMs });
+      this.form = document.getElementById(formId);
+      this.textarea = this.form.querySelector('textarea');
+      this.responseContainer = document.getElementById('response-container');
+      this.postUrl = postUrl;
+      this.timeout = null;
+      this.debounceMs = debounceMs;
+      this.eventSource = null;
+
+      this.init();
+    }
+
+    init() {
+      const uuid = 'b26e821c-b630-47a5-bece-35a83fd163d2' // Hard-coded UUID for now
+      this.form.querySelector('#prompt_id').value = uuid;
+
+      this.textarea.addEventListener('input', () => {
+        if (this.timeout) {
+          clearTimeout(this.timeout);
+        }
+
+        this.timeout = setTimeout(() => {
+          this.sendRequest();
+        }, this.debounceMs);
+      });
+
+      this.form.addEventListener('submit', (e) => {
+        e.preventDefault();
+      });
+    }
+
+    closeEventSource() {
+      if (this.eventSource) {
+        console.log('Closing existing EventSource connection');
+        this.eventSource.close();
+        this.eventSource = null;
+      } else {
+        console.log('No existing EventSource to close');
+      }
+    }
+
+    async sendRequest() {
+      console.log('Starting request submission');
+      this.closeEventSource();
+
+      const formData = new FormData(this.form);
+      const prompt = formData.get('prompt');
+      const promptId = formData.get('prompt_id');
+      console.log('Submitting request:', { promptId, promptLength: prompt?.length || 0 });
+
+      try {
+        console.time('promptSubmission');
+        const response = await fetch(this.postUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          console.log('Request successful, processing response');
+          const html = await response.text();
+          console.log('Received HTML response of length:', html.length);
+
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
+
+          const scripts = temp.getElementsByTagName('script');
+          for (let script of scripts) {
+            const newScript = document.createElement('script');
+            for (let attr of script.attributes) {
+              newScript.setAttribute(attr.name, attr.value);
+            }
+            newScript.textContent = script.textContent;
+            script.parentNode.replaceChild(newScript, script);
+          }
+
+          this.responseContainer.innerHTML = '';
+          this.responseContainer.appendChild(temp.firstElementChild);
+
+          console.log('HTML inserted and scripts executed');
+        } else {
+          console.error('Request failed with status:', response.status);
+        }
+        console.timeEnd('promptSubmission');
+      } catch (error) {
+        console.error('Error sending request:', error);
+      }
+    }
+  }
+
+  const formId = '${form_id}';
+  const postUrl = '${post_url}';
+  const debounceMs = parseInt('${debounce_ms}', 10);
+  new PromptForm(formId, postUrl, debounceMs);
+</script>
