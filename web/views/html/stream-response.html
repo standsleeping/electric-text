@@ -43,7 +43,20 @@
     }
   </style>
   <script>
-    (function () {
+    function setupLoadingAnimation(loadingDots) {
+      let dotCount = 0;
+      return setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        loadingDots.textContent = '.'.repeat(dotCount);
+      }, 250);
+    }
+
+    function hideLoadingIndicator(container, animationInterval) {
+      container.classList.add('stream-active');
+      clearInterval(animationInterval);
+    }
+
+    function setupStreamResponse() {
       const promptId = '${prompt_id}';
       const streamUrl = '${stream_url}';
       console.log('Setting up SSE connection for prompt:', promptId);
@@ -57,12 +70,7 @@
         return;
       }
 
-      // Animate the loading dots
-      let dotCount = 0;
-      const animateDots = setInterval(() => {
-        dotCount = (dotCount + 1) % 4;
-        loadingDots.textContent = '.'.repeat(dotCount);
-      }, 250);
+      const animateDots = setupLoadingAnimation(loadingDots);
 
       console.log('Creating EventSource connection to:', streamUrl);
       const eventSource = new EventSource(streamUrl + '?prompt_id=' + promptId);
@@ -73,21 +81,19 @@
 
       eventSource.onmessage = function (event) {
         console.log('Received message:', event.data);
-        // Mark container as active to hide loading indicator
-        container.classList.add('stream-active');
-        clearInterval(animateDots);
+        hideLoadingIndicator(container, animateDots);
         responseContent.innerHTML += event.data;
       };
 
       eventSource.addEventListener('StreamClosing', function (event) {
         console.log('Stream closing for prompt:', promptId);
-        clearInterval(animateDots);
+        hideLoadingIndicator(container, animateDots);
         eventSource.close();
       });
 
       eventSource.onerror = function (event) {
         console.error('SSE connection error for prompt:', promptId, event);
-        clearInterval(animateDots);
+        hideLoadingIndicator(container, animateDots);
         const loadingText = container.querySelector('.loading-text');
         if (loadingText) {
           loadingText.textContent = 'Error connecting to stream';
@@ -101,7 +107,7 @@
           mutation.removedNodes.forEach(function (node) {
             if (node.contains(container)) {
               console.log('Response container removed, closing SSE connection');
-              clearInterval(animateDots);
+              hideLoadingIndicator(container, animateDots);
               eventSource.close();
               observer.disconnect();
             }
@@ -113,6 +119,8 @@
         childList: true,
         subtree: true
       });
-    })();
+    }
+
+    setupStreamResponse();
   </script>
 </div>
