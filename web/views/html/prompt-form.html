@@ -1,5 +1,5 @@
 <form id="${form_id}">
-  <input type="hidden" name="prompt_id" id="prompt_id">
+  <input type="hidden" name="connection_id" id="connection_id" value="${connection_id}">
   <div class="flex flex-col gap-1" style="flex-grow: 1;">
     <textarea id="prompt" name="prompt" required autofocus class="type-anything-textarea"
       placeholder="Type anything"></textarea>
@@ -9,26 +9,32 @@
 
 <script>
   class PromptForm {
-    constructor(formId, postUrl, debounceMs = 300) {
-      console.log('Initializing PromptForm:', { formId, postUrl, debounceMs });
+    constructor(formId, postUrl, streamUrl, cancelUrl, connectionId, debounceMs = 300) {
+      console.log('Initializing PromptForm:', { formId, postUrl, streamUrl, cancelUrl, connectionId, debounceMs });
       this.form = document.getElementById(formId);
       this.textarea = this.form.querySelector('textarea');
       this.responseContainer = document.getElementById('response-container');
       this.postUrl = postUrl;
+      this.streamUrl = streamUrl;
+      this.cancelUrl = cancelUrl;
+      this.connectionId = connectionId;
       this.timeout = null;
       this.debounceMs = debounceMs;
       this.eventSource = null;
-
+      this.isStreaming = false;
       this.init();
     }
 
     init() {
-      const uuid = 'b26e821c-b630-47a5-bece-35a83fd163d2' // Hard-coded UUID for now
-      this.form.querySelector('#prompt_id').value = uuid;
-
-      this.textarea.addEventListener('input', () => {
+      this.textarea.addEventListener('input', async () => {
         if (this.timeout) {
           clearTimeout(this.timeout);
+        }
+
+        // If we're currently streaming, we need to cancel it
+        if (this.isStreaming) {
+          console.log('Form changed while streaming, canceling current stream');
+          await this.closeStream(true); // Wait for cancellation to complete
         }
 
         this.timeout = setTimeout(() => {
@@ -41,24 +47,116 @@
       });
     }
 
-    closeEventSource() {
+    setupEventSource() {
       if (this.eventSource) {
-        console.log('Closing existing EventSource connection');
+        console.log('EventSource already exists');
+        return;
+      }
+
+      console.log('Creating EventSource connection to:', this.streamUrl);
+      this.eventSource = new EventSource(this.streamUrl + '?connection_id=' + this.connectionId);
+      this.isStreaming = false;
+
+      this.eventSource.addEventListener('connected', (event) => {
+        console.log('SSE connection established:', event.data);
+      });
+
+      this.eventSource.addEventListener('response', (event) => {
+        console.log('Received response:', event.data);
+        this.isStreaming = true;
+        this.responseContainer.innerHTML += event.data;
+      });
+
+      this.eventSource.addEventListener('cancelled', (event) => {
+        console.log('Stream cancelled by server:', event.data);
+        this.isStreaming = false;
+        this.responseContainer.innerHTML += '<div class="info">Stream cancelled</div>';
+        this.closeStream(false); // Don't send another cancellation
+      });
+
+      this.eventSource.addEventListener('complete', (event) => {
+        console.log('Response complete');
+        this.isStreaming = false;
+        this.closeStream(false); // Don't send cancellation for normal completion
+      });
+
+      this.eventSource.addEventListener('error', (event) => {
+        console.log('Received error:', event.data);
+        this.responseContainer.innerHTML += '<div class="error">' + event.data + '</div>';
+        this.isStreaming = false;
+        this.closeStream(false); // Don't send cancellation for errors
+      });
+
+      this.eventSource.addEventListener('close', (event) => {
+        console.log('Connection closed by server');
+        this.isStreaming = false;
+        this.closeStream(false); // Don't send cancellation for server-initiated close
+      });
+
+      this.eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        this.isStreaming = false;
+        this.closeStream(false); // Don't send cancellation for connection errors
+      };
+    }
+
+    async closeStream(sendCancellation = true) {
+      if (this.eventSource) {
+        // Only send cancellation if explicitly requested and do it before closing the connection
+        if (sendCancellation) {
+          console.log('Sending cancellation request');
+          try {
+            const response = await fetch(this.cancelUrl + '?connection_id=' + this.connectionId, {
+              method: 'POST'
+            });
+
+            if (!response.ok) {
+              console.error('Cancellation request failed:', response.status);
+            }
+          } catch (error) {
+            console.error('Error sending cancellation request:', error);
+          }
+        }
+
+        console.log('Closing EventSource connection');
         this.eventSource.close();
         this.eventSource = null;
-      } else {
-        console.log('No existing EventSource to close');
       }
     }
 
     async sendRequest() {
-      console.log('Starting request submission');
-      this.closeEventSource();
+      // Always set up a new stream before sending the request
+      this.setupEventSource();
 
+      // Wait for connection to be established
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Connection timeout'));
+          this.closeStream(false); // Don't send cancellation for timeouts
+        }, 5000); // 5 second timeout
+
+        const onConnect = (event) => {
+          console.log('Connection established, proceeding with request');
+          this.eventSource.removeEventListener('connected', onConnect);
+          clearTimeout(timeout);
+          resolve();
+        };
+
+        const onError = (event) => {
+          console.error('Connection failed:', event);
+          this.eventSource.removeEventListener('error', onError);
+          clearTimeout(timeout);
+          reject(new Error('Connection failed'));
+        };
+
+        this.eventSource.addEventListener('connected', onConnect);
+        this.eventSource.addEventListener('error', onError);
+      });
+
+      console.log('Starting request submission');
       const formData = new FormData(this.form);
       const prompt = formData.get('prompt');
-      const promptId = formData.get('prompt_id');
-      console.log('Submitting request:', { promptId, promptLength: prompt?.length || 0 });
+      console.log('Submitting request:', { connectionId: this.connectionId, promptLength: prompt?.length || 0 });
 
       try {
         console.time('promptSubmission');
@@ -67,40 +165,25 @@
           body: formData
         });
 
-        if (response.ok) {
-          console.log('Request successful, processing response');
-          const html = await response.text();
-          console.log('Received HTML response of length:', html.length);
-
-          const temp = document.createElement('div');
-          temp.innerHTML = html;
-
-          const scripts = temp.getElementsByTagName('script');
-          for (let script of scripts) {
-            const newScript = document.createElement('script');
-            for (let attr of script.attributes) {
-              newScript.setAttribute(attr.name, attr.value);
-            }
-            newScript.textContent = script.textContent;
-            script.parentNode.replaceChild(newScript, script);
-          }
-
-          this.responseContainer.innerHTML = '';
-          this.responseContainer.appendChild(temp.firstElementChild);
-
-          console.log('HTML inserted and scripts executed');
-        } else {
+        if (!response.ok) {
           console.error('Request failed with status:', response.status);
+          this.responseContainer.innerHTML += '<div class="error">Failed to submit prompt: ' + response.status + '</div>';
+          this.closeStream(false); // Don't send cancellation for request failures
         }
         console.timeEnd('promptSubmission');
       } catch (error) {
         console.error('Error sending request:', error);
+        this.responseContainer.innerHTML += '<div class="error">Error submitting prompt: ' + error.message + '</div>';
+        this.closeStream(false); // Don't send cancellation for request errors
       }
     }
   }
 
   const formId = '${form_id}';
   const postUrl = '${post_url}';
+  const streamUrl = '${stream_url}';
+  const cancelUrl = '${cancel_url}';
+  const connectionId = '${connection_id}';
   const debounceMs = parseInt('${debounce_ms}', 10);
-  new PromptForm(formId, postUrl, debounceMs);
+  new PromptForm(formId, postUrl, streamUrl, cancelUrl, connectionId, debounceMs);
 </script>

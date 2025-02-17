@@ -25,8 +25,6 @@
             "args": [
                 "web.app:app",
                 "--reload",
-                "--log-level",
-                "debug"
             ],
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
@@ -34,7 +32,8 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}",
                 "VIRTUAL_ENV": "${workspaceFolder}/.venv",
-                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+                "LOG_LEVEL": "INFO"
             },
             "python": "${workspaceFolder}/.venv/bin/python"
         },
