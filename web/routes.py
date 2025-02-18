@@ -9,13 +9,7 @@ from .views.nav import nav
 from .views.render_html import render_html
 from .views.container import container
 from .views.prompt_form import prompt_form
-from .domain import (
-    CANCEL_STREAM,
-    RESPONSE_STREAM,
-    ROOT_PAGE,
-    SUBMIT_PROMPT,
-)
-from .domain import (  # Logging
+from .domain.logging import (
     EVENT_AWAITED,
     EVENT_PROCESSED,
     EVENT_RECEIVED,
@@ -38,6 +32,13 @@ from .domain import (  # Logging
     TASK_COMPLETED,
     TASK_MISSING,
     USER_TEXT_RECEIVED,
+)
+
+from .domain import (
+    CANCEL_STREAM,
+    RESPONSE_STREAM,
+    ROOT_PAGE,
+    SUBMIT_PROMPT,
 )
 
 
