@@ -9,9 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-# Caches
+# Other
 .mypy_cache
 .pytest_cache
-
-# Other files
-scratch_paper.py

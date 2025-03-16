@@ -1,1 +1,1 @@
-# Electric Text
+# ElectricText

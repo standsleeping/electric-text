@@ -1,41 +1,35 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Scratch Paper",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/scratch_paper.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: Electric Text",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "electric_text",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Debug web server",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "uvicorn",
-            "args": [
-                "web.app:app",
-                "--reload",
-            ],
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.env",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "VIRTUAL_ENV": "${workspaceFolder}/.venv",
-                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
-                "LOG_LEVEL": "INFO"
-            },
-            "python": "${workspaceFolder}/.venv/bin/python"
-        },
-    ]
+  "configurations": [
+    {
+      "name": "Python Debugger: Module",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "electric_text",
+      "args": [
+        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
+        "--log-level",
+        "DEBUG"
+      ]
+    },
+    {
+      "name": "Debug web server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "electric_text.web.server:app",
+        "--reload",
+      ],
+      "justMyCode": true,
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+          "PYTHONPATH": "${workspaceFolder}",
+          "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+          "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+          "LOG_LEVEL": "DEBUG"
+      },
+      "python": "${workspaceFolder}/.venv/bin/python"
+    }
+  ]
 }
