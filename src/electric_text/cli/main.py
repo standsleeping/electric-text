@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from electric_text.app import process_text
 from electric_text.app import format_result
-from electric_text.logging import setup_logger
+from electric_text.logging import configure_logging, get_logger
 
 from .parse_args import parse_args
 
@@ -20,9 +20,9 @@ async def main(args: Optional[List[str]] = None) -> int:
     """
     parsed_args = parse_args(args)
 
-    # Set up logging with the specified level
     log_level = getattr(logging, parsed_args.log_level)
-    logger = setup_logger(level=log_level)
+    configure_logging(level=log_level)
+    logger = get_logger(__name__)
 
     try:
         logger.debug(f"Processing arguments: {parsed_args}")

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from electric_text.logging.setup_logger import logger
+from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
 from electric_text.clients import (
     Client,
@@ -13,6 +13,7 @@ from electric_text.clients import (
 
 OutputFormat = Literal["text", "json"]
 
+logger = get_logger(__name__)
 
 async def process_text(*, text_input: str, model: str) -> str:
     """Process the text input.
