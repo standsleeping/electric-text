@@ -100,11 +100,16 @@ def test_create_payload_with_registered_schema(test_schema):
         False,
     )
 
+    MSG_ACKNOWLEDGED = "Acknowledged. I will respond with JSON."
     expected_system_message = "preserved-system-message"
     assert payload["model"] == "claude-3-sonnet-20240229"
-    assert payload["messages"][0]["role"] == "user" # NOTE: we change this create_payload()
+
+    # NOTE: we change this create_payload()
+    assert payload["messages"][0]["role"] == "user"
     assert payload["messages"][0]["content"] == expected_system_message
-    assert payload["messages"][1]["content"] == "Acknowledged. I will respond with JSON." # NOTE: we add this create_payload()
+
+    # NOTE: we add this create_payload()
+    assert payload["messages"][1]["content"] == MSG_ACKNOWLEDGED
     assert payload["stream"] is False
     assert payload["max_tokens"] == 4096
 
@@ -125,12 +130,17 @@ def test_create_payload_with_model_override(test_schema):
         True,
     )
 
+    MSG_ACKNOWLEDGED = "Acknowledged. I will respond with JSON."
     assert payload["model"] == "claude-3-haiku-20240307"
     assert payload["stream"] is True
-    assert payload["messages"][0]["role"] == "user" # NOTE: we change this create_payload()
+
+    # NOTE: we change this create_payload()
+    assert payload["messages"][0]["role"] == "user"
     assert payload["messages"][0]["content"] == "Hello"
-    assert payload["messages"][1]["role"] == "assistant" # NOTE: we add this create_payload()
-    assert payload["messages"][1]["content"] == "Acknowledged. I will respond with JSON."
+
+    # NOTE: we add this create_payload()
+    assert payload["messages"][1]["role"] == "assistant"
+    assert payload["messages"][1]["content"] == MSG_ACKNOWLEDGED
 
 
 def test_create_payload_without_schema_raises_error():
@@ -139,6 +149,15 @@ def test_create_payload_without_schema_raises_error():
 
     with pytest.raises(FormatError, match="No schema registered for type FakeResponse"):
         provider.create_payload("test prompt", FakeResponse, None, False)
+
+
+def test_get_prefill_content():
+    """Returns the default prefill content for any response type."""
+    provider = AnthropicProvider(api_key="test_key")
+
+    prefill = provider.get_prefill_content(FakeResponse)
+
+    assert prefill == "{"
 
 
 @pytest.mark.asyncio
@@ -194,10 +213,18 @@ async def test_generate_completion_successful_response(test_schema):
         )
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 1
-        assert result.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
-        assert result.chunks[0].content == json.dumps(RESULT)
-        assert result.get_full_content() == json.dumps(RESULT)
+        assert len(result.chunks) == 2
+
+        # First chunk should be the prefill content
+        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert result.chunks[0].content == "{"
+
+        # Second chunk should be the completion response
+        assert result.chunks[1].type == StreamChunkType.COMPLETE_RESPONSE
+        assert result.chunks[1].content == json.dumps(RESULT)
+
+        # Full content should combine prefill and response
+        assert result.get_full_content() == "{" + json.dumps(RESULT)
 
 
 @pytest.mark.asyncio
@@ -214,10 +241,16 @@ async def test_generate_completion_http_error(test_schema):
         )
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 1
-        assert result.chunks[0].type == StreamChunkType.HTTP_ERROR
-        assert result.chunks[0].error == "Complete request failed: Connection failed"
-        assert result.chunks[0].raw_line == ""
+        assert len(result.chunks) == 2  # Now includes prefill content chunk
+
+        # First chunk should be the prefill content
+        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert result.chunks[0].content == "{"
+
+        # Second chunk should be the HTTP error
+        assert result.chunks[1].type == StreamChunkType.HTTP_ERROR
+        assert result.chunks[1].error == "Complete request failed: Connection failed"
+        assert result.chunks[1].raw_line == ""
 
 
 @pytest.mark.asyncio
@@ -243,10 +276,16 @@ async def test_generate_completion_missing_content(test_schema):
         )
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 1
-        assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
-        assert "Failed to parse response" in result.chunks[0].error
-        assert result.chunks[0].raw_line == "{}"
+        assert len(result.chunks) == 2  # Now includes prefill content chunk
+
+        # First chunk should be the prefill content
+        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert result.chunks[0].content == "{"
+
+        # Second chunk should be the format error
+        assert result.chunks[1].type == StreamChunkType.FORMAT_ERROR
+        assert "Failed to parse response" in result.chunks[1].error
+        assert result.chunks[1].raw_line == "{}"
 
 
 @pytest.mark.asyncio
@@ -288,27 +327,32 @@ async def test_generate_stream_yields_chunks(test_schema):
         async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
-        # We should get three history objects (same object, updated)
-        assert len(histories) == 3
-        assert histories[0] is histories[1] is histories[2]  # All same object
+        # We should get four history objects (same object, updated)
+        # First yield is the initial prefill, then 3 more yields from the stream
+        assert len(histories) == 4
+        assert histories[0] is histories[1] is histories[2] is histories[3]
 
         # Final history should have all chunks
         final_history = histories[-1]
-        assert len(final_history.chunks) == 3
+        assert len(final_history.chunks) == 4
 
-        # First chunk should be the first part of content
-        assert final_history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[0].content == "Hello"
+        # First chunk should be the prefilled content
+        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert final_history.chunks[0].content == "{"
 
-        # Second chunk should be the second part of content
+        # Second chunk should be the first part of content
         assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[1].content == " world"
+        assert final_history.chunks[1].content == "Hello"
 
-        # Third chunk should be the completion marker
-        assert final_history.chunks[2].type == StreamChunkType.COMPLETION_END
+        # Third chunk should be the second part of content
+        assert final_history.chunks[2].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[2].content == " world"
 
-        # Full content should combine all content chunks
-        assert final_history.get_full_content() == "Hello world"
+        # Fourth chunk should be the completion marker
+        assert final_history.chunks[3].type == StreamChunkType.COMPLETION_END
+
+        # Full content should combine prefill and all content chunks
+        assert final_history.get_full_content() == "{Hello world"
 
 
 @pytest.mark.asyncio
@@ -329,11 +373,13 @@ async def test_generate_stream_http_error(test_schema):
         async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
-        assert len(histories) == 1
-        assert len(histories[0].chunks) == 1
-        assert histories[0].chunks[0].type == StreamChunkType.HTTP_ERROR
+        # Verify the final stream history has both prefill and error
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 2
+        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert final_history.chunks[1].type == StreamChunkType.HTTP_ERROR
         assert (
-            histories[0].chunks[0].error == "Stream request failed: Connection failed"
+            final_history.chunks[1].error == "Stream request failed: Connection failed"
         )
 
 
@@ -373,17 +419,15 @@ async def test_generate_stream_json_error(test_schema):
         async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
-        # We should get one history object with the error chunk
-        assert len(histories) == 1
-        final_history = histories[0]
-        assert len(final_history.chunks) == 1
-
-        # The chunk should be a parse error
-        assert final_history.chunks[0].type == StreamChunkType.PARSE_ERROR
-        assert final_history.chunks[0].raw_line == "data: invalid json"
+        # Verify the final stream history has both prefill and error
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 2
+        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert final_history.chunks[1].type == StreamChunkType.PARSE_ERROR
+        assert final_history.chunks[1].raw_line == "data: invalid json"
         assert (
-            "JSONDecodeError" in final_history.chunks[0].error
-            or "Expecting value" in final_history.chunks[0].error
+            "JSONDecodeError" in final_history.chunks[1].error
+            or "Expecting value" in final_history.chunks[1].error
         )
 
 
@@ -423,14 +467,12 @@ async def test_generate_stream_api_error(test_schema):
         async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
-        # We should get one history object with the error chunk
-        assert len(histories) == 1
-        final_history = histories[0]
-        assert len(final_history.chunks) == 1
-
-        # The chunk should be a FORMAT_ERROR since we changed API_ERROR to FORMAT_ERROR
-        assert final_history.chunks[0].type == StreamChunkType.FORMAT_ERROR
-        assert final_history.chunks[0].error == "API rate limit exceeded"
+        # Verify the final stream history has both prefill and error
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 2
+        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert final_history.chunks[1].type == StreamChunkType.FORMAT_ERROR
+        assert final_history.chunks[1].error == "API rate limit exceeded"
 
 
 @pytest.mark.asyncio
@@ -471,11 +513,12 @@ async def test_generate_stream_empty_line(test_schema):
         async for history in provider.generate_stream(messages, FakeResponse):
             histories.append(history)
 
-        # We should only get one history object since empty lines are skipped
-        assert len(histories) == 1
-        final_history = histories[0]
+        # Verify the final stream history has both prefill and content
+        final_history = histories[-1]
+        assert len(final_history.chunks) == 2
+        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
+        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[1].content == "Hello"
 
-        # Should only have the content chunk
-        assert len(final_history.chunks) == 1
-        assert final_history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[0].content == "Hello"
+        # Full content should combine both chunks
+        assert final_history.get_full_content() == "{Hello"

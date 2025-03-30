@@ -72,6 +72,20 @@ class AnthropicProvider(ModelProvider[ResponseType]):
         """
         self.format_schemas[response_type] = schema
 
+    def get_prefill_content(self, response_type: Type[ResponseType]) -> str:
+        """
+        Get the prefill content to use for a given response type.
+
+        Args:
+            response_type: The type to get prefill content for
+
+        Returns:
+            str: The prefill content to use
+        """
+        # Currently we only use "{" for all response types, but this could be
+        # customized per response type in the future if needed
+        return "{"
+
     def create_payload(
         self,
         messages: list[dict[str, str]],
@@ -114,6 +128,16 @@ class AnthropicProvider(ModelProvider[ResponseType]):
             },
         )
 
+        # Now, prefill Claude's response as the final message.
+        # (https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response)
+        prefill = self.get_prefill_content(response_type)
+        messages.append(
+            {
+                "role": "assistant",
+                "content": prefill,
+            },
+        )
+
         return {
             "model": model or self.default_model,
             "messages": messages,
@@ -148,6 +172,20 @@ class AnthropicProvider(ModelProvider[ResponseType]):
         """
         payload = self.create_payload(messages, response_type, model, stream=True)
         self.stream_history = StreamHistory()  # Reset stream history
+
+        # Add initial chunk with prefilled content
+        prefill = self.get_prefill_content(response_type)
+
+        prefill_chunk = StreamChunk(
+            type=StreamChunkType.PREFILLED_CONTENT,
+            raw_line="",
+            parsed_data=None,
+            content=prefill,
+        )
+
+        self.stream_history.add_chunk(prefill_chunk)
+
+        yield self.stream_history  # Yield immediately so consumer gets the prefill
 
         try:
             async with self.get_client() as client:
@@ -239,6 +277,18 @@ class AnthropicProvider(ModelProvider[ResponseType]):
 
         payload = self.create_payload(messages, response_type, model, stream=False)
         history = StreamHistory()
+
+        # Add prefill content as first chunk
+        prefill = self.get_prefill_content(response_type)
+
+        prefill_chunk = StreamChunk(
+            type=StreamChunkType.PREFILLED_CONTENT,
+            raw_line="",
+            parsed_data=None,
+            content=prefill,
+        )
+
+        history.add_chunk(prefill_chunk)
 
         try:
             async with self.get_client() as client:

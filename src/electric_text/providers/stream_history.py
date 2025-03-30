@@ -16,6 +16,7 @@ class StreamChunkType(Enum):
     COMPLETE_RESPONSE = "COMPLETE_RESPONSE"  # Non-streaming response
     HTTP_ERROR = "HTTP_ERROR"  # HTTP error
     FORMAT_ERROR = "FORMAT_ERROR"  # Response format doesn't match expected schema
+    PREFILLED_CONTENT = "prefilled_content"  # Content that was prefilled in the prompt
 
 
 @dataclass
@@ -46,7 +47,11 @@ class StreamHistory:
         for chunk in self.chunks:
             if (
                 chunk.type
-                in [StreamChunkType.CONTENT_CHUNK, StreamChunkType.COMPLETE_RESPONSE]
+                in [
+                    StreamChunkType.CONTENT_CHUNK,
+                    StreamChunkType.COMPLETE_RESPONSE,
+                    StreamChunkType.PREFILLED_CONTENT,
+                ]
                 and chunk.content
             ):
                 content_parts.append(chunk.content)
