@@ -30,6 +30,7 @@ async def main(args: Optional[List[str]] = None) -> int:
         result = await process_text(
             text_input=parsed_args.text_input,
             model=parsed_args.model,
+            api_key=parsed_args.api_key,
         )
 
         output = format_result(parsed_args.text_input, result, parsed_args.format)

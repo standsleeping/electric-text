@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
@@ -15,11 +15,13 @@ OutputFormat = Literal["text", "json"]
 
 logger = get_logger(__name__)
 
-async def process_text(*, text_input: str, model: str) -> str:
+async def process_text(*, text_input: str, model: str, api_key: Optional[str] = None) -> str:
     """Process the text input.
 
     Args:
         text_input: The text to be processed
+        model: The model to use for generating responses
+        api_key: Optional API key for providers that require authentication
 
     Returns:
         The processed text
@@ -39,13 +41,17 @@ async def process_text(*, text_input: str, model: str) -> str:
     provider, model_name = model.split(":", 1)
 
     logger.debug(f"Model name: {model_name}")
-
     logger.debug(f"Provider: {provider}")
-
     logger.debug(f"User prompt: {user_prompt}")
+
+    # Configure client with API key if provided
+    config = {}
+    if api_key and provider in ["anthropic", "openai"]:
+        config["api_key"] = api_key
 
     client: Client[SchemaResponse] = Client(
         provider_name=provider,
+        config=config,
     )
 
     client.provider.register_schema(
@@ -85,6 +91,10 @@ async def process_text(*, text_input: str, model: str) -> str:
 
     print(f"Full content: {full_content}")
 
-    print(f"JSON: {json.loads(full_content)}")
+    try:
+        print(f"JSON: {json.loads(full_content)}")
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+        print(f"Full content: {full_content}")
 
     return str(full_content)

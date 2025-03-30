@@ -1,5 +1,5 @@
 [project]
-name = "package-template"
+name = "electric_text"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -57,5 +57,6 @@ module = "tests.*"
 ignore_errors = true
 
 [tool.pytest.ini_options]
+asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 pythonpath = ["src"] # Adds src to the python path for tests

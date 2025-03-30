@@ -1,4 +1,5 @@
 {
+  "version": "0.2.0",
   "configurations": [
     {
       "name": "Python Debugger: Module",
@@ -8,7 +9,11 @@
       "args": [
         "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
         "--log-level",
-        "DEBUG"
+        "DEBUG",
+        "--model",
+        "anthropic:claude-3-7-sonnet-20250219",
+        // "--api-key",
+        // "TBD"
       ]
     },
     {

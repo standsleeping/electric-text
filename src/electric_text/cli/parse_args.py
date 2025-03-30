@@ -26,7 +26,10 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--model",
         "-m",
-        choices=["ollama:llama3.1:8b"],
+        choices=[
+            "ollama:llama3.1:8b",
+            "anthropic:claude-3-7-sonnet-20250219",
+        ],
         default="ollama:llama3.1:8b",
         help="Model to use for processing (default: llama3.1:8b)",
     )
@@ -44,6 +47,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         default="INFO",
         help="Set the logging level (default: INFO)",
+    )
+
+    parser.add_argument(
+        "--api-key",
+        type=str,
+        help="API key for providers that require authentication (e.g., Anthropic)",
     )
 
     return parser.parse_args(args)
