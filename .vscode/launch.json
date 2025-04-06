@@ -7,13 +7,13 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
+        "Write a Homeric haiku about the distance between oneself and a faraway home.",
         "--log-level",
         "DEBUG",
         "--model",
         "anthropic:claude-3-7-sonnet-20250219",
-        // "--api-key",
-        // "TBD"
+        "--api-key",
+        ""
       ]
     },
     {

@@ -3,7 +3,7 @@ import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Type, Optional, AsyncGenerator
 
-from electric_text.providers import ModelProvider, ResponseType
+# from electric_text.providers import ModelProvider, ResponseType
 from electric_text.providers.stream_history import (
     StreamChunk,
     StreamHistory,
@@ -23,7 +23,7 @@ class FormatError(ModelProviderError):
     pass
 
 
-class AnthropicProvider(ModelProvider[ResponseType]):
+class AnthropicProvider:
     def __init__(
         self,
         api_key: str,
@@ -60,24 +60,9 @@ class AnthropicProvider(ModelProvider[ResponseType]):
             **kwargs,
         }
 
-    def register_schema(
-        self, response_type: Type[ResponseType], schema: Dict[str, Any]
-    ) -> None:
+    def prefill_content(self) -> str:
         """
-        Register a JSON schema for a response type.
-
-        Args:
-            response_type: The type to register a schema for
-            schema: JSON schema defining the expected format
-        """
-        self.format_schemas[response_type] = schema
-
-    def get_prefill_content(self, response_type: Type[ResponseType]) -> str:
-        """
-        Get the prefill content to use for a given response type.
-
-        Args:
-            response_type: The type to get prefill content for
+        Provide a standard prefill content for all response types.
 
         Returns:
             str: The prefill content to use
@@ -86,10 +71,38 @@ class AnthropicProvider(ModelProvider[ResponseType]):
         # customized per response type in the future if needed
         return "{"
 
+    def transform_messages(
+        self, messages: list[dict[str, str]], prefill_content: str | None = None
+    ) -> list[dict[str, str]]:
+        """
+        Transform the messages to the format required by the Anthropic API.
+        """
+        # Anthropic disallows "system" messages.
+        # Replace each "system" message with a user message containing the system content,
+        # followed by an assistant message that says "Acknowledged."
+        transformed_messages = []
+        for message in messages:
+            if message.get("role") == "system":
+                transformed_messages.append({"role": "user", "content": message["content"]})
+                transformed_messages.append({"role": "assistant", "content": "Acknowledged."})
+            else:
+                transformed_messages.append(message)
+
+        # Now, prefill Claude's response as the final message.
+        # (https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response)
+        if prefill_content:
+            transformed_messages.append(
+                {
+                    "role": "assistant",
+                    "content": prefill_content,
+                },
+            )
+
+        return transformed_messages
+
     def create_payload(
         self,
         messages: list[dict[str, str]],
-        response_type: Type[ResponseType],
         model: Optional[str],
         stream: bool,
     ) -> Dict[str, Any]:
@@ -98,45 +111,12 @@ class AnthropicProvider(ModelProvider[ResponseType]):
 
         Args:
             messages: The list of messages to send
-            response_type: Expected response type
             model: Model override (optional)
             stream: Whether to stream the response
 
         Returns:
             Dict containing the formatted payload
-
-        Raises:
-            FormatError: If no schema is registered for the response type
         """
-        if response_type not in self.format_schemas:
-            raise FormatError(f"No schema registered for type {response_type.__name__}")
-
-        # Replace "system" with "user" in the messages.
-        # NOTE: See convert_to_llm_messages() which is NOT provider specific.
-        # Anthropic disallows "system" messages.
-        messages = [
-            {"role": "user", "content": message["content"]} for message in messages
-        ]
-
-        # Now, insert an assistant reply between the user messages.
-        # Anthropic requires strict user/assistant/user... structure.
-        messages.insert(
-            1,
-            {
-                "role": "assistant",
-                "content": "Acknowledged. I will respond with JSON.",
-            },
-        )
-
-        # Now, prefill Claude's response as the final message.
-        # (https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response)
-        prefill = self.get_prefill_content(response_type)
-        messages.append(
-            {
-                "role": "assistant",
-                "content": prefill,
-            },
-        )
 
         return {
             "model": model or self.default_model,
@@ -154,36 +134,36 @@ class AnthropicProvider(ModelProvider[ResponseType]):
     async def generate_stream(
         self,
         messages: list[dict[str, str]],
-        response_type: Type[ResponseType],
         model: Optional[str] = None,
-        **kwargs: Any,
+        prefill_content: str | None = None,
+        structured_prefill: bool = False,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Anthropic.
 
         Args:
             messages: The list of messages to send
-            response_type: Expected response type
             model: Optional model override
-            **kwargs: Additional query-specific parameters
 
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
-        payload = self.create_payload(messages, response_type, model, stream=True)
+        final_messages = self.transform_messages(messages, prefill_content)
+
+        payload = self.create_payload(final_messages, model, stream=True)
         self.stream_history = StreamHistory()  # Reset stream history
 
-        # Add initial chunk with prefilled content
-        prefill = self.get_prefill_content(response_type)
+        if structured_prefill or prefill_content:
+            prefill = self.prefill_content() if structured_prefill else prefill_content
 
-        prefill_chunk = StreamChunk(
-            type=StreamChunkType.PREFILLED_CONTENT,
-            raw_line="",
-            parsed_data=None,
-            content=prefill,
-        )
+            prefill_chunk = StreamChunk(
+                type=StreamChunkType.PREFILLED_CONTENT,
+                raw_line="",
+                parsed_data=None,
+                content=prefill,
+            )
 
-        self.stream_history.add_chunk(prefill_chunk)
+            self.stream_history.add_chunk(prefill_chunk)
 
         yield self.stream_history  # Yield immediately so consumer gets the prefill
 
@@ -245,7 +225,14 @@ class AnthropicProvider(ModelProvider[ResponseType]):
                                 )
                                 self.stream_history.add_chunk(error_chunk)
                                 yield self.stream_history
-
+                        else:
+                            error_chunk = StreamChunk(
+                                type=StreamChunkType.UNHANDLED_LINE,
+                                raw_line=line,
+                                error=f"Unhandled line: {line}",
+                            )
+                            self.stream_history.add_chunk(error_chunk)
+                            yield self.stream_history
         except httpx.HTTPError as e:
             error_chunk = StreamChunk(
                 type=StreamChunkType.HTTP_ERROR,
@@ -258,9 +245,9 @@ class AnthropicProvider(ModelProvider[ResponseType]):
     async def generate_completion(
         self,
         messages: list[dict[str, str]],
-        response_type: Type[ResponseType],
         model: Optional[str] = None,
-        **kwargs: Any,
+        prefill_content: str | None = None,
+        structured_prefill: bool = False,
     ) -> StreamHistory:
         """
         Get a complete response from Anthropic.
@@ -269,26 +256,28 @@ class AnthropicProvider(ModelProvider[ResponseType]):
             messages: The list of messages to send
             response_type: Expected response type
             model: Optional model override
-            **kwargs: Additional query-specific parameters
 
         Returns:
             StreamHistory containing the complete response
         """
 
-        payload = self.create_payload(messages, response_type, model, stream=False)
+        final_messages = self.transform_messages(messages, prefill_content)
+
+        payload = self.create_payload(final_messages, model, stream=False)
         history = StreamHistory()
 
         # Add prefill content as first chunk
-        prefill = self.get_prefill_content(response_type)
+        if structured_prefill or prefill_content:
+            prefill = self.prefill_content() if structured_prefill else prefill_content
 
-        prefill_chunk = StreamChunk(
-            type=StreamChunkType.PREFILLED_CONTENT,
-            raw_line="",
-            parsed_data=None,
-            content=prefill,
-        )
+            prefill_chunk = StreamChunk(
+                type=StreamChunkType.PREFILLED_CONTENT,
+                raw_line="",
+                parsed_data=None,
+                content=prefill,
+            )
 
-        history.add_chunk(prefill_chunk)
+            history.add_chunk(prefill_chunk)
 
         try:
             async with self.get_client() as client:

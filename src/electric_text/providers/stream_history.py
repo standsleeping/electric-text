@@ -17,6 +17,7 @@ class StreamChunkType(Enum):
     HTTP_ERROR = "HTTP_ERROR"  # HTTP error
     FORMAT_ERROR = "FORMAT_ERROR"  # Response format doesn't match expected schema
     PREFILLED_CONTENT = "prefilled_content"  # Content that was prefilled in the prompt
+    UNHANDLED_LINE = "unhandled_line"  # Line that we haven't handled yet
 
 
 @dataclass

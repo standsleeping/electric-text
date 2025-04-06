@@ -23,7 +23,7 @@ ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
 
 
 @runtime_checkable
-class ModelProvider(Protocol[ResponseType]):
+class ModelProvider(Protocol):  # ModelProvider(Protocol[ResponseType]):
     """Protocol defining the interface that providers will implement."""
 
     stream_history: StreamHistory
@@ -43,7 +43,7 @@ class ModelProvider(Protocol[ResponseType]):
     def generate_stream(
         self,
         messages: list[dict[str, str]],
-        response_type: Type[ResponseType],
+        # response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
     ) -> AsyncGenerator[StreamHistory, None]:
@@ -64,7 +64,7 @@ class ModelProvider(Protocol[ResponseType]):
     async def generate_completion(
         self,
         messages: list[dict[str, str]],
-        response_type: Type[ResponseType],
+        # response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
     ) -> StreamHistory:
