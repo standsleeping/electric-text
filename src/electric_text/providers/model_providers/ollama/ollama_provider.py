@@ -55,6 +55,7 @@ class OllamaProvider(ModelProvider):
         messages: list[dict[str, str]],
         model: Optional[str],
         stream: bool,
+        format_schema: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
@@ -63,15 +64,22 @@ class OllamaProvider(ModelProvider):
             messages: The list of messages to send
             model: Model override (optional)
             stream: Whether to stream the response
+            format_schema: Optional JSON schema for structured output
 
         Returns:
             Dict containing the formatted payload
         """
-        return {
+        payload = {
             "model": model or self.default_model,
             "messages": messages,
             "stream": stream,
         }
+        
+        # Add format if schema is provided
+        if format_schema is not None:
+            payload["format"] = format_schema
+            
+        return payload
 
     @asynccontextmanager
     async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -84,6 +92,7 @@ class OllamaProvider(ModelProvider):
         messages: list[dict[str, str]],
         model: Optional[str] = None,
         *,
+        format_schema: Optional[Dict[str, Any]] = None,
         prefill_content: str | None = None,
         structured_prefill: bool = False,
         **kwargs: Any,
@@ -94,6 +103,7 @@ class OllamaProvider(ModelProvider):
         Args:
             messages: The list of messages to send
             model: Optional model override
+            format_schema: Optional JSON schema for structured output
             prefill_content: Ignored, Ollama doesn't support prefilling
             structured_prefill: Ignored, Ollama doesn't support prefilling
             **kwargs: Additional provider-specific parameters
@@ -104,7 +114,7 @@ class OllamaProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # Create the payload
-        payload = self.create_payload(messages, model, stream=True)
+        payload = self.create_payload(messages, model, stream=True, format_schema=format_schema)
 
         try:
             async with self.get_client() as client:
@@ -165,6 +175,7 @@ class OllamaProvider(ModelProvider):
         messages: list[dict[str, str]],
         model: Optional[str] = None,
         *,
+        format_schema: Optional[Dict[str, Any]] = None,
         prefill_content: str | None = None,
         structured_prefill: bool = False,
         **kwargs: Any,
@@ -175,6 +186,7 @@ class OllamaProvider(ModelProvider):
         Args:
             messages: The list of messages to send
             model: Optional model override
+            format_schema: Optional JSON schema for structured output
             prefill_content: Ignored, Ollama doesn't support prefilling
             structured_prefill: Ignored, Ollama doesn't support prefilling
             **kwargs: Additional provider-specific parameters
@@ -184,7 +196,7 @@ class OllamaProvider(ModelProvider):
         """
         history = StreamHistory()
 
-        payload = self.create_payload(messages, model, stream=False)
+        payload = self.create_payload(messages, model, stream=False, format_schema=format_schema)
 
         try:
             async with self.get_client() as client:

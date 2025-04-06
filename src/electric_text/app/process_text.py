@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union, AsyncGenerator, Any
 
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
@@ -69,52 +69,64 @@ async def process_text(
     poetry_llm_messages = convert_to_llm_messages(poetry_user_prompt)
     structured_llm_messages = convert_to_llm_messages(structured_user_prompt)
 
-    unstructured_result: PromptResult
-
-    unstructured_result = await client.generate(
+    # Generate unstructured poetry response
+    unstructured_result: Union[PromptResult, ParseResult[Any]] = await client.generate(
         model=model_name,
         messages=poetry_llm_messages,
     )
 
+    # This will be PromptResult because we didn't provide a response_model
     print(f"Raw content: {unstructured_result.raw_content}")
 
-    structured_result: ParseResult[SchemaResponse] = await client.structured_generate(
+    # Generate structured schema response with type annotation
+    structured_result = await client.generate(
         model=model_name,
         messages=structured_llm_messages,
         response_model=SchemaResponse,
     )
 
-    if structured_result.model:
-        print(f"Result: {structured_result.model}")
-        print(structured_result.model.model_dump_json(indent=2))
+    # Since we provided a response_model, we know this is a ParseResult
+    if isinstance(structured_result, ParseResult):
+        if structured_result.model:
+            print(f"Result: {structured_result.model}")
+            print(structured_result.model.model_dump_json(indent=2))
 
     print(f"Unstructured raw content: {unstructured_result.raw_content}")
 
-    # Stream content
-    async for chunk in client.stream(
+    # Stream unstructured poetry content
+    poetry_stream_generator: Union[
+        AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[Any], None]
+    ] = await client.stream(
         model=model_name,
         messages=poetry_llm_messages,
-    ):
+    )
+
+    # We need to have enough context that this is awaitable
+    async for chunk in poetry_stream_generator:
+        # All stream chunks have raw_content
         print(f"Raw chunk content: {chunk.raw_content}")
 
     full_content = client.provider.stream_history.get_full_content()
-
     print(f"Full content: {full_content}")
 
-    # Stream the schema
-    async for structured_chunk in client.structured_stream(
+    # Stream the structured schema
+    schema_stream_generator = await client.stream(
         model=model_name,
         messages=structured_llm_messages,
         response_model=SchemaResponse,
-    ):
-        if structured_chunk.model:
-            print(f"Valid chunk: {structured_chunk.model}")
-            print(structured_chunk.model.model_dump_json(indent=2))
+    )
 
+    # Since we provided a response_model, we know these are ParseResult objects
+    async for structured_chunk in schema_stream_generator:
+        if isinstance(structured_chunk, ParseResult) and structured_chunk.is_valid:
+            print(f"Valid chunk: {structured_chunk.model}")
+            if structured_chunk.model:
+                print(structured_chunk.model.model_dump_json(indent=2))
+
+        # All chunks have raw_content
         print(f"Raw chunk content: {structured_chunk.raw_content}")
 
     structured_full_content = client.provider.stream_history.get_full_content()
-
     print(f"Structured full content: {structured_full_content}")
 
     try:

@@ -36,7 +36,7 @@ async def test_stream():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.structured_stream("model", messages, MockResponse):
+        async for result in client.stream_structured("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 2
@@ -60,7 +60,7 @@ async def test_stream_invalid_json():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.structured_stream("model", messages, MockResponse):
+        async for result in client.stream_structured("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 1
@@ -84,7 +84,7 @@ async def test_stream_validation_error():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.structured_stream("model", messages, MockResponse):
+        async for result in client.stream_structured("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 1
@@ -111,7 +111,7 @@ async def test_generate():
         "generate_completion",
         AsyncMock(return_value=mock_history),
     ):
-        result = await client.structured_generate("model", messages, MockResponse)
+        result = await client.generate_structured("model", messages, MockResponse)
         assert isinstance(result, ParseResult)
         assert result.is_valid
         assert result.model.event == "one"
