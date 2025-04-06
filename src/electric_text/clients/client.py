@@ -16,7 +16,7 @@ from typing import (
 
 from electric_text.providers import ModelProvider
 from electric_text.clients.parse_partial_response import parse_partial_response
-from electric_text.clients.transformers import prepare_provider_request
+from electric_text.transformers import prepare_provider_request
 
 
 @runtime_checkable

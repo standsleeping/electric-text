@@ -1,5 +1,4 @@
-"""
-Request transformers for adapting generic client requests to provider-specific formats.
+"""Request transformers for adapting generic client requests to provider-specific formats.
 
 This module contains pure functions that transform request parameters based on
 provider capabilities, following functional programming principles.
@@ -7,7 +6,7 @@ provider capabilities, following functional programming principles.
 
 from typing import Any, Dict, Optional, Type, Callable, TypeVar
 
-from electric_text.clients.capabilities import ProviderCapability, ProviderCapabilities
+from electric_text.capabilities import ProviderCapability, ProviderCapabilities
 
 # Type for any model class
 ModelType = TypeVar("ModelType")

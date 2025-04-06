@@ -1,6 +1,4 @@
-"""
-This module defines the capabilities that different providers may support.
-"""
+"""This module defines the capabilities that different providers may support."""
 
 from typing import Dict, Any, Optional, ClassVar, Union
 
