@@ -1,7 +1,7 @@
 import json
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Type, Optional, AsyncGenerator
+from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
 from electric_text.providers.stream_history import (
@@ -48,7 +48,6 @@ class AnthropicProvider(ModelProvider):
         self.default_model = default_model
         self.timeout = timeout
         self.api_version = api_version
-        self.format_schemas: Dict[Type[Any], Dict[str, Any]] = {}
         self.stream_history = StreamHistory()
         self.client_kwargs = {
             "timeout": timeout,
@@ -150,6 +149,9 @@ class AnthropicProvider(ModelProvider):
         Args:
             messages: The list of messages to send
             model: Optional model override
+            prefill_content: Optional custom prefill content
+            structured_prefill: Whether to use structured prefill
+            **kwargs: Additional provider-specific parameters
 
         Yields:
             StreamHistory object containing the full stream history after each chunk
@@ -264,8 +266,10 @@ class AnthropicProvider(ModelProvider):
 
         Args:
             messages: The list of messages to send
-            response_type: Expected response type
             model: Optional model override
+            prefill_content: Optional custom prefill content
+            structured_prefill: Whether to use structured prefill
+            **kwargs: Additional provider-specific parameters
 
         Returns:
             StreamHistory containing the complete response

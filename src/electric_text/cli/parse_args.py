@@ -29,6 +29,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         choices=[
             "ollama:llama3.1:8b",
             "anthropic:claude-3-7-sonnet-20250219",
+            "openai:gpt-4o-mini",
         ],
         default="ollama:llama3.1:8b",
         help="Model to use for processing (default: llama3.1:8b)",

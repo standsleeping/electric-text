@@ -11,9 +11,7 @@
         "--log-level",
         "DEBUG",
         "--model",
-        "anthropic:claude-3-7-sonnet-20250219",
-        "--api-key",
-        ""
+        "ollama:llama3.1:8b"
       ]
     },
     {
@@ -29,10 +27,10 @@
       "cwd": "${workspaceFolder}",
       "envFile": "${workspaceFolder}/.env",
       "env": {
-          "PYTHONPATH": "${workspaceFolder}",
-          "VIRTUAL_ENV": "${workspaceFolder}/.venv",
-          "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
-          "LOG_LEVEL": "DEBUG"
+        "PYTHONPATH": "${workspaceFolder}",
+        "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+        "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+        "LOG_LEVEL": "DEBUG"
       },
       "python": "${workspaceFolder}/.venv/bin/python"
     }

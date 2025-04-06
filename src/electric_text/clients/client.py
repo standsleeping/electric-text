@@ -54,8 +54,8 @@ class Client:
     provider: ModelProvider
 
     def __init__(self, provider_name: str, config: dict[str, str] = {}) -> None:
-        provider_module = f"electric_text.providers.model_providers.{provider_name}.{provider_name}_provider"
-        module = importlib.import_module(provider_module, package="models")
+        provider_module = f"electric_text.providers.model_providers.{provider_name}"
+        module = importlib.import_module(provider_module)
         provider_class = getattr(module, f"{provider_name.title()}Provider")
         self.provider = provider_class(**config)
 
@@ -115,10 +115,11 @@ class Client:
         Returns:
             AsyncGenerator[ParseResult[ResponseType], None]: A generator of ParseResult objects
         """
+
         async for history in self.provider.generate_stream(
             messages,
             model,
-            structured_prefill=True,
+            structured_prefill=True,  # Anthropic only
         ):
             content = history.get_full_content()
             try:
@@ -160,10 +161,11 @@ class Client:
         Returns:
             ParseResult containing the raw content, parsed content, and model instance if valid
         """
+
         history = await self.provider.generate_completion(
             messages,
             model,
-            structured_prefill=True,
+            structured_prefill=True,  # Anthropic only
         )
 
         content = history.get_full_content()

@@ -22,7 +22,7 @@ class MockStreamHistory(StreamHistory):
 async def test_stream():
     """Client streams responses from the provider."""
 
-    client = Client[MockResponse](provider_name="ollama", config={})
+    client = Client(provider_name="ollama", config={})
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
@@ -36,7 +36,7 @@ async def test_stream():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.stream("model", messages, MockResponse):
+        async for result in client.structured_stream("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 2
@@ -50,7 +50,7 @@ async def test_stream():
 async def test_stream_invalid_json():
     """Client handles invalid JSON in stream responses."""
 
-    client = Client[MockResponse](provider_name="ollama", config={})
+    client = Client(provider_name="ollama", config={})
     messages = [{"role": "user", "content": "Hello"}]
 
     mock_stream = AsyncMock()
@@ -60,7 +60,7 @@ async def test_stream_invalid_json():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.stream("model", messages, MockResponse):
+        async for result in client.structured_stream("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 1
@@ -74,7 +74,7 @@ async def test_stream_invalid_json():
 async def test_stream_validation_error():
     """Client handles validation errors in stream responses."""
 
-    client = Client[MockResponse](provider_name="ollama", config={})
+    client = Client(provider_name="ollama", config={})
     messages = [{"role": "user", "content": "Hello"}]
 
     mock_stream = AsyncMock()
@@ -84,7 +84,7 @@ async def test_stream_validation_error():
 
     with patch.object(client.provider, "generate_stream", return_value=mock_stream):
         results = []
-        async for result in client.stream("model", messages, MockResponse):
+        async for result in client.structured_stream("model", messages, MockResponse):
             results.append(result)
 
         assert len(results) == 1
@@ -98,7 +98,7 @@ async def test_stream_validation_error():
 async def test_generate():
     """Client generates a complete response."""
 
-    client = Client[MockResponse](provider_name="ollama", config={})
+    client = Client(provider_name="ollama", config={})
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
@@ -111,7 +111,7 @@ async def test_generate():
         "generate_completion",
         AsyncMock(return_value=mock_history),
     ):
-        result = await client.generate("model", messages, MockResponse)
+        result = await client.structured_generate("model", messages, MockResponse)
         assert isinstance(result, ParseResult)
         assert result.is_valid
         assert result.model.event == "one"
