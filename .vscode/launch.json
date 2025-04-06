@@ -7,7 +7,7 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "Write a Homeric haiku about the distance between oneself and a faraway home.",
+        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
         "--log-level",
         "DEBUG",
         "--model",

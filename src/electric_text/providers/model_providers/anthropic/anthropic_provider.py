@@ -83,8 +83,12 @@ class AnthropicProvider(ModelProvider):
         transformed_messages = []
         for message in messages:
             if message.get("role") == "system":
-                transformed_messages.append({"role": "user", "content": message["content"]})
-                transformed_messages.append({"role": "assistant", "content": "Acknowledged."})
+                transformed_messages.append(
+                    {"role": "user", "content": message["content"]}
+                )
+                transformed_messages.append(
+                    {"role": "assistant", "content": "Acknowledged."}
+                )
             else:
                 transformed_messages.append(message)
 
@@ -150,11 +154,9 @@ class AnthropicProvider(ModelProvider):
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
-        final_messages = self.transform_messages(messages, prefill_content)
-
-        payload = self.create_payload(final_messages, model, stream=True)
         self.stream_history = StreamHistory()  # Reset stream history
 
+        prefill = None
         if structured_prefill or prefill_content:
             prefill = self.prefill_content() if structured_prefill else prefill_content
 
@@ -166,6 +168,10 @@ class AnthropicProvider(ModelProvider):
             )
 
             self.stream_history.add_chunk(prefill_chunk)
+
+        final_messages = self.transform_messages(messages, prefill)
+
+        payload = self.create_payload(final_messages, model, stream=True)
 
         yield self.stream_history  # Yield immediately so consumer gets the prefill
 
@@ -264,16 +270,11 @@ class AnthropicProvider(ModelProvider):
         Returns:
             StreamHistory containing the complete response
         """
-
-        final_messages = self.transform_messages(messages, prefill_content)
-
-        payload = self.create_payload(final_messages, model, stream=False)
         history = StreamHistory()
 
-        # Add prefill content as first chunk
+        prefill = None
         if structured_prefill or prefill_content:
             prefill = self.prefill_content() if structured_prefill else prefill_content
-
             prefill_chunk = StreamChunk(
                 type=StreamChunkType.PREFILLED_CONTENT,
                 raw_line="",
@@ -282,6 +283,10 @@ class AnthropicProvider(ModelProvider):
             )
 
             history.add_chunk(prefill_chunk)
+
+        final_messages = self.transform_messages(messages, prefill)
+
+        payload = self.create_payload(final_messages, model, stream=False)
 
         try:
             async with self.get_client() as client:
