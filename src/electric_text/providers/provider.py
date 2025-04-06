@@ -1,10 +1,7 @@
 from typing import (
     Any,
-    Dict,
-    Type,
-    TypeVar,
-    Protocol,
     AsyncGenerator,
+    Protocol,
     runtime_checkable,
 )
 
@@ -12,38 +9,14 @@ from electric_text.providers.stream_history import StreamHistory
 
 
 @runtime_checkable
-class JSONResponse(Protocol):
-    """Protocol defining the required structure for response objects."""
-
-    def __init__(self, **kwargs: Any) -> None: ...
-
-
-# Type variable for response type, bounded by JSONResponse
-ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
-
-
-@runtime_checkable
-class ModelProvider(Protocol):  # ModelProvider(Protocol[ResponseType]):
+class ModelProvider(Protocol):
     """Protocol defining the interface that providers will implement."""
 
     stream_history: StreamHistory
 
-    def register_schema(
-        self, response_type: Type[ResponseType], schema: Dict[str, Any]
-    ) -> None:
-        """
-        Register a JSON schema for a response type.
-
-        Args:
-            response_type: The type to register a schema for
-            schema: JSON schema defining the expected format
-        """
-        ...
-
     def generate_stream(
         self,
         messages: list[dict[str, str]],
-        # response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
     ) -> AsyncGenerator[StreamHistory, None]:
@@ -52,7 +25,6 @@ class ModelProvider(Protocol):  # ModelProvider(Protocol[ResponseType]):
 
         Args:
             messages: The list of messages
-            response_type: Expected response type
             model: Optional model override
             **kwargs: Additional provider-specific parameters
 
@@ -64,7 +36,6 @@ class ModelProvider(Protocol):  # ModelProvider(Protocol[ResponseType]):
     async def generate_completion(
         self,
         messages: list[dict[str, str]],
-        # response_type: Type[ResponseType],
         model: str | None = None,
         **kwargs: Any,
     ) -> StreamHistory:
@@ -73,7 +44,6 @@ class ModelProvider(Protocol):  # ModelProvider(Protocol[ResponseType]):
 
         Args:
             messages: The list of messages
-            response_type: Expected response type (used for validation)
             model: Optional model override
             **kwargs: Additional provider-specific parameters
 

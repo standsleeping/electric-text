@@ -3,7 +3,7 @@ import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Type, Optional, AsyncGenerator
 
-# from electric_text.providers import ModelProvider, ResponseType
+from electric_text.providers import ModelProvider
 from electric_text.providers.stream_history import (
     StreamChunk,
     StreamHistory,
@@ -23,7 +23,7 @@ class FormatError(ModelProviderError):
     pass
 
 
-class AnthropicProvider:
+class AnthropicProvider(ModelProvider):
     def __init__(
         self,
         api_key: str,
@@ -135,8 +135,10 @@ class AnthropicProvider:
         self,
         messages: list[dict[str, str]],
         model: Optional[str] = None,
+        *,
         prefill_content: str | None = None,
         structured_prefill: bool = False,
+        **kwargs: Any,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Anthropic.
@@ -246,8 +248,10 @@ class AnthropicProvider:
         self,
         messages: list[dict[str, str]],
         model: Optional[str] = None,
+        *,
         prefill_content: str | None = None,
         structured_prefill: bool = False,
+        **kwargs: Any,
     ) -> StreamHistory:
         """
         Get a complete response from Anthropic.
