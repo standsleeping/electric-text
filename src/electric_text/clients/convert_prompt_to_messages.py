@@ -1,7 +1,7 @@
 from electric_text.clients.data.prompt import Prompt
 
 
-def convert_to_llm_messages(prompt: Prompt) -> list[dict[str, str]]:
+def convert_prompt_to_messages(prompt: Prompt) -> list[dict[str, str]]:
     if prompt.system_message is None:
         raise ValueError("System message is required")
 

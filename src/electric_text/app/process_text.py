@@ -9,7 +9,7 @@ from electric_text.clients import (
     PromptResult,
     ParseResult,
     build_simple_prompt,
-    convert_to_llm_messages,
+    convert_prompt_to_messages,
 )
 
 OutputFormat = Literal["text", "json"]
@@ -66,8 +66,8 @@ async def process_text(
         config=config,
     )
 
-    poetry_llm_messages = convert_to_llm_messages(poetry_user_prompt)
-    structured_llm_messages = convert_to_llm_messages(structured_user_prompt)
+    poetry_llm_messages = convert_prompt_to_messages(poetry_user_prompt)
+    structured_llm_messages = convert_prompt_to_messages(structured_user_prompt)
 
     # Generate unstructured poetry response
     unstructured_result: Union[PromptResult, ParseResult[Any]] = await client.generate(
