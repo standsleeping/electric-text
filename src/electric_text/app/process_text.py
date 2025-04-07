@@ -96,7 +96,7 @@ async def process_text(
     # Stream unstructured poetry content
     poetry_stream_generator: Union[
         AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[Any], None]
-    ] = await client.stream(
+    ] = client.stream(
         model=model_name,
         messages=poetry_llm_messages,
     )
@@ -110,7 +110,7 @@ async def process_text(
     print(f"Full content: {full_content}")
 
     # Stream the structured schema
-    schema_stream_generator = await client.stream(
+    schema_stream_generator = client.stream(
         model=model_name,
         messages=structured_llm_messages,
         response_model=SchemaResponse,

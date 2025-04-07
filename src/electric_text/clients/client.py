@@ -312,7 +312,7 @@ class Client:
             )
         return await self.generate_raw(model, messages, prefill_content=None)
 
-    async def stream(
+    def stream(
         self,
         model: str,
         messages: list[dict[str, str]],
