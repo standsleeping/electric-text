@@ -1,39 +1,15 @@
-import json
 import importlib
-from pydantic import ValidationError
 from typing import (
     AsyncGenerator,
-    Any,
     Optional,
     Union,
-    TypeVar,
-    Protocol,
-    runtime_checkable,
-    Dict,
     Type,
 )
 
 from electric_text.providers import ModelProvider
 from electric_text.transformers import prepare_provider_request
-from electric_text.clients.data import ParseResult, PromptResult
-from electric_text.clients.functions.parse_partial_response import (
-    parse_partial_response,
-)
-
-
-@runtime_checkable
-class JSONResponse(Protocol):
-    """Protocol defining the required structure for response objects."""
-
-    def __init__(self, **kwargs: Any) -> None: ...
-
-    @classmethod
-    def model_json_schema(cls) -> Dict[str, Any]: ...
-
-
-# Type variable for response type, bounded by JSONResponse
-ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
-T = TypeVar("T", bound=JSONResponse)
+from electric_text.clients.data import ParseResult, PromptResult, ResponseType, T
+from electric_text.clients.functions.create_parse_result import create_parse_result
 
 
 class Client:
@@ -160,27 +136,7 @@ class Client:
             messages, model, **stream_kwargs
         ):
             content = history.get_full_content()
-            try:
-                parsed_content = parse_partial_response(content)
-                try:
-                    model_instance = response_model(**parsed_content)
-                    yield ParseResult(
-                        raw_content=content,
-                        parsed_content=parsed_content,
-                        model=model_instance,
-                    )
-                except (ValidationError, TypeError) as error:
-                    yield ParseResult(
-                        raw_content=content,
-                        parsed_content=parsed_content,
-                        validation_error=error,
-                    )
-            except json.JSONDecodeError as error:
-                yield ParseResult(
-                    raw_content=content,
-                    parsed_content={},
-                    json_error=error,
-                )
+            yield create_parse_result(content, response_model)
 
     async def generate_structured(
         self,
@@ -221,28 +177,7 @@ class Client:
         )
 
         content = history.get_full_content()
-
-        try:
-            parsed_content = parse_partial_response(content)
-            try:
-                model_instance = response_model(**parsed_content)
-                return ParseResult(
-                    raw_content=content,
-                    parsed_content=parsed_content,
-                    model=model_instance,
-                )
-            except (ValidationError, TypeError) as error:
-                return ParseResult(
-                    raw_content=content,
-                    parsed_content=parsed_content,
-                    validation_error=error,
-                )
-        except json.JSONDecodeError as error:
-            return ParseResult(
-                raw_content=content,
-                parsed_content={},
-                json_error=error,
-            )
+        return create_parse_result(content, response_model)
 
     async def generate(
         self,
