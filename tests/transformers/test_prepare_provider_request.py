@@ -11,7 +11,8 @@ class MockModel:
 
 def test_prepare_provider_request_basic():
     """Test basic request preparation."""
-    request = {"model": "test-model", "messages": []}
+    messages = []
+    model = "test-model"
 
     # Mock the compose_transformers function to return a modified request
     def mock_transform(r, c):
@@ -22,14 +23,16 @@ def test_prepare_provider_request_basic():
         return_value=mock_transform,
     ):
         result = prepare_provider_request(
-            request,
+            messages,
+            model,
             response_model=MockModel,
             provider_name="test",
             prefill_content="prefill content",
         )
 
         # Check the result
-        assert result != request
+        expected_base = {"messages": messages, "model": model}
+        assert result != expected_base
         assert "structured" in result
         assert "prefill" in result
 
@@ -39,23 +42,27 @@ def test_prepare_provider_request_basic():
 
 def test_prepare_provider_request_minimal():
     """Test minimal request preparation with no optional parameters."""
-    request = {"model": "test-model", "messages": []}
+    messages = []
+    model = "test-model"
+    expected_request = {"model": model, "messages": messages}
 
     # Set up the transformers to not modify the request
     with patch(
-        "electric_text.transformers.compose_transformers",
+        "electric_text.transformers.prepare_provider_request.compose_transformers",
         return_value=lambda r, c: r.copy(),
     ):
-        result = prepare_provider_request(request)
+        result = prepare_provider_request(messages, model)
 
-        # Result should be a copy of the original
-        assert result == request
-        assert result is not request
+        # Result should be a copy of the expected request
+        assert result == expected_request
+        assert result is not expected_request
 
 
 def test_prepare_provider_request_integration():
     """Integration test with actual transformers."""
-    request = {"model": "test-model", "messages": []}
+    messages = []
+    model = "test-model"
+    expected_request = {"model": model, "messages": messages}
     response_model = MockModel
     provider_name = "test"
     prefill_content = "prefill content"
@@ -70,12 +77,13 @@ def test_prepare_provider_request_integration():
             side_effect=lambda r, c: r.copy(),
         ):
             result = prepare_provider_request(
-                request,
+                messages,
+                model,
                 response_model=response_model,
                 provider_name=provider_name,
                 prefill_content=prefill_content,
             )
 
-            # Since our mocks just return copies, the result should equal the request
-            assert result == request
-            assert result is not request
+            # Since our mocks just return copies, the result should equal the expected request
+            assert result == expected_request
+            assert result is not expected_request

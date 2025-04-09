@@ -1,6 +1,5 @@
 import json
 import importlib
-from dataclasses import dataclass
 from pydantic import ValidationError
 from typing import (
     AsyncGenerator,
@@ -15,8 +14,11 @@ from typing import (
 )
 
 from electric_text.providers import ModelProvider
-from electric_text.clients.parse_partial_response import parse_partial_response
 from electric_text.transformers import prepare_provider_request
+from electric_text.clients.data import ParseResult, PromptResult
+from electric_text.clients.functions.parse_partial_response import (
+    parse_partial_response,
+)
 
 
 @runtime_checkable
@@ -32,29 +34,6 @@ class JSONResponse(Protocol):
 # Type variable for response type, bounded by JSONResponse
 ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
 T = TypeVar("T", bound=JSONResponse)
-
-
-@dataclass
-class PromptResult:
-    """Model response data."""
-
-    raw_content: str
-
-
-@dataclass
-class ParseResult[T]:
-    """Wrapper for parsed response data that may be incomplete."""
-
-    raw_content: str
-    parsed_content: dict[str, Any]
-    model: Optional[T] = None
-    validation_error: Optional[Union[ValidationError, TypeError]] = None
-    json_error: Optional[json.JSONDecodeError] = None
-
-    @property
-    def is_valid(self) -> bool:
-        """Checks for a valid model."""
-        return self.model is not None
 
 
 class Client:
@@ -85,15 +64,10 @@ class Client:
         Returns:
             AsyncGenerator[PromptResult, None]: A generator of PromptResult objects
         """
-        # Prepare request with transformations
-        base_request = {
-            "messages": messages,
-            "model": model,
-        }
-
         # Transform request using functional transformers
         provider_request = prepare_provider_request(
-            base_request,
+            messages,
+            model,
             provider_name=self.provider_name,
             prefill_content=prefill_content,
         )
@@ -127,15 +101,10 @@ class Client:
         Returns:
             PromptResult: Contains the raw content
         """
-        # Prepare request with transformations
-        base_request = {
-            "messages": messages,
-            "model": model,
-        }
-
         # Transform request using functional transformers
         provider_request = prepare_provider_request(
-            base_request,
+            messages,
+            model,
             provider_name=self.provider_name,
             prefill_content=prefill_content,
         )
@@ -172,15 +141,10 @@ class Client:
         Returns:
             AsyncGenerator[ParseResult[ResponseType], None]: A generator of ParseResult objects
         """
-        # Prepare base request with just the core parameters
-        base_request = {
-            "messages": messages,
-            "model": model,
-        }
-
         # Transform request using functional transformers
         provider_request = prepare_provider_request(
-            base_request,
+            messages,
+            model,
             response_model=response_model,
             provider_name=self.provider_name,
             prefill_content=prefill_content,
@@ -237,15 +201,10 @@ class Client:
         Returns:
             ParseResult containing the raw content, parsed content, and model instance if valid
         """
-        # Prepare base request with just the core parameters
-        base_request = {
-            "messages": messages,
-            "model": model,
-        }
-
         # Transform request using functional transformers
         provider_request = prepare_provider_request(
-            base_request,
+            messages,
+            model,
             response_model=response_model,
             provider_name=self.provider_name,
             prefill_content=prefill_content,
