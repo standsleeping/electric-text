@@ -4,6 +4,7 @@ from typing import Literal, Optional, Union, AsyncGenerator, Any
 
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
+from electric_text.responses import UserRequest
 from electric_text.clients import (
     Client,
     PromptResult,
@@ -69,19 +70,32 @@ async def process_text(
     poetry_llm_messages = convert_prompt_to_messages(poetry_user_prompt)
     structured_llm_messages = convert_prompt_to_messages(structured_user_prompt)
 
+    # Create a UserRequest for unstructured poetry generation
+    poetry_request = UserRequest(
+        messages=poetry_llm_messages,
+        model=model_name,
+        provider_name=provider,
+    )
+
     # Generate unstructured poetry response
     unstructured_result: Union[PromptResult, ParseResult[Any]] = await client.generate(
-        model=model_name,
-        messages=poetry_llm_messages,
+        request=poetry_request,
     )
 
     # This will be PromptResult because we didn't provide a response_model
     print(f"Raw content: {unstructured_result.raw_content}")
 
+    # Create a UserRequest for structured schema generation
+    schema_request = UserRequest(
+        messages=structured_llm_messages,
+        model=model_name,
+        provider_name=provider,
+        response_model=SchemaResponse,
+    )
+
     # Generate structured schema response with type annotation
     structured_result = await client.generate(
-        model=model_name,
-        messages=structured_llm_messages,
+        request=schema_request,
         response_model=SchemaResponse,
     )
 
@@ -94,11 +108,17 @@ async def process_text(
     print(f"Unstructured raw content: {unstructured_result.raw_content}")
 
     # Stream unstructured poetry content
+    poetry_stream_request = UserRequest(
+        messages=poetry_llm_messages,
+        model=model_name,
+        provider_name=provider,
+        stream=True,
+    )
+
     poetry_stream_generator: Union[
         AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[Any], None]
     ] = client.stream(
-        model=model_name,
-        messages=poetry_llm_messages,
+        request=poetry_stream_request,
     )
 
     # We need to have enough context that this is awaitable
@@ -109,10 +129,18 @@ async def process_text(
     full_content = client.provider.stream_history.get_full_content()
     print(f"Full content: {full_content}")
 
+    # Create a UserRequest for structured schema streaming
+    schema_stream_request = UserRequest(
+        messages=structured_llm_messages,
+        model=model_name,
+        provider_name=provider,
+        response_model=SchemaResponse,
+        stream=True,
+    )
+
     # Stream the structured schema
     schema_stream_generator = client.stream(
-        model=model_name,
-        messages=structured_llm_messages,
+        request=schema_stream_request,
         response_model=SchemaResponse,
     )
 

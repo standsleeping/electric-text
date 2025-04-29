@@ -1,11 +1,11 @@
 from typing import (
-    Any,
     AsyncGenerator,
     Protocol,
     runtime_checkable,
 )
 
 from electric_text.providers.stream_history import StreamHistory
+from electric_text.responses import UserRequest
 
 
 @runtime_checkable
@@ -16,38 +16,30 @@ class ModelProvider(Protocol):
 
     def generate_stream(
         self,
-        messages: list[dict[str, str]],
-        model: str | None = None,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from the provider.
 
         Args:
-            messages: The list of messages
-            model: Optional model override
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Yields:
-            StreamHistory object containing the full stream history after each chunk
+            A generator of StreamHistory objects containing the full stream history after each chunk
         """
         ...
 
     async def generate_completion(
         self,
-        messages: list[dict[str, str]],
-        model: str | None = None,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> StreamHistory:
         """
         Get a complete response from the provider.
 
         Args:
-            messages: The list of messages
-            model: Optional model override
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Returns:
-            StreamHistory containing the complete response
+            A StreamHistory object containing the complete response
         """
         ...

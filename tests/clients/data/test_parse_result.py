@@ -4,8 +4,8 @@ from pydantic import BaseModel, ValidationError
 from electric_text.clients import ParseResult
 
 
-# Test model for response validation
-class TestModel(BaseModel):
+# Example model for response validation
+class ExampleModel(BaseModel):
     name: str
     value: int
 
@@ -14,7 +14,7 @@ def test_parse_result_valid():
     """Test ParseResult with valid model instance."""
     raw_content = '{"name": "test", "value": 42}'
     parsed_content = {"name": "test", "value": 42}
-    model = TestModel(name="test", value=42)
+    model = ExampleModel(name="test", value=42)
 
     result = ParseResult(
         raw_content=raw_content,
@@ -37,7 +37,7 @@ def test_parse_result_validation_error():
 
     # Create a validation error
     try:
-        TestModel(**parsed_content)
+        ExampleModel(**parsed_content)
         pytest.fail("Should have raised ValidationError")
     except ValidationError as e:
         validation_error = e
@@ -86,7 +86,7 @@ def test_is_valid_property():
     """Test the is_valid property."""
     # Valid case
     valid_result = ParseResult(
-        raw_content="{}", parsed_content={}, model=TestModel(name="test", value=42)
+        raw_content="{}", parsed_content={}, model=ExampleModel(name="test", value=42)
     )
     assert valid_result.is_valid is True
 
@@ -96,7 +96,7 @@ def test_is_valid_property():
 
     # Create a validation error directly
     try:
-        TestModel(name="test", value="not an integer")
+        ExampleModel(name="test", value="not an integer")
         pytest.fail("Should have raised ValidationError")
     except ValidationError as e:
         validation_error = e

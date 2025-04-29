@@ -2,8 +2,14 @@ import json
 import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
-
 from electric_text.providers import ModelProvider
+from electric_text.responses import UserRequest
+from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
+    OllamaProviderInputs,
+)
+from electric_text.providers.model_providers.ollama.convert_inputs import (
+    convert_user_request_to_ollama_inputs,
+)
 from electric_text.providers.stream_history import (
     StreamChunk,
     StreamHistory,
@@ -74,11 +80,15 @@ class OllamaProvider(ModelProvider):
             "messages": messages,
             "stream": stream,
         }
-        
+
         # Add format if schema is provided
         if format_schema is not None:
-            payload["format"] = format_schema
-            
+            # Check if format_schema is a Pydantic model with model_json_schema method
+            if hasattr(format_schema, 'model_json_schema'):
+                payload["format"] = format_schema.model_json_schema()
+            else:
+                payload["format"] = format_schema
+
         return payload
 
     @asynccontextmanager
@@ -89,32 +99,32 @@ class OllamaProvider(ModelProvider):
 
     async def generate_stream(
         self,
-        messages: list[dict[str, str]],
-        model: Optional[str] = None,
-        *,
-        format_schema: Optional[Dict[str, Any]] = None,
-        prefill_content: str | None = None,
-        structured_prefill: bool = False,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Ollama.
 
         Args:
-            messages: The list of messages to send
-            model: Optional model override
-            format_schema: Optional JSON schema for structured output
-            prefill_content: Ignored, Ollama doesn't support prefilling
-            structured_prefill: Ignored, Ollama doesn't support prefilling
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
         self.stream_history = StreamHistory()  # Reset stream history
 
+        # From this point, inputs is treated as OllamaProviderInputs
+        ollama_inputs: OllamaProviderInputs = convert_user_request_to_ollama_inputs(
+            request
+        )
+
+        messages = ollama_inputs.messages
+        model = ollama_inputs.model
+        format_schema = ollama_inputs.format_schema
+
         # Create the payload
-        payload = self.create_payload(messages, model, stream=True, format_schema=format_schema)
+        payload = self.create_payload(
+            messages, model, stream=True, format_schema=format_schema
+        )
 
         try:
             async with self.get_client() as client:
@@ -172,31 +182,30 @@ class OllamaProvider(ModelProvider):
 
     async def generate_completion(
         self,
-        messages: list[dict[str, str]],
-        model: Optional[str] = None,
-        *,
-        format_schema: Optional[Dict[str, Any]] = None,
-        prefill_content: str | None = None,
-        structured_prefill: bool = False,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> StreamHistory:
         """
         Get a complete response from Ollama.
 
         Args:
-            messages: The list of messages to send
-            model: Optional model override
-            format_schema: Optional JSON schema for structured output
-            prefill_content: Ignored, Ollama doesn't support prefilling
-            structured_prefill: Ignored, Ollama doesn't support prefilling
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Returns:
             StreamHistory containing the complete response
         """
         history = StreamHistory()
 
-        payload = self.create_payload(messages, model, stream=False, format_schema=format_schema)
+        ollama_inputs: OllamaProviderInputs = convert_user_request_to_ollama_inputs(
+            request
+        )
+
+        messages = ollama_inputs.messages
+        model = ollama_inputs.model
+        format_schema = ollama_inputs.format_schema
+
+        payload = self.create_payload(
+            messages, model, stream=False, format_schema=format_schema
+        )
 
         try:
             async with self.get_client() as client:

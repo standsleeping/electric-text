@@ -8,6 +8,7 @@ from electric_text.providers.stream_history import (
     StreamChunkType,
     StreamHistory,
 )
+from electric_text.responses import UserRequest
 
 
 def test_constructor_with_defaults():
@@ -95,9 +96,11 @@ async def test_generate_completion_successful_response():
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="gpt-4"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -114,9 +117,11 @@ async def test_generate_completion_http_error():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="gpt-4"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -146,9 +151,11 @@ async def test_generate_completion_missing_content():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
 
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="gpt-4"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -164,10 +171,12 @@ async def test_generate_stream_http_error():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="gpt-4"
+        )
         histories = []
-        async for history in provider.generate_stream(
-            [{"role": "user", "content": "test prompt"}]
-        ):
+        async for history in provider.generate_stream(user_request):
             histories.append(history)
 
         assert len(histories) == 1

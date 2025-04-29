@@ -7,7 +7,7 @@ from typing import (
 )
 
 from electric_text.providers import ModelProvider
-from electric_text.transformers import prepare_provider_request
+from electric_text.responses import UserRequest
 from electric_text.clients.data import ParseResult, PromptResult, ResponseType, T
 from electric_text.clients.functions.create_parse_result import create_parse_result
 
@@ -25,164 +25,103 @@ class Client:
 
     async def stream_raw(
         self,
-        model: str,
-        messages: list[dict[str, str]],
-        prefill_content: Optional[str] = None,
+        request: UserRequest,
     ) -> AsyncGenerator[PromptResult, None]:
         """
         Stream a raw response from the model without parsing.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
-            prefill_content: Optional content to prefill the model with
+            request: The user request object
 
         Returns:
             AsyncGenerator[PromptResult, None]: A generator of PromptResult objects
         """
-        # Transform request using functional transformers
-        provider_request = prepare_provider_request(
-            messages,
-            model,
-            provider_name=self.provider_name,
-            prefill_content=prefill_content,
-        )
+        # Ensure request has the correct provider and stream flag
+        request.provider_name = self.provider_name
+        request.stream = True
 
-        # Extract parameters for generate_stream
-        stream_kwargs = {
-            k: v for k, v in provider_request.items() if k not in ["messages", "model"]
-        }
-
-        # Call provider with transformed request
-        async for history in self.provider.generate_stream(
-            messages, model, **stream_kwargs
-        ):
+        # Call provider with request
+        async for history in self.provider.generate_stream(request):
             content = history.get_full_content()
             yield PromptResult(raw_content=content)
 
     async def generate_raw(
         self,
-        model: str,
-        messages: list[dict[str, str]],
-        prefill_content: Optional[str] = None,
+        request: UserRequest,
     ) -> PromptResult:
         """
         Generate a complete raw response without parsing.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
-            prefill_content: Optional content to prefill the model with
+            request: The user request object
 
         Returns:
             PromptResult: Contains the raw content
         """
-        # Transform request using functional transformers
-        provider_request = prepare_provider_request(
-            messages,
-            model,
-            provider_name=self.provider_name,
-            prefill_content=prefill_content,
-        )
+        # Ensure request has the correct provider and stream flag
+        request.provider_name = self.provider_name
+        request.stream = False
 
-        # Extract parameters for generate_completion
-        completion_kwargs = {
-            k: v for k, v in provider_request.items() if k not in ["messages", "model"]
-        }
-
-        # Call provider with transformed request
-        history = await self.provider.generate_completion(
-            messages, model, **completion_kwargs
-        )
+        # Call provider with request
+        history = await self.provider.generate_completion(request)
 
         content = history.get_full_content()
         return PromptResult(raw_content=content)
 
     async def stream_structured(
         self,
-        model: str,
-        messages: list[dict[str, str]],
+        request: UserRequest,
         response_model: type[ResponseType],
-        prefill_content: Optional[str] = None,
     ) -> AsyncGenerator[ParseResult[ResponseType], None]:
         """
         Stream a response from the model and parse it into a structured object.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
+            request: The user request object
             response_model: The type to parse the response into
-            prefill_content: Optional content to prefill the model with
 
         Returns:
             AsyncGenerator[ParseResult[ResponseType], None]: A generator of ParseResult objects
         """
-        # Transform request using functional transformers
-        provider_request = prepare_provider_request(
-            messages,
-            model,
-            response_model=response_model,
-            provider_name=self.provider_name,
-            prefill_content=prefill_content,
-        )
+        # Ensure request has the correct provider, response model and stream flag
+        request.provider_name = self.provider_name
+        request.response_model = response_model
+        request.stream = True
 
-        # Extract parameters for generate_stream
-        stream_kwargs = {
-            k: v for k, v in provider_request.items() if k not in ["messages", "model"]
-        }
-
-        # Call provider with transformed request
-        async for history in self.provider.generate_stream(
-            messages, model, **stream_kwargs
-        ):
+        # Call provider with request
+        async for history in self.provider.generate_stream(request):
             content = history.get_full_content()
             yield create_parse_result(content, response_model)
 
     async def generate_structured(
         self,
-        model: str,
-        messages: list[dict[str, str]],
+        request: UserRequest,
         response_model: type[ResponseType],
-        prefill_content: Optional[str] = None,
     ) -> ParseResult[ResponseType]:
         """
         Generate a complete response and parse it into a structured object.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
+            request: The user request object
             response_model: The type to parse the response into
-            prefill_content: Optional content to prefill the model with
 
         Returns:
             ParseResult containing the raw content, parsed content, and model instance if valid
         """
-        # Transform request using functional transformers
-        provider_request = prepare_provider_request(
-            messages,
-            model,
-            response_model=response_model,
-            provider_name=self.provider_name,
-            prefill_content=prefill_content,
-        )
+        # Ensure request has the correct provider, response model and stream flag
+        request.provider_name = self.provider_name
+        request.response_model = response_model
+        request.stream = False
 
-        # Extract parameters for generate_completion
-        completion_kwargs = {
-            k: v for k, v in provider_request.items() if k not in ["messages", "model"]
-        }
-
-        # Call provider with transformed request
-        history = await self.provider.generate_completion(
-            messages, model, **completion_kwargs
-        )
+        # Call provider with request
+        history = await self.provider.generate_completion(request)
 
         content = history.get_full_content()
         return create_parse_result(content, response_model)
 
     async def generate(
         self,
-        model: str,
-        messages: list[dict[str, str]],
+        request: UserRequest,
         *,
         response_model: Optional[Type[T]] = None,
     ) -> Union[PromptResult, ParseResult[T]]:
@@ -193,23 +132,19 @@ class Client:
         Otherwise, the raw response will be returned.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
+            request: The user request object
             response_model: Optional type to parse the response into
 
         Returns:
             PromptResult if no response_model is provided, otherwise ParseResult[T]
         """
         if response_model is not None:
-            return await self.generate_structured(
-                model, messages, response_model, prefill_content=None
-            )
-        return await self.generate_raw(model, messages, prefill_content=None)
+            return await self.generate_structured(request, response_model)
+        return await self.generate_raw(request)
 
     def stream(
         self,
-        model: str,
-        messages: list[dict[str, str]],
+        request: UserRequest,
         *,
         response_model: Optional[Type[T]] = None,
     ) -> Union[
@@ -222,8 +157,7 @@ class Client:
         Otherwise, the raw response will be streamed.
 
         Args:
-            model: The model to use for generation
-            messages: The messages to generate from
+            request: The user request object
             response_model: Optional type to parse the response into
 
         Returns:
@@ -231,7 +165,5 @@ class Client:
             otherwise AsyncGenerator of ParseResult[T]
         """
         if response_model is not None:
-            return self.stream_structured(
-                model, messages, response_model, prefill_content=None
-            )
-        return self.stream_raw(model, messages, prefill_content=None)
+            return self.stream_structured(request, response_model)
+        return self.stream_raw(request)

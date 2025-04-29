@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from electric_text.providers.model_providers.ollama import OllamaProvider
 from electric_text.providers.stream_history import StreamChunkType, StreamHistory
+from electric_text.responses import UserRequest
 
 
 class ModelProviderError(Exception):
@@ -70,9 +71,11 @@ async def test_generate_completion_successful_response():
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="llama3.1:8b"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -89,9 +92,11 @@ async def test_generate_completion_http_error():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="llama3.1:8b"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -117,9 +122,11 @@ async def test_generate_completion_missing_content():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
 
-        result = await provider.generate_completion(
-            [{"role": "user", "content": "test prompt"}]
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="llama3.1:8b"
         )
+        result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
@@ -137,6 +144,10 @@ async def test_generate_stream_yields_chunks():
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
     ]
+    user_request = UserRequest(
+        messages=messages,
+        model="llama3.1:8b"
+    )
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
@@ -162,7 +173,7 @@ async def test_generate_stream_yields_chunks():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream(messages):
+        async for history in provider.generate_stream(user_request):
             histories.append(history)
 
         assert len(histories) == 2
@@ -187,10 +198,12 @@ async def test_generate_stream_http_error():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="llama3.1:8b"
+        )
         histories = []
-        async for history in provider.generate_stream(
-            [{"role": "user", "content": "test prompt"}]
-        ):
+        async for history in provider.generate_stream(user_request):
             histories.append(history)
 
         assert len(histories) == 1
@@ -225,9 +238,11 @@ async def test_generate_stream_invalid_json():
         mock_stream.return_value = AsyncContextManagerMock()
         histories = []
 
-        async for history in provider.generate_stream(
-            [{"role": "user", "content": "test prompt"}]
-        ):
+        user_request = UserRequest(
+            messages=[{"role": "user", "content": "test prompt"}],
+            model="llama3.1:8b"
+        )
+        async for history in provider.generate_stream(user_request):
             histories.append(history)
 
         # Should get one history object with the error chunk

@@ -4,6 +4,11 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
+from electric_text.responses import UserRequest
+from electric_text.providers.model_providers.openai.openai_provider_inputs import OpenAIProviderInputs
+from electric_text.providers.model_providers.openai.convert_inputs import (
+    convert_user_request_to_openai_inputs,
+)
 from electric_text.providers.stream_history import (
     StreamChunk,
     StreamHistory,
@@ -113,27 +118,24 @@ class OpenaiProvider(ModelProvider):
 
     async def generate_stream(
         self,
-        messages: list[dict[str, str]],
-        model: Optional[str] = None,
-        *,
-        prefill_content: str | None = None,
-        structured_prefill: bool = False,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from OpenAI.
 
         Args:
-            messages: The list of messages to send
-            model: Optional model override
-            prefill_content: Ignored, OpenAI doesn't support prefilling
-            structured_prefill: Ignored, OpenAI doesn't support prefilling
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
         self.stream_history = StreamHistory()  # Reset stream history
+
+        # Convert the request to OpenAI inputs
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(request)
+        
+        messages = openai_inputs.messages
+        model = openai_inputs.model
 
         payload = self.create_payload(messages, model, stream=True)
 
@@ -154,27 +156,24 @@ class OpenaiProvider(ModelProvider):
 
     async def generate_completion(
         self,
-        messages: list[dict[str, str]],
-        model: Optional[str] = None,
-        *,
-        prefill_content: str | None = None,
-        structured_prefill: bool = False,
-        **kwargs: Any,
+        request: UserRequest,
     ) -> StreamHistory:
         """
         Get a complete response from OpenAI.
 
         Args:
-            messages: The list of messages to send
-            model: Optional model override
-            prefill_content: Ignored, OpenAI doesn't support prefilling
-            structured_prefill: Ignored, OpenAI doesn't support prefilling
-            **kwargs: Additional provider-specific parameters
+            request: The request for the provider
 
         Returns:
             StreamHistory containing the complete response
         """
         history = StreamHistory()
+
+        # Convert the request to OpenAI inputs
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(request)
+        
+        messages = openai_inputs.messages
+        model = openai_inputs.model
 
         payload = self.create_payload(messages, model, stream=False)
 
