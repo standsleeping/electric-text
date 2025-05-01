@@ -94,16 +94,16 @@ async def process_text(
     )
 
     # Generate structured schema response with type annotation
-    structured_result = await client.generate(
+    structured_result: Union[PromptResult, ParseResult[SchemaResponse]] = await client.generate(
         request=schema_request,
-        response_model=SchemaResponse,
     )
+    # Since schema_request has response_model set to SchemaResponse, we can assert the type
+    assert isinstance(structured_result, ParseResult)
 
     # Since we provided a response_model, we know this is a ParseResult
-    if isinstance(structured_result, ParseResult):
-        if structured_result.model:
-            print(f"Result: {structured_result.model}")
-            print(structured_result.model.model_dump_json(indent=2))
+    if structured_result.model:
+        print(f"Result: {structured_result.model}")
+        print(structured_result.model.model_dump_json(indent=2))
 
     print(f"Unstructured raw content: {unstructured_result.raw_content}")
 
@@ -139,17 +139,18 @@ async def process_text(
     )
 
     # Stream the structured schema
-    schema_stream_generator = client.stream(
+    schema_stream_generator: Union[
+        AsyncGenerator[PromptResult, None], 
+        AsyncGenerator[ParseResult[SchemaResponse], None]
+    ] = client.stream(
         request=schema_stream_request,
-        response_model=SchemaResponse,
     )
 
     # Since we provided a response_model, we know these are ParseResult objects
     async for structured_chunk in schema_stream_generator:
-        if isinstance(structured_chunk, ParseResult) and structured_chunk.is_valid:
+        if isinstance(structured_chunk, ParseResult) and structured_chunk.is_valid and structured_chunk.model:
             print(f"Valid chunk: {structured_chunk.model}")
-            if structured_chunk.model:
-                print(structured_chunk.model.model_dump_json(indent=2))
+            print(structured_chunk.model.model_dump_json(indent=2))
 
         # All chunks have raw_content
         print(f"Raw chunk content: {structured_chunk.raw_content}")

@@ -1,9 +1,7 @@
 import importlib
 from typing import (
     AsyncGenerator,
-    Optional,
     Union,
-    Type,
 )
 
 from electric_text.providers import ModelProvider
@@ -71,99 +69,93 @@ class Client:
     async def stream_structured(
         self,
         request: UserRequest,
-        response_model: type[ResponseType],
     ) -> AsyncGenerator[ParseResult[ResponseType], None]:
         """
         Stream a response from the model and parse it into a structured object.
 
         Args:
-            request: The user request object
-            response_model: The type to parse the response into
+            request: The user request object with response_model set
 
         Returns:
             AsyncGenerator[ParseResult[ResponseType], None]: A generator of ParseResult objects
         """
-        # Ensure request has the correct provider, response model and stream flag
+        # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
-        request.response_model = response_model
         request.stream = True
+
+        # Ensure response_model is set
+        assert request.response_model is not None, "response_model must be set on the request"
 
         # Call provider with request
         async for history in self.provider.generate_stream(request):
             content = history.get_full_content()
-            yield create_parse_result(content, response_model)
+            yield create_parse_result(content, request.response_model)
 
     async def generate_structured(
         self,
         request: UserRequest,
-        response_model: type[ResponseType],
     ) -> ParseResult[ResponseType]:
         """
         Generate a complete response and parse it into a structured object.
 
         Args:
-            request: The user request object
-            response_model: The type to parse the response into
+            request: The user request object with response_model set
 
         Returns:
             ParseResult containing the raw content, parsed content, and model instance if valid
         """
-        # Ensure request has the correct provider, response model and stream flag
+        # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
-        request.response_model = response_model
         request.stream = False
+
+        # Ensure response_model is set
+        assert request.response_model is not None, "response_model must be set on the request"
 
         # Call provider with request
         history = await self.provider.generate_completion(request)
 
         content = history.get_full_content()
-        return create_parse_result(content, response_model)
+        return create_parse_result(content, request.response_model)
 
     async def generate(
         self,
         request: UserRequest,
-        *,
-        response_model: Optional[Type[T]] = None,
     ) -> Union[PromptResult, ParseResult[T]]:
         """
         Generate a complete response from the model.
 
-        If response_model is provided, the response will be parsed into a structured object.
+        If request.response_model is provided, the response will be parsed into a structured object.
         Otherwise, the raw response will be returned.
 
         Args:
             request: The user request object
-            response_model: Optional type to parse the response into
 
         Returns:
             PromptResult if no response_model is provided, otherwise ParseResult[T]
         """
-        if response_model is not None:
-            return await self.generate_structured(request, response_model)
+        if request.response_model is not None:
+            return await self.generate_structured(request)
         return await self.generate_raw(request)
 
     def stream(
         self,
         request: UserRequest,
-        *,
-        response_model: Optional[Type[T]] = None,
     ) -> Union[
         AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[T], None]
     ]:
         """
         Stream a response from the model.
 
-        If response_model is provided, the response will be parsed into a structured object.
+        If request.response_model is provided, the response will be parsed into a structured object.
         Otherwise, the raw response will be streamed.
 
         Args:
             request: The user request object
-            response_model: Optional type to parse the response into
 
         Returns:
             AsyncGenerator of PromptResult if no response_model is provided,
             otherwise AsyncGenerator of ParseResult[T]
         """
-        if response_model is not None:
-            return self.stream_structured(request, response_model)
+        if request.response_model is not None:
+            return self.stream_structured(request)
         return self.stream_raw(request)
