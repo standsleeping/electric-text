@@ -5,12 +5,12 @@ from typing import Literal, Optional, Union, AsyncGenerator, Any
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
 from electric_text.responses import UserRequest
+from electric_text.responses.create_user_request import create_user_request
+from electric_text.responses.split_model_string import split_model_string
 from electric_text.clients import (
     Client,
     PromptResult,
     ParseResult,
-    build_simple_prompt,
-    convert_prompt_to_messages,
 )
 
 OutputFormat = Literal["text", "json"]
@@ -25,7 +25,7 @@ async def process_text(
 
     Args:
         text_input: The text to be processed
-        model: The model to use for generating responses
+        model: The model to use in format "provider:model_name"
         api_key: Optional API key for providers that require authentication
 
     Returns:
@@ -33,48 +33,35 @@ async def process_text(
     """
     logger.debug(f"Processing {text_input} with model {model}")
 
+    # Split the model string to get provider and model name
+    provider_name, model_name = split_model_string(model)
+
+    # Read system message files
     sys_msg_path = Path("src/electric_text/prompts/prose_to_schema/prose-to-schema.txt")
     poetry_system_msg = Path("src/electric_text/prompts/poetry/poetry.txt")
 
-    sys_msg_content = sys_msg_path.read_text()
-    poetry_sys_msg_content = poetry_system_msg.read_text()
-
-    structured_user_prompt = build_simple_prompt(
-        sys_msg_content,
-        text_input,
-    )
-
-    poetry_user_prompt = build_simple_prompt(
-        poetry_sys_msg_content,
-        text_input,
-    )
-
-    # Split provider:model_name into model_name and provider (only split on first colon)
-    provider, model_name = model.split(":", 1)
-
-    logger.debug(f"Model name: {model_name}")
-    logger.debug(f"Provider: {provider}")
-    logger.debug(f"Structured user prompt: {structured_user_prompt}")
-    logger.debug(f"Poetry user prompt: {poetry_user_prompt}")
+    structured_sys_msg = sys_msg_path.read_text()
+    poetry_sys_msg = poetry_system_msg.read_text()
 
     # Configure client with API key if provided
     config = {}
-    if api_key and provider in ["anthropic", "openai"]:
+    if api_key and provider_name in ["anthropic", "openai"]:
         config["api_key"] = api_key
 
     client = Client(
-        provider_name=provider,
+        provider_name=provider_name,
         config=config,
     )
 
-    poetry_llm_messages = convert_prompt_to_messages(poetry_user_prompt)
-    structured_llm_messages = convert_prompt_to_messages(structured_user_prompt)
+    logger.debug(f"Model name: {model_name}")
+    logger.debug(f"Provider: {provider_name}")
 
     # Create a UserRequest for unstructured poetry generation
-    poetry_request = UserRequest(
-        messages=poetry_llm_messages,
-        model=model_name,
-        provider_name=provider,
+    poetry_request = create_user_request(
+        model_name=model_name,
+        provider_name=provider_name,
+        system_message=poetry_sys_msg,
+        text_input=text_input,
     )
 
     # Generate unstructured poetry response
@@ -86,15 +73,18 @@ async def process_text(
     print(f"Raw content: {unstructured_result.raw_content}")
 
     # Create a UserRequest for structured schema generation
-    schema_request = UserRequest(
-        messages=structured_llm_messages,
-        model=model_name,
-        provider_name=provider,
+    schema_request = create_user_request(
+        model_name=model_name,
+        provider_name=provider_name,
+        system_message=structured_sys_msg,
+        text_input=text_input,
         response_model=SchemaResponse,
     )
 
     # Generate structured schema response with type annotation
-    structured_result: Union[PromptResult, ParseResult[SchemaResponse]] = await client.generate(
+    structured_result: Union[
+        PromptResult, ParseResult[SchemaResponse]
+    ] = await client.generate(
         request=schema_request,
     )
     # Since schema_request has response_model set to SchemaResponse, we can assert the type
@@ -108,10 +98,11 @@ async def process_text(
     print(f"Unstructured raw content: {unstructured_result.raw_content}")
 
     # Stream unstructured poetry content
-    poetry_stream_request = UserRequest(
-        messages=poetry_llm_messages,
-        model=model_name,
-        provider_name=provider,
+    poetry_stream_request = create_user_request(
+        model_name=model_name,
+        provider_name=provider_name,
+        system_message=poetry_sys_msg,
+        text_input=text_input,
         stream=True,
     )
 
@@ -130,25 +121,30 @@ async def process_text(
     print(f"Full content: {full_content}")
 
     # Create a UserRequest for structured schema streaming
-    schema_stream_request = UserRequest(
-        messages=structured_llm_messages,
-        model=model_name,
-        provider_name=provider,
+    schema_stream_request = create_user_request(
+        model_name=model_name,
+        provider_name=provider_name,
+        system_message=structured_sys_msg,
+        text_input=text_input,
         response_model=SchemaResponse,
         stream=True,
     )
 
     # Stream the structured schema
     schema_stream_generator: Union[
-        AsyncGenerator[PromptResult, None], 
-        AsyncGenerator[ParseResult[SchemaResponse], None]
+        AsyncGenerator[PromptResult, None],
+        AsyncGenerator[ParseResult[SchemaResponse], None],
     ] = client.stream(
         request=schema_stream_request,
     )
 
     # Since we provided a response_model, we know these are ParseResult objects
     async for structured_chunk in schema_stream_generator:
-        if isinstance(structured_chunk, ParseResult) and structured_chunk.is_valid and structured_chunk.model:
+        if (
+            isinstance(structured_chunk, ParseResult)
+            and structured_chunk.is_valid
+            and structured_chunk.model
+        ):
             print(f"Valid chunk: {structured_chunk.model}")
             print(structured_chunk.model.model_dump_json(indent=2))
 
