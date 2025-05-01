@@ -5,18 +5,18 @@ from pydantic import ValidationError
 
 from electric_text.clients.data import PromptResult, ParseResult
 
-T = TypeVar("T")
+ResponseModel = TypeVar("ResponseModel")
 
 
 @dataclass
-class ProviderResponse(Generic[T]):
+class ProviderResponse(Generic[ResponseModel]):
     """
     Represents a unified response from a provider.
     Contains either a raw prompt result or a parsed structured result.
     """
 
     # Store the original result
-    raw_result: Union[PromptResult, ParseResult[T]]
+    raw_result: Union[PromptResult, ParseResult[ResponseModel]]
 
     @property
     def raw_content(self) -> str:
@@ -29,7 +29,7 @@ class ProviderResponse(Generic[T]):
         return isinstance(self.raw_result, ParseResult)
 
     @property
-    def parsed_model(self) -> Optional[T]:
+    def parsed_model(self) -> Optional[ResponseModel]:
         """Get the parsed model if available, otherwise None."""
         if self.is_parsed:
             return self.raw_result.model  # type: ignore[union-attr]
@@ -48,7 +48,7 @@ class ProviderResponse(Generic[T]):
     ) -> Optional[Union[ValidationError, TypeError, json.JSONDecodeError]]:
         """Get any validation error if available."""
         if self.is_parsed:
-            result = cast(ParseResult[T], self.raw_result)
+            result = cast(ParseResult[ResponseModel], self.raw_result)
             if result.validation_error:
                 return result.validation_error
             return result.json_error
@@ -60,6 +60,6 @@ class ProviderResponse(Generic[T]):
         return cls(raw_result=result)
 
     @classmethod
-    def from_parse_result(cls, result: ParseResult[T]) -> "ProviderResponse[T]":
+    def from_parse_result(cls, result: ParseResult[ResponseModel]) -> "ProviderResponse[ResponseModel]":
         """Create a ProviderResponse from a ParseResult."""
         return cls(raw_result=result)

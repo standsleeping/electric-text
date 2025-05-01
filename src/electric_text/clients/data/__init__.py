@@ -1,4 +1,4 @@
-from .parse_result import ParseResult, ResponseType, T
+from .parse_result import ParseResult, ResponseType, ResponseModel
 from .prompt_result import PromptResult
 from .prompt import Prompt
 from .template_fragment import TemplateFragment
@@ -11,7 +11,7 @@ __all__ = [
     "TemplateFragment",
     "PromptResult",
     "ResponseType",
-    "T",
+    "ResponseModel",
     "ProviderResponse",
     "UserRequest",
 ]

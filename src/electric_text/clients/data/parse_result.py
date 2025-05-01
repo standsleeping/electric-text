@@ -25,16 +25,16 @@ class JSONResponse(Protocol):
 # Type variable for response type, bounded by JSONResponse
 ResponseType = TypeVar("ResponseType", bound="JSONResponse", contravariant=True)
 
-T = TypeVar("T", bound=JSONResponse)
+ResponseModel = TypeVar("ResponseModel", bound=JSONResponse)
 
 
 @dataclass
-class ParseResult[T]:
+class ParseResult[ResponseModel]:
     """Wrapper for parsed response data that may be incomplete."""
 
     raw_content: str
     parsed_content: dict[str, Any]
-    model: Optional[T] = None
+    model: Optional[ResponseModel] = None
     validation_error: Optional[Union[ValidationError, TypeError]] = None
     json_error: Optional[json.JSONDecodeError] = None
 

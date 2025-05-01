@@ -1,14 +1,13 @@
 import importlib
 from typing import (
     AsyncGenerator,
-    TypeVar,
     cast,
     Any,
 )
 
 from electric_text.providers import ModelProvider
 
-from electric_text.clients.data import ParseResult, PromptResult, ResponseType, T, UserRequest, ProviderResponse
+from electric_text.clients.data import PromptResult, ResponseModel, UserRequest, ProviderResponse
 from electric_text.clients.functions.create_parse_result import create_parse_result
 
 
@@ -130,7 +129,7 @@ class Client:
     async def generate(
         self,
         request: UserRequest,
-    ) -> ProviderResponse[T]:
+    ) -> ProviderResponse[ResponseModel]:
         """
         Generate a complete response from the model.
 
@@ -141,18 +140,18 @@ class Client:
             request: The user request object
 
         Returns:
-            ProviderResponse[T]: A unified response wrapper
+            ProviderResponse[ResponseModel]: A unified response wrapper
         """
         if request.response_model is not None:
             structured_result = await self.generate_structured(request)
-            return cast(ProviderResponse[T], structured_result)
+            return cast(ProviderResponse[ResponseModel], structured_result)
         raw_result = await self.generate_raw(request)
-        return cast(ProviderResponse[T], raw_result)
+        return cast(ProviderResponse[ResponseModel], raw_result)
 
     def stream(
         self,
         request: UserRequest,
-    ) -> AsyncGenerator[ProviderResponse[T], None]:
+    ) -> AsyncGenerator[ProviderResponse[ResponseModel], None]:
         """
         Stream a response from the model.
 
@@ -163,10 +162,10 @@ class Client:
             request: The user request object
 
         Returns:
-            AsyncGenerator[ProviderResponse[T], None]: A generator of unified response wrappers
+            AsyncGenerator[ProviderResponse[ResponseModel], None]: A generator of unified response wrappers
         """
         if request.response_model is not None:
             structured_stream = self.stream_structured(request)
-            return cast(AsyncGenerator[ProviderResponse[T], None], structured_stream)
+            return cast(AsyncGenerator[ProviderResponse[ResponseModel], None], structured_stream)
         raw_stream = self.stream_raw(request)
-        return cast(AsyncGenerator[ProviderResponse[T], None], raw_stream)
+        return cast(AsyncGenerator[ProviderResponse[ResponseModel], None], raw_stream)
