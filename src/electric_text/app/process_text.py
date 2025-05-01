@@ -1,17 +1,13 @@
 import json
 from pathlib import Path
-from typing import Literal, Optional, Union, AsyncGenerator, Any
+from typing import Literal, Optional, AsyncGenerator, Any
 
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients.functions.create_user_request import create_user_request
 from electric_text.clients.functions.split_model_string import split_model_string
-from electric_text.clients import (
-    Client,
-    PromptResult,
-    ParseResult,
-)
+from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
 
 OutputFormat = Literal["text", "json"]
