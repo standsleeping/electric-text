@@ -3,7 +3,7 @@ import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 from electric_text.providers import ModelProvider
-from electric_text.responses import UserRequest
+from electric_text.clients.data import UserRequest
 from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
     OllamaProviderInputs,
 )
@@ -70,7 +70,7 @@ class OllamaProvider(ModelProvider):
             messages: The list of messages to send
             model: Model override (optional)
             stream: Whether to stream the response
-            format_schema: Optional JSON schema for structured output
+            format_schema: Optional JSON schema for structured output (already converted to dict)
 
         Returns:
             Dict containing the formatted payload
@@ -81,13 +81,9 @@ class OllamaProvider(ModelProvider):
             "stream": stream,
         }
 
-        # Add format if schema is provided
+        # Add format if schema is provided (already converted to dict)
         if format_schema is not None:
-            # Check if format_schema is a Pydantic model with model_json_schema method
-            if hasattr(format_schema, 'model_json_schema'):
-                payload["format"] = format_schema.model_json_schema()
-            else:
-                payload["format"] = format_schema
+            payload["format"] = format_schema
 
         return payload
 

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from electric_text.providers.model_providers.ollama import OllamaProvider
 from electric_text.providers.stream_history import StreamChunkType, StreamHistory
-from electric_text.responses import UserRequest
+from electric_text.clients.data import UserRequest
 
 
 class ModelProviderError(Exception):

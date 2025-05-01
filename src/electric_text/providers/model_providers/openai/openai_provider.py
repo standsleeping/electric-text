@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.responses import UserRequest
+from electric_text.clients.data import UserRequest
 from electric_text.providers.model_providers.openai.openai_provider_inputs import OpenAIProviderInputs
 from electric_text.providers.model_providers.openai.convert_inputs import (
     convert_user_request_to_openai_inputs,

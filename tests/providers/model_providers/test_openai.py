@@ -8,7 +8,7 @@ from electric_text.providers.stream_history import (
     StreamChunkType,
     StreamHistory,
 )
-from electric_text.responses import UserRequest
+from electric_text.clients.data import UserRequest
 
 
 def test_constructor_with_defaults():

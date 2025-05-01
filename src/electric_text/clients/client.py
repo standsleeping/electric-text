@@ -1,12 +1,14 @@
 import importlib
 from typing import (
     AsyncGenerator,
-    Union,
+    TypeVar,
+    cast,
+    Any,
 )
 
 from electric_text.providers import ModelProvider
-from electric_text.responses import UserRequest
-from electric_text.clients.data import ParseResult, PromptResult, ResponseType, T
+
+from electric_text.clients.data import ParseResult, PromptResult, ResponseType, T, UserRequest, ProviderResponse
 from electric_text.clients.functions.create_parse_result import create_parse_result
 
 
@@ -24,7 +26,7 @@ class Client:
     async def stream_raw(
         self,
         request: UserRequest,
-    ) -> AsyncGenerator[PromptResult, None]:
+    ) -> AsyncGenerator[ProviderResponse[None], None]:
         """
         Stream a raw response from the model without parsing.
 
@@ -32,7 +34,7 @@ class Client:
             request: The user request object
 
         Returns:
-            AsyncGenerator[PromptResult, None]: A generator of PromptResult objects
+            AsyncGenerator[ProviderResponse[None], None]: A generator of ProviderResponse objects
         """
         # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
@@ -41,12 +43,13 @@ class Client:
         # Call provider with request
         async for history in self.provider.generate_stream(request):
             content = history.get_full_content()
-            yield PromptResult(raw_content=content)
+            prompt_result = PromptResult(raw_content=content)
+            yield ProviderResponse.from_prompt_result(prompt_result)
 
     async def generate_raw(
         self,
         request: UserRequest,
-    ) -> PromptResult:
+    ) -> ProviderResponse[None]:
         """
         Generate a complete raw response without parsing.
 
@@ -54,7 +57,7 @@ class Client:
             request: The user request object
 
         Returns:
-            PromptResult: Contains the raw content
+            ProviderResponse[None]: Contains the raw content
         """
         # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
@@ -64,12 +67,13 @@ class Client:
         history = await self.provider.generate_completion(request)
 
         content = history.get_full_content()
-        return PromptResult(raw_content=content)
+        prompt_result = PromptResult(raw_content=content)
+        return ProviderResponse.from_prompt_result(prompt_result)
 
     async def stream_structured(
         self,
         request: UserRequest,
-    ) -> AsyncGenerator[ParseResult[ResponseType], None]:
+    ) -> AsyncGenerator[ProviderResponse[Any], None]:
         """
         Stream a response from the model and parse it into a structured object.
 
@@ -77,24 +81,27 @@ class Client:
             request: The user request object with response_model set
 
         Returns:
-            AsyncGenerator[ParseResult[ResponseType], None]: A generator of ParseResult objects
+            AsyncGenerator[ProviderResponse[Any], None]: A generator of ProviderResponse objects
         """
         # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
         request.stream = True
 
         # Ensure response_model is set
-        assert request.response_model is not None, "response_model must be set on the request"
+        assert request.response_model is not None, (
+            "response_model must be set on the request"
+        )
 
         # Call provider with request
         async for history in self.provider.generate_stream(request):
             content = history.get_full_content()
-            yield create_parse_result(content, request.response_model)
+            parse_result = create_parse_result(content, request.response_model)
+            yield ProviderResponse.from_parse_result(parse_result)
 
     async def generate_structured(
         self,
         request: UserRequest,
-    ) -> ParseResult[ResponseType]:
+    ) -> ProviderResponse[Any]:
         """
         Generate a complete response and parse it into a structured object.
 
@@ -102,25 +109,28 @@ class Client:
             request: The user request object with response_model set
 
         Returns:
-            ParseResult containing the raw content, parsed content, and model instance if valid
+            ProviderResponse[Any]: Contains the raw content, parsed content, and model instance if valid
         """
         # Ensure request has the correct provider and stream flag
         request.provider_name = self.provider_name
         request.stream = False
 
         # Ensure response_model is set
-        assert request.response_model is not None, "response_model must be set on the request"
+        assert request.response_model is not None, (
+            "response_model must be set on the request"
+        )
 
         # Call provider with request
         history = await self.provider.generate_completion(request)
 
         content = history.get_full_content()
-        return create_parse_result(content, request.response_model)
+        parse_result = create_parse_result(content, request.response_model)
+        return ProviderResponse.from_parse_result(parse_result)
 
     async def generate(
         self,
         request: UserRequest,
-    ) -> Union[PromptResult, ParseResult[T]]:
+    ) -> ProviderResponse[T]:
         """
         Generate a complete response from the model.
 
@@ -131,18 +141,18 @@ class Client:
             request: The user request object
 
         Returns:
-            PromptResult if no response_model is provided, otherwise ParseResult[T]
+            ProviderResponse[T]: A unified response wrapper
         """
         if request.response_model is not None:
-            return await self.generate_structured(request)
-        return await self.generate_raw(request)
+            structured_result = await self.generate_structured(request)
+            return cast(ProviderResponse[T], structured_result)
+        raw_result = await self.generate_raw(request)
+        return cast(ProviderResponse[T], raw_result)
 
     def stream(
         self,
         request: UserRequest,
-    ) -> Union[
-        AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[T], None]
-    ]:
+    ) -> AsyncGenerator[ProviderResponse[T], None]:
         """
         Stream a response from the model.
 
@@ -153,9 +163,10 @@ class Client:
             request: The user request object
 
         Returns:
-            AsyncGenerator of PromptResult if no response_model is provided,
-            otherwise AsyncGenerator of ParseResult[T]
+            AsyncGenerator[ProviderResponse[T], None]: A generator of unified response wrappers
         """
         if request.response_model is not None:
-            return self.stream_structured(request)
-        return self.stream_raw(request)
+            structured_stream = self.stream_structured(request)
+            return cast(AsyncGenerator[ProviderResponse[T], None], structured_stream)
+        raw_stream = self.stream_raw(request)
+        return cast(AsyncGenerator[ProviderResponse[T], None], raw_stream)

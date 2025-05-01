@@ -4,14 +4,15 @@ from typing import Literal, Optional, Union, AsyncGenerator, Any
 
 from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
-from electric_text.responses import UserRequest
-from electric_text.responses.create_user_request import create_user_request
-from electric_text.responses.split_model_string import split_model_string
+from electric_text.clients.data.user_request import UserRequest
+from electric_text.clients.functions.create_user_request import create_user_request
+from electric_text.clients.functions.split_model_string import split_model_string
 from electric_text.clients import (
     Client,
     PromptResult,
     ParseResult,
 )
+from electric_text.clients.data.provider_response import ProviderResponse
 
 OutputFormat = Literal["text", "json"]
 
@@ -57,7 +58,7 @@ async def process_text(
     logger.debug(f"Provider: {provider_name}")
 
     # Create a UserRequest for unstructured poetry generation
-    poetry_request = create_user_request(
+    poetry_request: UserRequest = create_user_request(
         model_name=model_name,
         provider_name=provider_name,
         system_message=poetry_sys_msg,
@@ -65,15 +66,15 @@ async def process_text(
     )
 
     # Generate unstructured poetry response
-    unstructured_result: Union[PromptResult, ParseResult[Any]] = await client.generate(
+    unstructured_result: ProviderResponse[None] = await client.generate(
         request=poetry_request,
     )
 
-    # This will be PromptResult because we didn't provide a response_model
+    # Direct access to raw content regardless of result type
     print(f"Raw content: {unstructured_result.raw_content}")
 
     # Create a UserRequest for structured schema generation
-    schema_request = create_user_request(
+    schema_request: UserRequest = create_user_request(
         model_name=model_name,
         provider_name=provider_name,
         system_message=structured_sys_msg,
@@ -82,23 +83,19 @@ async def process_text(
     )
 
     # Generate structured schema response with type annotation
-    structured_result: Union[
-        PromptResult, ParseResult[SchemaResponse]
-    ] = await client.generate(
+    structured_result: ProviderResponse[SchemaResponse] = await client.generate(
         request=schema_request,
     )
-    # Since schema_request has response_model set to SchemaResponse, we can assert the type
-    assert isinstance(structured_result, ParseResult)
 
-    # Since we provided a response_model, we know this is a ParseResult
-    if structured_result.model:
-        print(f"Result: {structured_result.model}")
-        print(structured_result.model.model_dump_json(indent=2))
+    # Unified interface for accessing parsed model and checking validity
+    if structured_result.is_valid and structured_result.parsed_model:
+        print(f"Result: {structured_result.parsed_model}")
+        print(structured_result.parsed_model.model_dump_json(indent=2))
 
     print(f"Unstructured raw content: {unstructured_result.raw_content}")
 
     # Stream unstructured poetry content
-    poetry_stream_request = create_user_request(
+    poetry_stream_request: UserRequest = create_user_request(
         model_name=model_name,
         provider_name=provider_name,
         system_message=poetry_sys_msg,
@@ -106,22 +103,21 @@ async def process_text(
         stream=True,
     )
 
-    poetry_stream_generator: Union[
-        AsyncGenerator[PromptResult, None], AsyncGenerator[ParseResult[Any], None]
-    ] = client.stream(
-        request=poetry_stream_request,
+    poetry_stream_generator: AsyncGenerator[ProviderResponse[Any], None] = (
+        client.stream(
+            request=poetry_stream_request,
+        )
     )
 
-    # We need to have enough context that this is awaitable
+    # All chunks use the same ProviderResponse interface
     async for chunk in poetry_stream_generator:
-        # All stream chunks have raw_content
         print(f"Raw chunk content: {chunk.raw_content}")
 
     full_content = client.provider.stream_history.get_full_content()
     print(f"Full content: {full_content}")
 
     # Create a UserRequest for structured schema streaming
-    schema_stream_request = create_user_request(
+    schema_stream_request: UserRequest = create_user_request(
         model_name=model_name,
         provider_name=provider_name,
         system_message=structured_sys_msg,
@@ -130,23 +126,18 @@ async def process_text(
         stream=True,
     )
 
-    # Stream the structured schema
-    schema_stream_generator: Union[
-        AsyncGenerator[PromptResult, None],
-        AsyncGenerator[ParseResult[SchemaResponse], None],
-    ] = client.stream(
-        request=schema_stream_request,
+    # Stream the structured schema with consistent typing
+    schema_stream_generator: AsyncGenerator[ProviderResponse[SchemaResponse], None] = (
+        client.stream(
+            request=schema_stream_request,
+        )
     )
 
-    # Since we provided a response_model, we know these are ParseResult objects
+    # Unified interface for all chunks
     async for structured_chunk in schema_stream_generator:
-        if (
-            isinstance(structured_chunk, ParseResult)
-            and structured_chunk.is_valid
-            and structured_chunk.model
-        ):
-            print(f"Valid chunk: {structured_chunk.model}")
-            print(structured_chunk.model.model_dump_json(indent=2))
+        if structured_chunk.is_valid and structured_chunk.parsed_model:
+            print(f"Valid chunk: {structured_chunk.parsed_model}")
+            print(structured_chunk.parsed_model.model_dump_json(indent=2))
 
         # All chunks have raw_content
         print(f"Raw chunk content: {structured_chunk.raw_content}")

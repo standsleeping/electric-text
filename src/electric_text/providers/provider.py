@@ -5,7 +5,7 @@ from typing import (
 )
 
 from electric_text.providers.stream_history import StreamHistory
-from electric_text.responses import UserRequest
+from electric_text.clients.data import UserRequest
 
 
 @runtime_checkable
