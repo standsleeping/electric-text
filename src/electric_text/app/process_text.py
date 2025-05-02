@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Literal, Optional, AsyncGenerator, Any
 
@@ -7,6 +8,7 @@ from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients.functions.create_user_request import create_user_request
 from electric_text.clients.functions.split_model_string import split_model_string
+from electric_text.clients.functions.resolve_api_key import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
 
@@ -177,10 +179,12 @@ async def process_text(
     # Split the model string to get provider and model name
     provider_name, model_name = split_model_string(model)
 
-    # Configure client with API key if provided
+    # Configure client with API key if available
     config = {}
-    if api_key and provider_name in ["anthropic", "openai"]:
-        config["api_key"] = api_key
+    if provider_name in ["anthropic", "openai"]:
+        resolved_api_key = resolve_api_key(provider_name, api_key)
+        if resolved_api_key:
+            config["api_key"] = resolved_api_key
 
     client = Client(
         provider_name=provider_name,

@@ -45,6 +45,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
 
     parser.add_argument(
         "--log-level",
+        "-l",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         default="INFO",
         help="Set the logging level (default: INFO)",
@@ -52,6 +53,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
 
     parser.add_argument(
         "--api-key",
+        "-k",
         type=str,
         help="API key for providers that require authentication (e.g., Anthropic)",
     )
