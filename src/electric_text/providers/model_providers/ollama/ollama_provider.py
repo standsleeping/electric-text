@@ -200,7 +200,10 @@ class OllamaProvider(ModelProvider):
         format_schema = ollama_inputs.format_schema
 
         payload = self.create_payload(
-            messages, model, stream=False, format_schema=format_schema
+            messages,
+            model,
+            stream=False,
+            format_schema=format_schema,
         )
 
         try:

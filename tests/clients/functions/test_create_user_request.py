@@ -96,7 +96,7 @@ def test_empty_input_handling():
     assert isinstance(request, UserRequest)
 
     # Expected messages for empty prompt
-    expected_prompt = build_simple_prompt("", "")
+    expected_prompt = build_simple_prompt("You are a helpful assistant.", "")
     expected_messages = convert_prompt_to_messages(expected_prompt)
 
     assert request.messages == expected_messages

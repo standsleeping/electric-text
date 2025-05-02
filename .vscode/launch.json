@@ -7,7 +7,7 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
+        "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest.",
         "--log-level",
         "DEBUG",
         "--model",

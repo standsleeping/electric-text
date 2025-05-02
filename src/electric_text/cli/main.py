@@ -3,7 +3,6 @@ import traceback
 from typing import List, Optional
 
 from electric_text.app import process_text
-from electric_text.app import format_result
 from electric_text.logging import configure_logging, get_logger
 
 from .parse_args import parse_args
@@ -27,14 +26,12 @@ async def main(args: Optional[List[str]] = None) -> int:
     try:
         logger.debug(f"Processing arguments: {parsed_args}")
 
-        result = await process_text(
+        await process_text(
             text_input=parsed_args.text_input,
             model=parsed_args.model,
             api_key=parsed_args.api_key,
         )
 
-        output = format_result(parsed_args.text_input, result, parsed_args.format)
-        print(output)
         return 0
     except Exception as e:
         print(f"Error: {e}")

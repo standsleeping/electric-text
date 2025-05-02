@@ -29,7 +29,7 @@ def create_user_request(
     Returns:
         A configured UserRequest instance
     """
-    sys_msg = system_message or ""
+    sys_msg = system_message or "You are a helpful assistant."
     txt_input = text_input or ""
     prompt = build_simple_prompt(sys_msg, txt_input)
     messages = convert_prompt_to_messages(prompt)
