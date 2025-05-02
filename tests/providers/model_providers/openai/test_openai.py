@@ -97,8 +97,9 @@ async def test_generate_completion_successful_response():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
         user_request = UserRequest(
+            provider_name="openai",
             messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4"
+            model="gpt-4",
         )
         result = await provider.generate_completion(user_request)
 
@@ -118,8 +119,9 @@ async def test_generate_completion_http_error():
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
         user_request = UserRequest(
+            provider_name="openai",
             messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4"
+            model="gpt-4",
         )
         result = await provider.generate_completion(user_request)
 
@@ -152,8 +154,9 @@ async def test_generate_completion_missing_content():
         mock_post.return_value = mock_response
 
         user_request = UserRequest(
+            provider_name="openai",
             messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4"
+            model="gpt-4",
         )
         result = await provider.generate_completion(user_request)
 
@@ -172,8 +175,9 @@ async def test_generate_stream_http_error():
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
         user_request = UserRequest(
+            provider_name="openai",
             messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4"
+            model="gpt-4",
         )
         histories = []
         async for history in provider.generate_stream(user_request):

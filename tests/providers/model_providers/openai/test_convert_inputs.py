@@ -12,7 +12,7 @@ from electric_text.providers.model_providers.openai.openai_provider_inputs impor
 def test_convert_basic_request():
     """Test conversion of basic UserRequest to OpenAIProviderInputs."""
     messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(messages=messages, model="test-model")
+    request = UserRequest(provider_name="openai", messages=messages, model="test-model")
 
     result = convert_user_request_to_openai_inputs(request)
 
@@ -32,7 +32,10 @@ def test_convert_with_response_model():
 
     messages = [{"role": "user", "content": "Hello"}]
     request = UserRequest(
-        messages=messages, model="test-model", response_model=ExampleModel
+        provider_name="openai",
+        messages=messages,
+        model="test-model",
+        response_model=ExampleModel,
     )
 
     result = convert_user_request_to_openai_inputs(request)

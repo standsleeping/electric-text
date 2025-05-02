@@ -8,10 +8,10 @@ class UserRequest:
     Represents a user's request for a response from a provider.
     """
 
-    messages: List[Dict[str, str]]
+    provider_name: str
     model: str
+    messages: List[Dict[str, str]]
 
-    provider_name: Optional[str] = None
     response_model: Optional[Type[Any]] = None
     prefill_content: Optional[str] = None
     structured_prefill: bool = False

@@ -21,7 +21,7 @@ class SampleResponseModel(BaseModel):
 def test_convert_without_response_model():
     """Test conversion of UserRequest to OllamaProviderInputs without response_model."""
     messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(messages=messages, model="test-model")
+    request = UserRequest(provider_name="ollama", messages=messages, model="test-model")
 
     result = convert_user_request_to_ollama_inputs(request)
 
@@ -35,7 +35,10 @@ def test_convert_with_pydantic_response_model():
     """Test conversion of UserRequest to OllamaProviderInputs with a Pydantic response_model."""
     messages = [{"role": "user", "content": "Hello"}]
     request = UserRequest(
-        messages=messages, model="test-model", response_model=SampleResponseModel
+        provider_name="ollama",
+        messages=messages,
+        model="test-model",
+        response_model=SampleResponseModel,
     )
 
     result = convert_user_request_to_ollama_inputs(request)
@@ -59,7 +62,12 @@ def test_convert_with_pydantic_response_model():
 def test_convert_with_none_response_model():
     """Test conversion of UserRequest to OllamaProviderInputs with response_model=None."""
     messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(messages=messages, model="test-model", response_model=None)
+    request = UserRequest(
+        provider_name="ollama",
+        messages=messages,
+        model="test-model",
+        response_model=None,
+    )
 
     result = convert_user_request_to_ollama_inputs(request)
 

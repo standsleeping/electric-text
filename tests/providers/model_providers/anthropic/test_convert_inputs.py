@@ -12,7 +12,9 @@ from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs
 def test_convert_basic_request():
     """Test conversion of basic UserRequest to AnthropicProviderInputs."""
     messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(messages=messages, model="test-model")
+    request = UserRequest(
+        provider_name="anthropic", messages=messages, model="test-model"
+    )
 
     result = convert_user_request_to_anthropic_inputs(request)
 
@@ -28,7 +30,10 @@ def test_convert_with_prefill():
     messages = [{"role": "user", "content": "Hello"}]
     prefill = "This is a prefill"
     request = UserRequest(
-        messages=messages, model="test-model", prefill_content=prefill
+        provider_name="anthropic",
+        messages=messages,
+        model="test-model",
+        prefill_content=prefill,
     )
 
     result = convert_user_request_to_anthropic_inputs(request)
@@ -51,7 +56,10 @@ def test_convert_with_response_model():
 
     messages = [{"role": "user", "content": "Hello"}]
     request = UserRequest(
-        messages=messages, model="test-model", response_model=ExampleModel
+        provider_name="anthropic",
+        messages=messages,
+        model="test-model",
+        response_model=ExampleModel,
     )
 
     result = convert_user_request_to_anthropic_inputs(request)

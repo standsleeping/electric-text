@@ -142,10 +142,11 @@ async def test_generate_completion_successful_response():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
         user_request = UserRequest(
+            provider_name="anthropic",
             messages=[{"role": "user", "content": "test prompt"}],
             model="claude-3-sonnet-20240229",
             prefill_content=None,
-            structured_prefill=True
+            structured_prefill=True,
         )
         result = await provider.generate_completion(user_request)
 
@@ -189,10 +190,11 @@ async def test_generate_completion_with_custom_prefill():
         # but with the current implementation, it will always use "{"
         # when structured_prefill is True
         user_request = UserRequest(
+            provider_name="anthropic",
             messages=[{"role": "user", "content": "test prompt"}],
             model="claude-3-sonnet-20240229",
             prefill_content="<response>",
-            structured_prefill=True
+            structured_prefill=True,
         )
         result = await provider.generate_completion(user_request)
 
@@ -212,9 +214,10 @@ async def test_generate_completion_http_error():
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
         user_request = UserRequest(
+            provider_name="anthropic",
             messages=[{"role": "user", "content": "test prompt"}],
             model="claude-3-sonnet-20240229",
-            structured_prefill=True
+            structured_prefill=True,
         )
         result = await provider.generate_completion(user_request)
 
@@ -249,9 +252,10 @@ async def test_generate_completion_missing_content():
         mock_post.return_value = mock_response
 
         user_request = UserRequest(
+            provider_name="anthropic",
             messages=[{"role": "user", "content": "test prompt"}],
             model="claude-3-sonnet-20240229",
-            structured_prefill=True
+            structured_prefill=True,
         )
         result = await provider.generate_completion(user_request)
 
@@ -278,9 +282,10 @@ async def test_generate_stream_yields_chunks():
         {"role": "user", "content": "Hello"},
     ]
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
-        structured_prefill=True
+        structured_prefill=True,
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -350,10 +355,11 @@ async def test_generate_stream_with_custom_prefill():
     # The AnthropicProvider implementation will use the standard "{" prefill
     # when structured_prefill is True, regardless of prefill_content
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
         prefill_content="<",
-        structured_prefill=True  # This will make it use "{" instead of "<"
+        structured_prefill=True,  # This will make it use "{" instead of "<"
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -386,7 +392,9 @@ async def test_generate_stream_with_custom_prefill():
         final_history = histories[-1]
         assert len(final_history.chunks) == 3
         assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[0].content == "{"  # Should match the provider's prefill_content() method
+        assert (
+            final_history.chunks[0].content == "{"
+        )  # Should match the provider's prefill_content() method
         assert final_history.get_full_content() == "{response"
 
 
@@ -399,9 +407,10 @@ async def test_generate_stream_http_error():
         {"role": "user", "content": "Hello"},
     ]
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
-        structured_prefill=True
+        structured_prefill=True,
     )
 
     # Mock the get_client method to raise an exception
@@ -431,9 +440,10 @@ async def test_generate_stream_json_error():
         {"role": "user", "content": "Hello"},
     ]
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
-        structured_prefill=True
+        structured_prefill=True,
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -483,9 +493,10 @@ async def test_generate_stream_api_error():
         {"role": "user", "content": "Hello"},
     ]
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
-        structured_prefill=True
+        structured_prefill=True,
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -531,9 +542,10 @@ async def test_generate_stream_empty_line():
         {"role": "user", "content": "Hello"},
     ]
     user_request = UserRequest(
+        provider_name="anthropic",
         messages=messages,
         model="claude-3-sonnet-20240229",
-        structured_prefill=True
+        structured_prefill=True,
     )
 
     mock_request = httpx.Request("POST", "http://test")
