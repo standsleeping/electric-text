@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from typing import Literal, Optional, AsyncGenerator, Any
 
@@ -181,10 +180,9 @@ async def process_text(
 
     # Configure client with API key if available
     config = {}
-    if provider_name in ["anthropic", "openai"]:
-        resolved_api_key = resolve_api_key(provider_name, api_key)
-        if resolved_api_key:
-            config["api_key"] = resolved_api_key
+    resolved_api_key = resolve_api_key(provider_name, api_key)
+    if resolved_api_key:
+        config["api_key"] = resolved_api_key
 
     client = Client(
         provider_name=provider_name,

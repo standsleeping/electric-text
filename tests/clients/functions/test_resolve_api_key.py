@@ -48,7 +48,21 @@ def test_different_providers():
     """Test with different provider names."""
     with patch.dict(
         os.environ,
-        {"ANTHROPIC_API_KEY": "anthropic-key", "OPENAI_API_KEY": "openai-key"},
+        {
+            "ANTHROPIC_API_KEY": "anthropic-key",
+            "OPENAI_API_KEY": "openai-key",
+            "OLLAMA_API_KEY": "ollama-key",
+        },
     ):
         assert resolve_api_key("anthropic") == "anthropic-key"
         assert resolve_api_key("openai") == "openai-key"
+        assert resolve_api_key("ollama") == "ollama-key"
+
+
+def test_custom_provider():
+    """Test that arbitrary provider names work."""
+    with patch.dict(
+        os.environ,
+        {"CUSTOM_PROVIDER_API_KEY": "custom-key"},
+    ):
+        assert resolve_api_key("custom_provider") == "custom-key"
