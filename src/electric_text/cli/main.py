@@ -30,6 +30,7 @@ async def main(args: Optional[List[str]] = None) -> int:
             text_input=parsed_args.text_input,
             model=parsed_args.model,
             api_key=parsed_args.api_key,
+            max_tokens=parsed_args.max_tokens,
         )
 
         return 0

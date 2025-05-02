@@ -159,6 +159,7 @@ async def process_text(
     text_input: str,
     model: str,
     api_key: Optional[str] = None,
+    max_tokens: Optional[int] = None,
 ) -> None:
     """Process the text input.
 
@@ -166,6 +167,7 @@ async def process_text(
         text_input: The text to be processed
         model: The model to use in format "provider:model_name"
         api_key: Optional API key for providers that require authentication
+        max_tokens: Maximum number of tokens to generate
 
     Returns:
         The processed text
@@ -192,6 +194,7 @@ async def process_text(
         model_name=model_name,
         provider_name=provider_name,
         text_input=text_input,
+        max_tokens=max_tokens,
     )
 
     result: ProviderResponse[Any] = await client.generate(

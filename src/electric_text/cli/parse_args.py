@@ -56,4 +56,11 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         help="API key for providers that require authentication (e.g., Anthropic)",
     )
 
+    parser.add_argument(
+        "--max-tokens",
+        "-mt",
+        type=int,
+        help="Maximum number of tokens to generate",
+    )
+
     return parser.parse_args(args)
