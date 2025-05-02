@@ -16,4 +16,5 @@ class UserRequest:
     prefill_content: Optional[str] = None
     structured_prefill: bool = False
 
+    max_tokens: Optional[int] = None
     stream: bool = False

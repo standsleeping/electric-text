@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Type, Any, Union
+from typing import Optional, Type, Any
 
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients import build_simple_prompt, convert_prompt_to_messages
@@ -12,6 +12,7 @@ def create_user_request(
     stream: bool = False,
     system_message: Optional[str] = None,
     text_input: Optional[str] = None,
+    max_tokens: Optional[int] = None,
 ) -> UserRequest:
     """Create a UserRequest instance with the given parameters.
 
@@ -23,6 +24,7 @@ def create_user_request(
         messages: Pre-built messages (mutually exclusive with system_message + text_input)
         system_message: System message content (used with text_input)
         text_input: User text input (used with system_message)
+        max_tokens: Maximum number of tokens to generate
 
     Returns:
         A configured UserRequest instance
@@ -38,4 +40,5 @@ def create_user_request(
         provider_name=provider_name,
         response_model=response_model,
         stream=stream,
+        max_tokens=max_tokens,
     )

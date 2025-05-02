@@ -25,6 +25,7 @@ def test_create_with_system_and_text():
     assert request.provider_name == "openai"
     assert request.response_model is None
     assert not request.stream
+    assert request.max_tokens is None
 
 
 def test_create_with_response_model_and_stream():
@@ -53,6 +54,33 @@ def test_create_with_response_model_and_stream():
     assert request.provider_name == "anthropic"
     assert request.response_model == DummyModel
     assert request.stream
+    assert request.max_tokens is None
+
+
+def test_create_with_max_tokens():
+    """Test creating a request with max_tokens specified."""
+    system_message = "You are a helpful assistant."
+    text_input = "Tell me a joke."
+    max_tokens = 100
+
+    request = create_user_request(
+        model_name="claude-3",
+        provider_name="anthropic",
+        system_message=system_message,
+        text_input=text_input,
+        max_tokens=max_tokens,
+    )
+
+    formed_messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Tell me a joke."},
+    ]
+
+    assert isinstance(request, UserRequest)
+    assert request.messages == formed_messages
+    assert request.model == "claude-3"
+    assert request.provider_name == "anthropic"
+    assert request.max_tokens == max_tokens
 
 
 def test_empty_input_handling():
@@ -72,3 +100,4 @@ def test_empty_input_handling():
     expected_messages = convert_prompt_to_messages(expected_prompt)
 
     assert request.messages == expected_messages
+    assert request.max_tokens is None

@@ -115,6 +115,7 @@ class AnthropicProvider(ModelProvider):
         messages: list[dict[str, str]],
         model: Optional[str],
         stream: bool,
+        max_tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
@@ -123,17 +124,25 @@ class AnthropicProvider(ModelProvider):
             messages: The list of messages to send
             model: Model override (optional)
             stream: Whether to stream the response
+            max_tokens: Maximum number of tokens to generate (optional)
 
         Returns:
             Dict containing the formatted payload
         """
 
-        return {
+        payload = {
             "model": model or self.default_model,
             "messages": messages,
             "stream": stream,
-            "max_tokens": 4096,  # Can be made configurable
         }
+
+        # Use provided max_tokens or default to 4096
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        else:
+            payload["max_tokens"] = 4096
+
+        return payload
 
     @asynccontextmanager
     async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -181,7 +190,9 @@ class AnthropicProvider(ModelProvider):
 
         final_messages = self.transform_messages(messages, prefill)
 
-        payload = self.create_payload(final_messages, model, stream=True)
+        payload = self.create_payload(
+            final_messages, model, stream=True, max_tokens=anthropic_inputs.max_tokens
+        )
 
         yield self.stream_history  # Yield immediately so consumer gets the prefill
 
@@ -298,7 +309,9 @@ class AnthropicProvider(ModelProvider):
 
         final_messages = self.transform_messages(messages, prefill)
 
-        payload = self.create_payload(final_messages, model, stream=False)
+        payload = self.create_payload(
+            final_messages, model, stream=False, max_tokens=anthropic_inputs.max_tokens
+        )
 
         try:
             async with self.get_client() as client:

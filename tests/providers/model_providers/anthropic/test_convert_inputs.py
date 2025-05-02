@@ -23,6 +23,7 @@ def test_convert_basic_request():
     assert result.model == "test-model"
     assert result.prefill_content is None
     assert result.structured_prefill is True
+    assert result.max_tokens is None
 
 
 def test_convert_with_prefill():
@@ -43,6 +44,28 @@ def test_convert_with_prefill():
     assert result.model == "test-model"
     assert result.prefill_content == prefill
     assert result.structured_prefill is True
+    assert result.max_tokens is None
+
+
+def test_convert_with_max_tokens():
+    """Test conversion of UserRequest with max_tokens to AnthropicProviderInputs."""
+    messages = [{"role": "user", "content": "Hello"}]
+    max_tokens = 1000
+    request = UserRequest(
+        provider_name="anthropic",
+        messages=messages,
+        model="test-model",
+        max_tokens=max_tokens,
+    )
+
+    result = convert_user_request_to_anthropic_inputs(request)
+
+    assert isinstance(result, AnthropicProviderInputs)
+    assert result.messages == messages
+    assert result.model == "test-model"
+    assert result.prefill_content is None
+    assert result.structured_prefill is True
+    assert result.max_tokens == max_tokens
 
 
 def test_convert_with_response_model():
@@ -69,3 +92,4 @@ def test_convert_with_response_model():
     assert result.model == "test-model"
     assert result.prefill_content is None
     assert result.structured_prefill is True
+    assert result.max_tokens is None
