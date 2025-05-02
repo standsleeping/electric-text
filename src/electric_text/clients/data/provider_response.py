@@ -60,6 +60,8 @@ class ProviderResponse(Generic[ResponseModel]):
         return cls(raw_result=result)
 
     @classmethod
-    def from_parse_result(cls, result: ParseResult[ResponseModel]) -> "ProviderResponse[ResponseModel]":
+    def from_parse_result(
+        cls, result: ParseResult[ResponseModel]
+    ) -> "ProviderResponse[ResponseModel]":
         """Create a ProviderResponse from a ParseResult."""
         return cls(raw_result=result)

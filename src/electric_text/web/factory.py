@@ -29,10 +29,7 @@ def create_app() -> Starlette:
     )
 
     static_dir = (
-        Path(__file__).parent.parent.parent /
-        "electric_text" /
-        "web" /
-        "static"
+        Path(__file__).parent.parent.parent / "electric_text" / "web" / "static"
     )
 
     if not static_dir.exists():

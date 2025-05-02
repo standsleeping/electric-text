@@ -32,4 +32,3 @@ def create_parse_result(
             parsed_content={},
             json_error=error,
         )
-

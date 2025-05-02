@@ -7,7 +7,7 @@ def prompt_form(
     stream_url: str,
     connection_id: str = "",
     cancel_url: str = "",
-    debounce_ms: int = 300
+    debounce_ms: int = 300,
 ) -> str:
     return render_html(
         "prompt-form.html",

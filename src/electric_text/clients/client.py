@@ -7,7 +7,12 @@ from typing import (
 
 from electric_text.providers import ModelProvider
 
-from electric_text.clients.data import PromptResult, ResponseModel, UserRequest, ProviderResponse
+from electric_text.clients.data import (
+    PromptResult,
+    ResponseModel,
+    UserRequest,
+    ProviderResponse,
+)
 from electric_text.clients.functions.create_parse_result import create_parse_result
 
 
@@ -166,6 +171,8 @@ class Client:
         """
         if request.response_model is not None:
             structured_stream = self.stream_structured(request)
-            return cast(AsyncGenerator[ProviderResponse[ResponseModel], None], structured_stream)
+            return cast(
+                AsyncGenerator[ProviderResponse[ResponseModel], None], structured_stream
+            )
         raw_stream = self.stream_raw(request)
         return cast(AsyncGenerator[ProviderResponse[ResponseModel], None], raw_stream)

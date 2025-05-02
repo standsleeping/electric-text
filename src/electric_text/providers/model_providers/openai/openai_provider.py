@@ -5,7 +5,9 @@ from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
 from electric_text.clients.data import UserRequest
-from electric_text.providers.model_providers.openai.openai_provider_inputs import OpenAIProviderInputs
+from electric_text.providers.model_providers.openai.openai_provider_inputs import (
+    OpenAIProviderInputs,
+)
 from electric_text.providers.model_providers.openai.convert_inputs import (
     convert_user_request_to_openai_inputs,
 )
@@ -132,8 +134,10 @@ class OpenaiProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(request)
-        
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(
+            request
+        )
+
         messages = openai_inputs.messages
         model = openai_inputs.model
 
@@ -170,8 +174,10 @@ class OpenaiProvider(ModelProvider):
         history = StreamHistory()
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(request)
-        
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(
+            request
+        )
+
         messages = openai_inputs.messages
         model = openai_inputs.model
 
