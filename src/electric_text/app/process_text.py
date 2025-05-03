@@ -6,7 +6,7 @@ from electric_text.logging import get_logger
 from electric_text.prompts.prose_to_schema.schema_response import SchemaResponse
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients.functions.create_user_request import create_user_request
-from electric_text.clients.functions.split_model_string import split_model_string
+from electric_text.clients.functions.parse_provider_model import parse_provider_model
 from electric_text.clients.functions.resolve_api_key import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
@@ -176,7 +176,7 @@ async def process_text(
     logger.debug(f"Processing {text_input} with model {model}")
 
     # Split the model string to get provider and model name
-    provider_name, model_name = split_model_string(model)
+    provider_name, model_name = parse_provider_model(model)
 
     # Configure client with API key if available
     config = {}

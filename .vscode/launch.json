@@ -8,11 +8,17 @@
       "module": "electric_text",
       "args": [
         "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest.",
-        "--log-level",
-        "DEBUG",
-        "--model",
-        "ollama:llama3.1:8b"
-      ]
+        "-m",
+        "31",
+        // "--model",
+        // "ollama:llama3.1:8b"
+        // "--log-level",
+        // "DEBUG",
+      ],
+      "env": {
+        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b|31"
+      }
     },
     {
       "name": "Debug web server",
