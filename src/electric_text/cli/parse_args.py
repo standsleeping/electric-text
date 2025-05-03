@@ -57,7 +57,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         "--log-level",
         "-l",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        default="INFO",
+        default="ERROR",
         help="Set the logging level (default: INFO)",
     )
 
