@@ -46,14 +46,6 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--format",
-        "-f",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)",
-    )
-
-    parser.add_argument(
         "--log-level",
         "-l",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],

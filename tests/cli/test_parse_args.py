@@ -7,19 +7,11 @@ def test_parse_args() -> None:
     """Test argument parsing."""
     args = parse_args(["hello"])
     assert args.text_input == "hello"
-    assert args.format == "text"
-    assert args.log_level == "INFO"
+    assert args.log_level == "ERROR"
     assert args.max_tokens is None
 
-    args = parse_args(["hello", "--format", "json"])
+    args = parse_args(["hello", "--log-level", "DEBUG"])
     assert args.text_input == "hello"
-    assert args.format == "json"
-    assert args.log_level == "INFO"
-    assert args.max_tokens is None
-
-    args = parse_args(["hello", "-f", "json", "--log-level", "DEBUG"])
-    assert args.text_input == "hello"
-    assert args.format == "json"
     assert args.log_level == "DEBUG"
     assert args.max_tokens is None
 

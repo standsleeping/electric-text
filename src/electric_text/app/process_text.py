@@ -11,8 +11,6 @@ from electric_text.clients.functions.resolve_api_key import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
 
-OutputFormat = Literal["text", "json"]
-
 logger = get_logger(__name__)
 
 
