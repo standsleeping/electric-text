@@ -1,5 +1,6 @@
 {
   "name": "poetry",
   "description": "Generates concise, imagery-rich poetry with deliberate use of language and structure",
-  "system_message_path": "poetry/system_message.txt"
+  "system_message_path": "poetry/system_message.txt",
+  "model_path": "poetry/poem_model.py"
 }

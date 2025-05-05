@@ -2,5 +2,5 @@
   "name": "prose_to_schema",
   "description": "Converts natural language descriptions into JSON schema definitions",
   "system_message_path": "prose_to_schema/system_message.txt",
-  "schema_path": "prose_to_schema/schema.json"
+  "model_path": "prose_to_schema/schema_model.py"
 }

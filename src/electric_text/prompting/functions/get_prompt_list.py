@@ -9,6 +9,12 @@ from electric_text.prompting.data.prompt_config import PromptConfig
 def get_prompt_list() -> List[PromptConfig]:
     """
     Get a list of all prompt configurations from the directory specified in USER_PROMPT_DIRECTORY.
+    
+    Loads configurations from JSON files, where each config specifies:
+    - name: Name of the prompt
+    - description: Description of what the prompt does
+    - system_message_path: Path to the text file containing the system message
+    - model_path: Optional path to Python file containing a Pydantic model for response validation
 
     Returns:
         List[PromptConfig]: A list of prompt configurations.
@@ -28,13 +34,21 @@ def get_prompt_list() -> List[PromptConfig]:
             # Convert relative paths to absolute if needed
             base_dir = Path(prompt_dir)
             system_path = config_data.get("system_message_path", "")
-            schema_path = config_data.get("schema_path", None)
+            
+            # Handle model_path (previously schema_path)
+            model_path = config_data.get("model_path", None)
+            
+            # For backward compatibility, check schema_path if model_path is not provided
+            if model_path is None and "schema_path" in config_data:
+                print(f"Warning: 'schema_path' in {json_file} is deprecated. Use 'model_path' instead.")
+                model_path = config_data.pop("schema_path")
+                config_data["model_path"] = model_path
 
             if system_path and not os.path.isabs(system_path):
                 config_data["system_message_path"] = str(base_dir / system_path)
 
-            if schema_path and not os.path.isabs(schema_path):
-                config_data["schema_path"] = str(base_dir / schema_path)
+            if model_path and not os.path.isabs(model_path):
+                config_data["model_path"] = str(base_dir / model_path)
 
             # Add the name based on filename if not present
             if "name" not in config_data:
