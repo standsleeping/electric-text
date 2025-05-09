@@ -17,7 +17,7 @@
       ],
       "env": {
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
-        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b|31"
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31"
       }
     },
     {
