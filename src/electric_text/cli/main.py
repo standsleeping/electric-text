@@ -31,6 +31,8 @@ async def main(args: Optional[List[str]] = None) -> int:
             model=parsed_args.model,
             api_key=parsed_args.api_key,
             max_tokens=parsed_args.max_tokens,
+            prompt_name=parsed_args.prompt_name,
+            stream=parsed_args.stream,
         )
 
         return 0

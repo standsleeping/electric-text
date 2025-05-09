@@ -1,5 +1,6 @@
 from typing import Optional
-from electric_text.prompting import get_prompt_list, PromptConfig
+from electric_text.prompting.functions.get_prompt_list import get_prompt_list
+from electric_text.prompting.data.prompt_config import PromptConfig
 
 
 def get_prompt_by_name(name: str) -> Optional[PromptConfig]:
@@ -15,4 +16,4 @@ def get_prompt_by_name(name: str) -> Optional[PromptConfig]:
     for config in prompt_configs:
         if config.name == name:
             return config
-    return None
+    return None 

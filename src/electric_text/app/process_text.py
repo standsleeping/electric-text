@@ -6,14 +6,7 @@ from electric_text.clients.functions.parse_provider_model import parse_provider_
 from electric_text.clients.functions.resolve_api_key import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
-
-
-from electric_text.app.temp_examples import (
-    temp_example_structured_request,
-    temp_example_structured_stream,
-    temp_example_poetry_request,
-    temp_example_poetry_stream,
-)
+from electric_text.prompting.functions.execute_prompt import execute_prompt
 
 logger = get_logger(__name__)
 
@@ -24,6 +17,8 @@ async def process_text(
     model: str,
     api_key: Optional[str] = None,
     max_tokens: Optional[int] = None,
+    prompt_name: Optional[str] = None,
+    stream: bool = False,
 ) -> None:
     """Process the text input.
 
@@ -32,6 +27,8 @@ async def process_text(
         model: The model to use in format "provider:model_name"
         api_key: Optional API key for providers that require authentication
         max_tokens: Maximum number of tokens to generate
+        prompt_name: Optional name of the prompt to use
+        stream: Whether to stream the response
 
     Returns:
         The processed text
@@ -55,43 +52,27 @@ async def process_text(
     logger.debug(f"Model name: {model_name}")
     logger.debug(f"Provider: {provider_name}")
 
-    request = create_user_request(
-        model_name=model_name,
-        provider_name=provider_name,
-        text_input=text_input,
-        max_tokens=max_tokens,
-    )
+    if prompt_name:
+        # Use the execute_prompt function with the provided parameters
+        await execute_prompt(
+            model_name=model_name,
+            provider_name=provider_name,
+            text_input=text_input,
+            client=client,
+            prompt_name=prompt_name,
+            stream=stream,
+        )
+    else:
+        # Use the original simple approach with no specific prompt
+        request = create_user_request(
+            model_name=model_name,
+            provider_name=provider_name,
+            text_input=text_input,
+            max_tokens=max_tokens,
+        )
 
-    result: ProviderResponse[Any] = await client.generate(
-        request=request,
-    )
+        result: ProviderResponse[Any] = await client.generate(
+            request=request,
+        )
 
-    print(result.raw_content)
-
-    # await temp_example_structured_request(
-    #     model_name=model_name,
-    #     provider_name=provider_name,
-    #     text_input=text_input,
-    #     client=client,
-    # )
-
-    # await temp_example_structured_stream(
-    #     model_name=model_name,
-    #     provider_name=provider_name,
-    #     text_input=text_input,
-    #     client=client,
-    # )
-
-    # await temp_example_poetry_request(
-    #     model_name=model_name,
-    #     provider_name=provider_name,
-    #     text_input=text_input,
-    #     client=client,
-    # )
-
-    # await temp_example_poetry_stream(
-    #     model_name=model_name,
-    #     provider_name=provider_name,
-    #     text_input=text_input,
-    #     client=client,
-    # )
+        print(result.raw_content)

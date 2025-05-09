@@ -2,7 +2,7 @@ import importlib.util
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Dict, Any, Type, cast, Union
+from typing import Optional, Dict, Any, Type
 
 
 class ModelLoadError(Enum):
@@ -15,7 +15,7 @@ class ModelLoadError(Enum):
 @dataclass
 class ModelResult:
     """Result of loading a Pydantic model from a Python file."""
-    model_class: Optional[Type] = None
+    model_class: Optional[Type[Any]] = None
     error: Optional[ModelLoadError] = None
     error_message: Optional[str] = None
 

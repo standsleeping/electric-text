@@ -6,7 +6,7 @@ Get any response from any AI model.
 
 Basic usage:
 ```bash
-python -m electric_text "What is the capital of Nebraska?" --model ollama:llama3.1:8b
+python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." --model ollama:llama3.1:8b
 ```
 
 ### Options
@@ -16,14 +16,58 @@ python -m electric_text "What is the capital of Nebraska?" --model ollama:llama3
 - `--log-level`, `-l`: Set the logging level to DEBUG, INFO, WARNING, ERROR, or CRITICAL (default: ERROR)
 - `--api-key`, `-k`: API key for providers that require authentication (e.g., Anthropic)
 - `--max-tokens`, `-mt`: Maximum number of tokens to generate
+- `--prompt-name`, `-p`: Name of the prompt to use (see below)
+- `--stream`, `-st`: Stream the response (flag)
 
-Example with all options:
+Example with options:
 ```bash
-python -m electric_text "What is the capital of Nebraska?" \
+python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
   --model ollama:llama3.1:8b \
   --log-level DEBUG \
   --api-key your_api_key \
   --max-tokens 1000
+```
+
+### Reusable Prompts
+
+Configure reusable prompts with structured responses by creating a JSON file in the `USER_PROMPT_DIRECTORY` directory.
+
+**Note:** Before using these prompt examples, you need to set the `USER_PROMPT_DIRECTORY` environment variable to point to the directory containing your prompt configurations.
+
+There are some example prompts (structured and unstructured) in the `examples/prompt_configs` directory.
+
+```bash
+export USER_PROMPT_DIRECTORY="/path/to/electric-text/examples/prompt_configs"
+```
+
+#### Structured Schema Generation
+Convert natural language to structured data:
+```bash
+python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles." \
+  --prompt-name prose_to_schema
+```
+
+#### Streaming Structured Schema
+Same as above but with streaming output:
+```bash
+python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles." \
+  --prompt-name prose_to_schema \
+  --stream
+```
+
+#### Poetry Generation
+Generate poetry based on a topic:
+```bash
+python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
+  --prompt-name poetry
+```
+
+#### Streaming Poetry
+Generate poetry with streaming output:
+```bash
+python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
+  --prompt-name poetry \
+  --stream
 ```
 
 ## Model Shorthands
