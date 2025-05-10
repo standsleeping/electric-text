@@ -14,3 +14,4 @@ wheels/
 .pytest_cache
 .ruff_cache
 scratch/
+electric_text.svg
