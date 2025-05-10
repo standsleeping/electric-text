@@ -2,10 +2,9 @@ import logging
 import traceback
 from typing import List, Optional
 
-from electric_text.app import process_text
+from electric_text.prompting import process_text
 from electric_text.logging import configure_logging, get_logger
-
-from .parse_args import parse_args
+from electric_text.cli.parse_args import parse_args
 
 
 async def main(args: Optional[List[str]] = None) -> int:

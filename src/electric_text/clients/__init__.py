@@ -1,13 +1,17 @@
-from .client import Client
-from .functions.parse_partial_response import parse_partial_response
-from .functions.build_simple_prompt import build_simple_prompt
-from .functions.convert_prompt_to_messages import convert_prompt_to_messages
-from .functions.create_user_request import create_user_request
-from .functions.is_complete_number import is_complete_number
-from .functions.resolve_api_key import resolve_api_key
-from .data import ParseResult
-from .data import PromptResult
-from .data import ProviderResponse
+from electric_text.clients.data import ParseResult
+from electric_text.clients.data import PromptResult
+from electric_text.clients.data import ProviderResponse
+from electric_text.clients.client import Client
+from electric_text.clients.functions.parse_partial_response import (
+    parse_partial_response,
+)
+from electric_text.clients.functions.build_simple_prompt import build_simple_prompt
+from electric_text.clients.functions.convert_prompt_to_messages import (
+    convert_prompt_to_messages,
+)
+from electric_text.clients.functions.create_user_request import create_user_request
+from electric_text.clients.functions.is_complete_number import is_complete_number
+from electric_text.clients.functions.resolve_api_key import resolve_api_key
 
 __all__ = [
     "Client",

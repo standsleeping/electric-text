@@ -63,4 +63,4 @@ asyncio_default_fixture_loop_scope = "function"
 pythonpath = ["src"] # Adds src to the python path for tests
 
 [tool.pydeps]
-exclude = ["electric_text.logging"]
+exclude = ["electric_text.logging", "electric_text.web"]

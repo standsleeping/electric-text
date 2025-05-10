@@ -1,4 +1,4 @@
-from .render_html import render_html
+from electric_text.web.views.render_html import render_html
 from electric_text.web.names import ROOT_PAGE
 
 

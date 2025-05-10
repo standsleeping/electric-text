@@ -43,27 +43,20 @@ The following dependencies are allowed.
 #### `__main__.py` depends on:
 - `cli`
 
-
 #### `cli` depends on:
 - `shorthand`
-- `app`
-
-#### `app` depends on:
-- `clients`
 - `prompting`
+
+#### `prompting` depends on:
+- `clients`
 - `tools`
 
 #### `clients` depends on:
 - `providers`
 
-#### `prompting` depends on:
-- [TODO]
+#### `providers` depends on nothing.
 
-#### `tools` depends on:
-- [TODO]
-
-#### `providers` depends on:
-- [TODO]
+#### `tools` depends on nothing.
 
 #### `shorthand` depends on nothing.
 

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.clients.data import UserRequest
+from electric_text.providers.user_request import UserRequest
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )

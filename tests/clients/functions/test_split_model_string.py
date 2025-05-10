@@ -1,5 +1,5 @@
 import pytest
-from electric_text.app.functions.split_model_string import split_model_string
+from electric_text.prompting.functions.split_model_string import split_model_string
 
 
 def test_basic_splitting():

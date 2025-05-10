@@ -1,6 +1,6 @@
 from typing import Optional, Type, Any, List, Dict
 
-from electric_text.clients.data.user_request import UserRequest
+from electric_text.providers.user_request import UserRequest
 from electric_text.clients import build_simple_prompt, convert_prompt_to_messages
 
 

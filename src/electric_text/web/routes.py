@@ -38,10 +38,10 @@ from electric_text.web.logging import (
     USER_TEXT_RECEIVED,
 )
 
-from .views.nav import nav
-from .views.render_html import render_html
-from .views.container import container
-from .views.prompt_form import prompt_form
+from electric_text.web.views.nav import nav
+from electric_text.web.views.render_html import render_html
+from electric_text.web.views.container import container
+from electric_text.web.views.prompt_form import prompt_form
 
 
 logger = logging.getLogger(__name__)

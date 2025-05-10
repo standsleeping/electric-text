@@ -1,5 +1,5 @@
 from electric_text.clients.functions.create_user_request import create_user_request
-from electric_text.clients.data.user_request import UserRequest
+from electric_text.providers.user_request import UserRequest
 from electric_text.clients import build_simple_prompt, convert_prompt_to_messages
 
 

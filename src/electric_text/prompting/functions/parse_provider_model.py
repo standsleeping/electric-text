@@ -1,5 +1,5 @@
 from typing import Tuple
-from electric_text.app.functions.split_model_string import split_model_string
+from electric_text.prompting.functions.split_model_string import split_model_string
 from electric_text.shorthand.build_user_shorthand_models import (
     build_user_shorthand_models,
 )

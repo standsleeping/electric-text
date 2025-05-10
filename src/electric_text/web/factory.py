@@ -4,7 +4,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
-from .routes import routes
+from electric_text.web.routes import routes
 
 
 def setup_logging() -> None:
