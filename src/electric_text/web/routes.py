@@ -6,14 +6,14 @@ from starlette.routing import Route
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, StreamingResponse
 
-from electric_text.app.names.web import (
+from electric_text.web.names import (
     CANCEL_STREAM,
     RESPONSE_STREAM,
     ROOT_PAGE,
     SUBMIT_PROMPT,
 )
 
-from electric_text.app.names.logging import (
+from electric_text.web.logging import (
     EVENT_AWAITED,
     EVENT_PROCESSED,
     EVENT_RECEIVED,

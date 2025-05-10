@@ -1,5 +1,5 @@
 from .render_html import render_html
-from electric_text.app.names.web import ROOT_PAGE
+from electric_text.web.names import ROOT_PAGE
 
 
 def nav() -> str:
