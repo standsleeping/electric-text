@@ -8,7 +8,7 @@ from electric_text.providers.model_providers.ollama.ollama_provider_inputs impor
     OllamaProviderInputs,
 )
 from electric_text.providers.model_providers.ollama.convert_inputs import (
-    convert_user_request_to_ollama_inputs,
+    convert_user_request_to_provider_inputs,
 )
 from electric_text.providers.stream_history import (
     StreamChunk,
@@ -109,7 +109,7 @@ class OllamaProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # From this point, inputs is treated as OllamaProviderInputs
-        ollama_inputs: OllamaProviderInputs = convert_user_request_to_ollama_inputs(
+        ollama_inputs: OllamaProviderInputs = convert_user_request_to_provider_inputs(
             request
         )
 
@@ -191,7 +191,7 @@ class OllamaProvider(ModelProvider):
         """
         history = StreamHistory()
 
-        ollama_inputs: OllamaProviderInputs = convert_user_request_to_ollama_inputs(
+        ollama_inputs: OllamaProviderInputs = convert_user_request_to_provider_inputs(
             request
         )
 

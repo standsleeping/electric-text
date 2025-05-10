@@ -9,7 +9,7 @@ from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs
     AnthropicProviderInputs,
 )
 from electric_text.providers.model_providers.anthropic.convert_inputs import (
-    convert_user_request_to_anthropic_inputs,
+    convert_user_request_to_provider_inputs,
 )
 from electric_text.providers.stream_history import (
     StreamChunk,
@@ -167,7 +167,7 @@ class AnthropicProvider(ModelProvider):
 
         # From this point, inputs is treated as AnthropicProviderInputs
         anthropic_inputs: AnthropicProviderInputs = (
-            convert_user_request_to_anthropic_inputs(request)
+            convert_user_request_to_provider_inputs(request)
         )
 
         messages = anthropic_inputs.messages
@@ -287,7 +287,7 @@ class AnthropicProvider(ModelProvider):
         history = StreamHistory()
 
         anthropic_inputs: AnthropicProviderInputs = (
-            convert_user_request_to_anthropic_inputs(request)
+            convert_user_request_to_provider_inputs(request)
         )
 
         messages = anthropic_inputs.messages

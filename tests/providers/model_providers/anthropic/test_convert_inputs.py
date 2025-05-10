@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from electric_text.clients.data import UserRequest
 from electric_text.providers.model_providers.anthropic.convert_inputs import (
-    convert_user_request_to_anthropic_inputs,
+    convert_user_request_to_provider_inputs,
 )
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
@@ -16,7 +16,7 @@ def test_convert_basic_request():
         provider_name="anthropic", messages=messages, model="test-model"
     )
 
-    result = convert_user_request_to_anthropic_inputs(request)
+    result = convert_user_request_to_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
     assert result.messages == messages
@@ -37,7 +37,7 @@ def test_convert_with_prefill():
         prefill_content=prefill,
     )
 
-    result = convert_user_request_to_anthropic_inputs(request)
+    result = convert_user_request_to_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
     assert result.messages == messages
@@ -58,7 +58,7 @@ def test_convert_with_max_tokens():
         max_tokens=max_tokens,
     )
 
-    result = convert_user_request_to_anthropic_inputs(request)
+    result = convert_user_request_to_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
     assert result.messages == messages
@@ -85,7 +85,7 @@ def test_convert_with_response_model():
         response_model=ExampleModel,
     )
 
-    result = convert_user_request_to_anthropic_inputs(request)
+    result = convert_user_request_to_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
     assert result.messages == messages

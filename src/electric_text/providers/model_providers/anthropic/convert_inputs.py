@@ -4,7 +4,7 @@ from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs
 )
 
 
-def convert_user_request_to_anthropic_inputs(
+def convert_user_request_to_provider_inputs(
     request: UserRequest,
 ) -> AnthropicProviderInputs:
     return AnthropicProviderInputs(

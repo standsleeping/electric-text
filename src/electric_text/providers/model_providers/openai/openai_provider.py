@@ -9,7 +9,7 @@ from electric_text.providers.model_providers.openai.openai_provider_inputs impor
     OpenAIProviderInputs,
 )
 from electric_text.providers.model_providers.openai.convert_inputs import (
-    convert_user_request_to_openai_inputs,
+    convert_user_request_to_provider_inputs,
 )
 from electric_text.providers.stream_history import (
     StreamChunk,
@@ -134,7 +134,7 @@ class OpenaiProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_provider_inputs(
             request
         )
 
@@ -174,7 +174,7 @@ class OpenaiProvider(ModelProvider):
         history = StreamHistory()
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_openai_inputs(
+        openai_inputs: OpenAIProviderInputs = convert_user_request_to_provider_inputs(
             request
         )
 

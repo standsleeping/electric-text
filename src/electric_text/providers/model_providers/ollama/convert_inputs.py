@@ -5,7 +5,7 @@ from electric_text.providers.model_providers.ollama.ollama_provider_inputs impor
 from typing import Dict, Any, Optional
 
 
-def convert_user_request_to_ollama_inputs(request: UserRequest) -> OllamaProviderInputs:
+def convert_user_request_to_provider_inputs(request: UserRequest) -> OllamaProviderInputs:
     # Convert response_model (Type) to format_schema (Dict)
     format_schema: Optional[Dict[str, Any]] = None
     if request.response_model is not None:

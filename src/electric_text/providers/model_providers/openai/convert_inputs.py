@@ -4,7 +4,7 @@ from electric_text.providers.model_providers.openai.openai_provider_inputs impor
 )
 
 
-def convert_user_request_to_openai_inputs(request: UserRequest) -> OpenAIProviderInputs:
+def convert_user_request_to_provider_inputs(request: UserRequest) -> OpenAIProviderInputs:
     return OpenAIProviderInputs(
         messages=request.messages,
         model=request.model,
