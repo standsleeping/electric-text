@@ -1,13 +1,13 @@
 from typing import Optional, Any, List
 
 from electric_text.logging import get_logger
-from electric_text.clients.functions.create_user_request import create_user_request
-from electric_text.clients.functions.parse_provider_model import parse_provider_model
-from electric_text.clients.functions.resolve_api_key import resolve_api_key
+from electric_text.clients import create_user_request
+from electric_text.clients import resolve_api_key
 from electric_text.clients import Client
-from electric_text.clients.data.provider_response import ProviderResponse
-from electric_text.prompting.functions.execute_prompt import execute_prompt
+from electric_text.clients import ProviderResponse
+from electric_text.prompting import execute_prompt
 from electric_text.tools import load_tools_from_tool_boxes
+from electric_text.app.functions.parse_provider_model import parse_provider_model
 
 logger = get_logger(__name__)
 

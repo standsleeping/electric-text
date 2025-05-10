@@ -12,7 +12,7 @@ class UserRequest:
     model: str
     messages: List[Dict[str, str]]
     tool_boxes: List[str] = field(default_factory=list)
-    tools: List[Dict[str, Any]] = field(default_factory=list)
+    tools: Optional[List[Dict[str, Any]]] = None
 
     response_model: Optional[Type[Any]] = None
     prefill_content: Optional[str] = None

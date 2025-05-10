@@ -36,6 +36,37 @@ We maintain a strict 1:1 correspondence between functions and files: one functio
 
 We also maintain a strict 1:1 correspondence between files and tests: one file, one test suite.
 
+### Dependencies
+
+The following dependencies are allowed.
+
+#### `__main__.py` depends on:
+- `cli`
+
+
+#### `cli` depends on:
+- `shorthand`
+- `app`
+
+#### `app` depends on:
+- `clients`
+- `prompting`
+- `tools`
+
+#### `clients` depends on:
+- `providers`
+
+#### `prompting` depends on:
+- [TODO]
+
+#### `tools` depends on:
+- [TODO]
+
+#### `providers` depends on:
+- [TODO]
+
+#### `shorthand` depends on nothing.
+
 ## Testing
 
 Testing is critical in this project and often informs how subsystems are designed.

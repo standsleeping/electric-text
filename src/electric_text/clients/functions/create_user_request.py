@@ -2,7 +2,6 @@ from typing import Optional, Type, Any, List, Dict
 
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients import build_simple_prompt, convert_prompt_to_messages
-from electric_text.tools import load_tools_from_tool_boxes
 
 
 def create_user_request(
@@ -42,12 +41,6 @@ def create_user_request(
     # Process tool boxes and tools
     tool_box_list = tool_boxes or []
 
-    # If tools are explicitly provided, use them
-    # Otherwise, load them from tool_boxes if any are specified
-    tool_list = tools if tools is not None else []
-    if not tool_list and tool_box_list:
-        tool_list = load_tools_from_tool_boxes(tool_box_list)
-
     return UserRequest(
         messages=messages,
         model=model_name,
@@ -56,5 +49,5 @@ def create_user_request(
         stream=stream,
         max_tokens=max_tokens,
         tool_boxes=tool_box_list,
-        tools=tool_list,
+        tools=tools,
     )

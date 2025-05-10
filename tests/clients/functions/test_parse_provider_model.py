@@ -1,6 +1,6 @@
 import os
 import pytest
-from electric_text.clients.functions.parse_provider_model import parse_provider_model
+from electric_text.app.functions.parse_provider_model import parse_provider_model
 
 
 def test_parse_provider_model_basic():

@@ -2,9 +2,7 @@ import argparse
 
 from typing import List, Optional
 
-from electric_text.shorthand.build_user_shorthand_models import (
-    build_user_shorthand_models,
-)
+from electric_text.shorthand import build_user_shorthand_models
 
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:

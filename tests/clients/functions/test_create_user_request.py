@@ -27,7 +27,7 @@ def test_create_with_system_and_text():
     assert not request.stream
     assert request.max_tokens is None
     assert request.tool_boxes == []
-    assert request.tools == []
+    assert request.tools is None
 
 
 def test_create_with_response_model_and_stream():
@@ -58,7 +58,7 @@ def test_create_with_response_model_and_stream():
     assert request.stream
     assert request.max_tokens is None
     assert request.tool_boxes == []
-    assert request.tools == []
+    assert request.tools is None
 
 
 def test_create_with_max_tokens():
@@ -86,7 +86,7 @@ def test_create_with_max_tokens():
     assert request.provider_name == "anthropic"
     assert request.max_tokens == max_tokens
     assert request.tool_boxes == []
-    assert request.tools == []
+    assert request.tools is None
 
 
 def test_empty_input_handling():
@@ -108,7 +108,7 @@ def test_empty_input_handling():
     assert request.messages == expected_messages
     assert request.max_tokens is None
     assert request.tool_boxes == []
-    assert request.tools == []
+    assert request.tools is None
 
 
 def test_create_with_tool_boxes(temp_tool_configs_dir):
@@ -125,12 +125,6 @@ def test_create_with_tool_boxes(temp_tool_configs_dir):
     assert request.model == "gpt-4"
     assert request.provider_name == "openai"
     assert request.tool_boxes == ["test_box"]
-
-    # Tools should be loaded
-    assert len(request.tools) == 2
-    tool_names = [tool["name"] for tool in request.tools]
-    assert "test_tool1" in tool_names
-    assert "test_tool2" in tool_names
 
 
 def test_create_with_explicit_tools():
