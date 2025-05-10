@@ -2,7 +2,7 @@ import importlib.util
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Dict, Any, Type
+from typing import Optional, Dict, Any, Type, cast
 
 
 class ModelLoadError(Enum):
@@ -56,7 +56,10 @@ class PromptConfig:
         """
         result = self.get_model_class()
         if result.is_valid and result.model_class:
-            return result.model_class.model_json_schema()
+            schema = result.model_class.model_json_schema()
+            if isinstance(schema, dict):
+                return schema
+            return None
         return None
 
     def get_model_class(self) -> ModelResult:
