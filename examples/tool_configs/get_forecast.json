@@ -1,0 +1,19 @@
+{
+    "name": "get_forecast",
+    "description": "Get the forecast for a given location",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "The city and state, e.g. Omaha, NE"
+            },
+            "days": {
+                "type": "integer",
+                "description": "The number of days to forecast",
+                "minimum": 1,
+                "maximum": 7
+            }
+        }
+    }
+}

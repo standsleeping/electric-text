@@ -1,7 +1,8 @@
-from typing import Optional, Type, Any
+from typing import Optional, Type, Any, List, Dict
 
 from electric_text.clients.data.user_request import UserRequest
 from electric_text.clients import build_simple_prompt, convert_prompt_to_messages
+from electric_text.tools import load_tools_from_tool_boxes
 
 
 def create_user_request(
@@ -13,6 +14,8 @@ def create_user_request(
     system_message: Optional[str] = None,
     text_input: Optional[str] = None,
     max_tokens: Optional[int] = None,
+    tool_boxes: Optional[List[str]] = None,
+    tools: Optional[List[Dict[str, Any]]] = None,
 ) -> UserRequest:
     """Create a UserRequest instance with the given parameters.
 
@@ -25,6 +28,8 @@ def create_user_request(
         system_message: System message content (used with text_input)
         text_input: User text input (used with system_message)
         max_tokens: Maximum number of tokens to generate
+        tool_boxes: List of tool box names to use
+        tools: Pre-loaded tools (if not provided, will be loaded from tool_boxes)
 
     Returns:
         A configured UserRequest instance
@@ -34,6 +39,15 @@ def create_user_request(
     prompt = build_simple_prompt(sys_msg, txt_input)
     messages = convert_prompt_to_messages(prompt)
 
+    # Process tool boxes and tools
+    tool_box_list = tool_boxes or []
+
+    # If tools are explicitly provided, use them
+    # Otherwise, load them from tool_boxes if any are specified
+    tool_list = tools if tools is not None else []
+    if not tool_list and tool_box_list:
+        tool_list = load_tools_from_tool_boxes(tool_box_list)
+
     return UserRequest(
         messages=messages,
         model=model_name,
@@ -41,4 +55,6 @@ def create_user_request(
         response_model=response_model,
         stream=stream,
         max_tokens=max_tokens,
+        tool_boxes=tool_box_list,
+        tools=tool_list,
     )

@@ -49,6 +49,9 @@ export OLLAMA_MODEL_SHORTHAND_SMALL=llama3.1:8b++31
 
 # Specify the path to your prompt configs.
 export USER_PROMPT_DIRECTORY=path/to/your/prompt_configs
+
+# Specify the path to your tool configurations.
+export USER_TOOL_CONFIGS_DIRECTORY=path/to/your/tool_configs
 ```
 
 ## Canonical names
@@ -98,7 +101,17 @@ Electric Text supports tool boxes, which are collections of tools that can be us
 
 ### Configuring Tool Boxes
 
-Tool boxes are defined in JSON files in the `examples/tool_configs` directory. Each tool box is a collection of tools that can be used together.
+Tool boxes are defined in JSON files in the tool configs directory. Each tool box is a collection of tools that can be used together.
+
+**Note:** Before using tool boxes, set the `USER_TOOL_CONFIGS_DIRECTORY` environment variable to point to your tool configs directory. If not set, the system will use the default `examples/tool_configs` directory.
+
+```bash
+export USER_TOOL_CONFIGS_DIRECTORY="/path/to/electric-text/examples/tool_configs"
+```
+
+The directory should contain:
+1. A `tool_boxes.json` file that defines collections of tools
+2. Individual JSON files for each tool
 
 Example tool box configuration:
 ```json
@@ -125,7 +138,7 @@ Each tool is defined in its own JSON file with details about its parameters and 
         "properties": {
             "location": {
                 "type": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
+                "description": "The city and state, e.g. Omaha, NE"
             },
             "unit": {
                 "type": "string",
@@ -147,7 +160,7 @@ Each tool is defined in its own JSON file with details about its parameters and 
 To use tool boxes in your requests, use the `--tool-boxes` or `-tb` option:
 
 ```bash
-python -m electric_text "What's the weather like in San Francisco?" \
+python -m electric_text "What's the weather like in Omaha?" \
   --model gpt4 \
   --tool-boxes meteorology
 ```
@@ -155,7 +168,7 @@ python -m electric_text "What's the weather like in San Francisco?" \
 You can specify multiple tool boxes:
 
 ```bash
-python -m electric_text "Plan a trip to New York and check the weather." \
+python -m electric_text "Plan a trip to Chicago and check the weather." \
   --model claude3 \
   --tool-boxes meteorology,travel
 ```

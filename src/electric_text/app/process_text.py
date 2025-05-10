@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from electric_text.logging import get_logger
 from electric_text.clients.functions.create_user_request import create_user_request
@@ -7,6 +7,7 @@ from electric_text.clients.functions.resolve_api_key import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
 from electric_text.prompting.functions.execute_prompt import execute_prompt
+from electric_text.tools import load_tools_from_tool_boxes
 
 logger = get_logger(__name__)
 
@@ -19,6 +20,7 @@ async def process_text(
     max_tokens: Optional[int] = None,
     prompt_name: Optional[str] = None,
     stream: bool = False,
+    tool_boxes: Optional[str] = None,
 ) -> None:
     """Process the text input.
 
@@ -29,6 +31,7 @@ async def process_text(
         max_tokens: Maximum number of tokens to generate
         prompt_name: Optional name of the prompt to use
         stream: Whether to stream the response
+        tool_boxes: Optional comma-separated list of tool box names to use
 
     Returns:
         The processed text
@@ -52,6 +55,18 @@ async def process_text(
     logger.debug(f"Model name: {model_name}")
     logger.debug(f"Provider: {provider_name}")
 
+    # Parse tool_boxes string into a list if provided
+    tool_box_list: List[str] = []
+    if tool_boxes:
+        tool_box_list = [tb.strip() for tb in tool_boxes.split(",")]
+        logger.debug(f"Using tool boxes: {tool_box_list}")
+        
+        # Load and process tools from the specified tool boxes
+        tools = load_tools_from_tool_boxes(tool_box_list)
+        logger.debug(f"Loaded {len(tools)} tools from {len(tool_box_list)} tool boxes")
+    else:
+        tools = []
+
     if prompt_name:
         # Use the execute_prompt function with the provided parameters
         await execute_prompt(
@@ -61,6 +76,7 @@ async def process_text(
             client=client,
             prompt_name=prompt_name,
             stream=stream,
+            tool_boxes=tool_box_list,
         )
     else:
         # Use the original simple approach with no specific prompt
@@ -69,6 +85,8 @@ async def process_text(
             provider_name=provider_name,
             text_input=text_input,
             max_tokens=max_tokens,
+            tool_boxes=tool_box_list,
+            tools=tools,
         )
 
         result: ProviderResponse[Any] = await client.generate(

@@ -33,6 +33,7 @@ async def main(args: Optional[List[str]] = None) -> int:
             max_tokens=parsed_args.max_tokens,
             prompt_name=parsed_args.prompt_name,
             stream=parsed_args.stream,
+            tool_boxes=parsed_args.tool_boxes,
         )
 
         return 0

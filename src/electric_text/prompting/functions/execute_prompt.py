@@ -1,11 +1,12 @@
 import json
-from typing import AsyncGenerator, Any, Optional, Type, TypeVar, Tuple
+from typing import AsyncGenerator, Any, Optional, Type, TypeVar, Tuple, List
 
 from electric_text.logging import get_logger
 from electric_text.clients.functions.create_user_request import create_user_request
 from electric_text.clients import Client
 from electric_text.clients.data.provider_response import ProviderResponse
 from electric_text.prompting.functions.get_prompt_by_name import get_prompt_by_name
+from electric_text.tools import load_tools_from_tool_boxes
 
 logger = get_logger(__name__)
 
@@ -44,6 +45,7 @@ async def execute_prompt(
     client: Client,
     prompt_name: str,
     stream: bool = False,
+    tool_boxes: Optional[List[str]] = None,
 ) -> None:
     """Execute a prompt with the given parameters.
 
@@ -57,6 +59,7 @@ async def execute_prompt(
         client: Client instance to use for the request
         prompt_name: Name of the prompt to use
         stream: Whether to stream the response
+        tool_boxes: Optional list of tool box names to use
     """
     # Get prompt config and model if needed
     config_result = await get_prompt_config_and_model(prompt_name)
@@ -73,6 +76,13 @@ async def execute_prompt(
         "text_input": text_input,
         "stream": stream,
     }
+
+    # Load tools if tool_boxes are provided
+    if tool_boxes:
+        request_args["tool_boxes"] = tool_boxes
+        # Load the tools
+        tools = load_tools_from_tool_boxes(tool_boxes)
+        request_args["tools"] = tools
 
     if model_class:
         request_args["response_model"] = model_class

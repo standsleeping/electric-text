@@ -66,7 +66,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         type=int,
         help="Maximum number of tokens to generate",
     )
-    
+
     parser.add_argument(
         "--prompt-name",
         "-p",
@@ -74,12 +74,19 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         choices=["prose_to_schema", "poetry"],
         help="Name of the prompt to use (if not specified, uses default system message)",
     )
-    
+
     parser.add_argument(
         "--stream",
         "-st",
         action="store_true",
         help="Stream the response",
+    )
+
+    parser.add_argument(
+        "--tool-boxes",
+        "-tb",
+        type=str,
+        help="List of tool boxes to use (comma-separated, e.g., 'meteorology,travel')",
     )
 
     return parser.parse_args(args)

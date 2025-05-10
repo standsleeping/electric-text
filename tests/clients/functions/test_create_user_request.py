@@ -26,6 +26,8 @@ def test_create_with_system_and_text():
     assert request.response_model is None
     assert not request.stream
     assert request.max_tokens is None
+    assert request.tool_boxes == []
+    assert request.tools == []
 
 
 def test_create_with_response_model_and_stream():
@@ -55,6 +57,8 @@ def test_create_with_response_model_and_stream():
     assert request.response_model == DummyModel
     assert request.stream
     assert request.max_tokens is None
+    assert request.tool_boxes == []
+    assert request.tools == []
 
 
 def test_create_with_max_tokens():
@@ -81,6 +85,8 @@ def test_create_with_max_tokens():
     assert request.model == "claude-3"
     assert request.provider_name == "anthropic"
     assert request.max_tokens == max_tokens
+    assert request.tool_boxes == []
+    assert request.tools == []
 
 
 def test_empty_input_handling():
@@ -101,3 +107,48 @@ def test_empty_input_handling():
 
     assert request.messages == expected_messages
     assert request.max_tokens is None
+    assert request.tool_boxes == []
+    assert request.tools == []
+
+
+def test_create_with_tool_boxes(temp_tool_configs_dir):
+    """Test creating a request with tool boxes specified."""
+    request = create_user_request(
+        model_name="gpt-4",
+        provider_name="openai",
+        system_message="You are a helpful assistant.",
+        text_input="Tell me the weather.",
+        tool_boxes=["test_box"],
+    )
+
+    assert isinstance(request, UserRequest)
+    assert request.model == "gpt-4"
+    assert request.provider_name == "openai"
+    assert request.tool_boxes == ["test_box"]
+
+    # Tools should be loaded
+    assert len(request.tools) == 2
+    tool_names = [tool["name"] for tool in request.tools]
+    assert "test_tool1" in tool_names
+    assert "test_tool2" in tool_names
+
+
+def test_create_with_explicit_tools():
+    """Test creating a request with explicitly provided tools."""
+    tool_box_names = ["meteorology"]
+    explicit_tools = [{"name": "custom_tool", "description": "Custom tool"}]
+
+    request = create_user_request(
+        model_name="gpt-4",
+        provider_name="openai",
+        system_message="You are a helpful assistant.",
+        text_input="Tell me the weather.",
+        tool_boxes=tool_box_names,
+        tools=explicit_tools,
+    )
+
+    assert isinstance(request, UserRequest)
+    assert request.model == "gpt-4"
+    assert request.provider_name == "openai"
+    assert request.tool_boxes == tool_box_names
+    assert request.tools == explicit_tools

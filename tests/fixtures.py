@@ -114,3 +114,65 @@ def invalid_prompt_dir():
             f.write("Dummy system message")
 
         yield temp_dir
+
+
+@pytest.fixture
+def temp_tool_configs_dir():
+    """Create a temporary directory with sample tool config files for testing."""
+    with TemporaryDirectory() as temp_dir:
+        # Create tool_boxes.json
+        tool_boxes_config = [
+            {
+                "name": "test_box",
+                "description": "Test tool box",
+                "tools": ["test_tool1", "test_tool2"],
+            },
+            {"name": "empty_box", "description": "Empty tool box", "tools": []},
+        ]
+
+        with open(os.path.join(temp_dir, "tool_boxes.json"), "w") as f:
+            json.dump(tool_boxes_config, f)
+
+        # Create test_tool1.json
+        test_tool1 = {
+            "name": "test_tool1",
+            "description": "Test tool 1",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "param1": {"type": "string", "description": "Parameter 1"}
+                },
+                "required": ["param1"],
+            },
+        }
+
+        with open(os.path.join(temp_dir, "test_tool1.json"), "w") as f:
+            json.dump(test_tool1, f)
+
+        # Create test_tool2.json
+        test_tool2 = {
+            "name": "test_tool2",
+            "description": "Test tool 2",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "param2": {"type": "number", "description": "Parameter 2"}
+                },
+                "required": ["param2"],
+            },
+        }
+
+        with open(os.path.join(temp_dir, "test_tool2.json"), "w") as f:
+            json.dump(test_tool2, f)
+
+        # Set environment variable for testing
+        original_env = os.environ.get("USER_TOOL_CONFIGS_DIRECTORY")
+        os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = temp_dir
+
+        yield temp_dir
+
+        # Restore original environment variable
+        if original_env:
+            os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = original_env
+        else:
+            del os.environ["USER_TOOL_CONFIGS_DIRECTORY"]

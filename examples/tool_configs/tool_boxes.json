@@ -1,0 +1,10 @@
+[
+    {
+        "name": "meteorology",
+        "description": "Tools for meteorology",
+        "tools": [
+            "get_current_weather",
+            "get_forecast"
+        ]
+    }
+]
