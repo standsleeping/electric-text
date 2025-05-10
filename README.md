@@ -18,6 +18,7 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
 - `--max-tokens`, `-mt`: Maximum number of tokens to generate
 - `--prompt-name`, `-p`: Name of the prompt to use (see below)
 - `--stream`, `-st`: Stream the response (flag)
+- `--tool-boxes`, `-tb`: List of tool boxes to use (comma-separated, e.g., "meteorology,travel")
 
 Example with options:
 ```bash
@@ -25,7 +26,8 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
   --model ollama:llama3.1:8b \
   --log-level DEBUG \
   --api-key your_api_key \
-  --max-tokens 1000
+  --max-tokens 1000 \
+  --tool-boxes meteorology
 ```
 
 ## Setting up your environment
@@ -90,6 +92,74 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
   --prompt-name poetry
 ```
 
+## Tool Boxes
+
+Electric Text supports tool boxes, which are collections of tools that can be used by models to perform specific tasks.
+
+### Configuring Tool Boxes
+
+Tool boxes are defined in JSON files in the `examples/tool_configs` directory. Each tool box is a collection of tools that can be used together.
+
+Example tool box configuration:
+```json
+[
+    {
+        "name": "meteorology",
+        "description": "Tools for meteorology",
+        "tools": [
+            "get_current_weather",
+            "get_forecast"
+        ]
+    }
+]
+```
+
+Each tool is defined in its own JSON file with details about its parameters and functionality:
+
+```json
+{
+    "name": "get_current_weather",
+    "description": "Get the current weather in a given location",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "The city and state, e.g. San Francisco, CA"
+            },
+            "unit": {
+                "type": "string",
+                "enum": [
+                    "celsius",
+                    "fahrenheit"
+                ]
+            }
+        },
+        "required": [
+            "location"
+        ]
+    }
+}
+```
+
+### Using Tool Boxes
+
+To use tool boxes in your requests, use the `--tool-boxes` or `-tb` option:
+
+```bash
+python -m electric_text "What's the weather like in San Francisco?" \
+  --model gpt4 \
+  --tool-boxes meteorology
+```
+
+You can specify multiple tool boxes:
+
+```bash
+python -m electric_text "Plan a trip to New York and check the weather." \
+  --model claude3 \
+  --tool-boxes meteorology,travel
+```
+
 ## Model Shorthands
 
 Electric Text supports custom model shorthands to make it easier to reference your frequently used models.
@@ -135,3 +205,9 @@ After setting these environment variables, you can use the shorthands in your co
 ```bash
 python -m electric_text "Hello world" --model claude3
 ```
+
+## Note for AI Coding Assistants
+
+Are you an AI coding assistant?
+
+Please refer to the [CLAUDE.md](CLAUDE.md) file for information about the project.
