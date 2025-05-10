@@ -28,26 +28,55 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
   --max-tokens 1000
 ```
 
-### Reusable Prompts
+## Setting up your environment
+
+The following environment variables control the behavior of Electric Text. More details on these variables are provided below.
+
+```bash
+# Specify a provider API key.
+# General pattern: [PROVIDER]_API_KEY=your_api_key
+export ANTHROPIC_API_KEY=your_api_key
+
+# Specify shorthands for a provider name.
+# General pattern: [PROVIDER]_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
+export OLLAMA_PROVIDER_NAME_SHORTHAND=lma
+
+# Specify shorthands for a model name.
+# General pattern: [PROVIDER]_MODEL_SHORTHAND_*=canonical_model++shorthand
+export OLLAMA_MODEL_SHORTHAND_SMALL=llama3.1:8b++31
+
+# Specify the path to your prompt configs.
+export USER_PROMPT_DIRECTORY=path/to/your/prompt_configs
+```
+
+## Canonical names
+
+The following are the canonical names for the providers and models that Electric Text supports.
+
+```bash
+(Coming soon...)
+```
+
+## Reusable Prompts
 
 Configure reusable prompts with structured responses by creating a JSON file in the `USER_PROMPT_DIRECTORY` directory.
 
 **Note:** Before using these prompt examples, you need to set the `USER_PROMPT_DIRECTORY` environment variable to point to the directory containing your prompt configurations.
 
-There are some example prompts (structured and unstructured) in the `examples/prompt_configs` directory.
-
 ```bash
 export USER_PROMPT_DIRECTORY="/path/to/electric-text/examples/prompt_configs"
 ```
 
-#### Structured Schema Generation
+### Example reusable prompts
+
+These examples are provided to help you get started. You can find more examples in the `examples/prompt_configs` directory.
+
 Convert natural language to structured data:
 ```bash
 python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles." \
   --prompt-name prose_to_schema
 ```
 
-#### Streaming Structured Schema
 Same as above but with streaming output:
 ```bash
 python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles." \
@@ -55,19 +84,10 @@ python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a r
   --stream
 ```
 
-#### Poetry Generation
 Generate poetry based on a topic:
 ```bash
 python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
   --prompt-name poetry
-```
-
-#### Streaming Poetry
-Generate poetry with streaming output:
-```bash
-python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
-  --prompt-name poetry \
-  --stream
 ```
 
 ## Model Shorthands
@@ -97,7 +117,7 @@ You can define custom shorthands by setting environment variables:
    export PROVIDER_MODEL_SHORTHAND_NAME="canonical_model++shorthand"
    ```
 
-#### Examples:
+#### Model shorthand examples:
 
 ```bash
 # Define "antro" as a shorthand for "anthropic" provider
