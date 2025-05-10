@@ -7,7 +7,7 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest.",
+        "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
         "31",
         // "--model",
@@ -63,7 +63,7 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest.",
+        "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
         "31",
         "--prompt-name",
@@ -81,7 +81,7 @@
       "request": "launch",
       "module": "electric_text",
       "args": [
-        "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest.",
+        "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
         "31",
         "--prompt-name",

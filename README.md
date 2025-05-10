@@ -6,7 +6,7 @@ Get any response from any AI model.
 
 Basic usage:
 ```bash
-python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." --model ollama:llama3.1:8b
+python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." --model ollama:llama3.1:8b
 ```
 
 ### Options
@@ -21,7 +21,7 @@ python -m electric_text "Write a haiku about the way rain smells when the weathe
 
 Example with options:
 ```bash
-python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
+python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
   --model ollama:llama3.1:8b \
   --log-level DEBUG \
   --api-key your_api_key \
@@ -58,14 +58,14 @@ python -m electric_text "The car weighs 5,000 pounds, costs $25,000, and has a r
 #### Poetry Generation
 Generate poetry based on a topic:
 ```bash
-python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
+python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
   --prompt-name poetry
 ```
 
 #### Streaming Poetry
 Generate poetry with streaming output:
 ```bash
-python -m electric_text "Write a haiku about the way rain smells when the weather starts to warm up in the American Midwest." \
+python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
   --prompt-name poetry \
   --stream
 ```
