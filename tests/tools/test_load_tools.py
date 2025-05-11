@@ -1,6 +1,6 @@
 import pytest
 
-from electric_text.tools.load_tools import (
+from electric_text.tools.functions.load_tools import (
     get_tool_configs_directory,
     load_tool_boxes,
     load_tool_config,

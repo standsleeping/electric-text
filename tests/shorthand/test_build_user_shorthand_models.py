@@ -1,5 +1,5 @@
 import os
-from electric_text.shorthand.build_user_shorthand_models import (
+from electric_text.shorthand.functions.build_user_shorthand_models import (
     build_user_shorthand_models,
 )
 
