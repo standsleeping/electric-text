@@ -10,6 +10,7 @@ from electric_text.providers.functions.convert_prompt_to_messages import (
 def convert_provider_inputs(
     request: ProviderRequest,
 ) -> OpenAIProviderInputs:
+
     messages = convert_prompt_to_messages(
         system_messages=request.system_messages,
         prompt_text=request.prompt_text
