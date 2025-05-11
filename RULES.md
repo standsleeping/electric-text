@@ -38,7 +38,13 @@ We also maintain a strict 1:1 correspondence between files and tests: one file, 
 
 ### Dependencies
 
-The following dependencies are allowed.
+Run the following command to visualize the dependency graph:
+
+```bash
+uv run pydeps src/electric_text --max-module-depth=2 --rankdir RL --rmprefix electric_text.
+```
+
+The following dependencies are allowed:
 
 #### `__main__.py` depends on:
 - `cli`
