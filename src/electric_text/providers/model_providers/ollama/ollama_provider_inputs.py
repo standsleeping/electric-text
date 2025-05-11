@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
-from electric_text.providers.base_provider_inputs import BaseProviderInputs
+from electric_text.providers.data.base_provider_inputs import BaseProviderInputs
 
 
 @dataclass

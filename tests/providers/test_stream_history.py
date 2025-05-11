@@ -1,7 +1,9 @@
-from electric_text.providers.stream_history import (
+from electric_text.providers.data.stream_history import (
     StreamChunkType,
     StreamChunk,
     StreamHistory,
+)
+from electric_text.providers.functions.categorize_stream_line import (
     categorize_stream_line,
 )
 

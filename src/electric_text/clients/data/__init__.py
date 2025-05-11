@@ -4,7 +4,6 @@ from electric_text.clients.data.prompt import Prompt
 from electric_text.clients.data.template_fragment import TemplateFragment
 from electric_text.clients.data.provider_response import ProviderResponse
 from electric_text.clients.data.validation_model import ValidationModel, ValidationModelType, ModelLoadResult
-from electric_text.providers.user_request import UserRequest
 
 __all__ = [
     "ParseResult",
@@ -14,7 +13,6 @@ __all__ = [
     "ResponseType",
     "ResponseModel",
     "ProviderResponse",
-    "UserRequest",
     "ValidationModel",
     "ValidationModelType",
     "ModelLoadResult",

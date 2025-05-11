@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.user_request import UserRequest
 from electric_text.providers.model_providers.ollama.convert_inputs import (
     convert_user_request_to_provider_inputs,
 )

@@ -28,13 +28,20 @@ The system is organized into a set of subpackages. Each subpackage is an indepen
 
 Each subpackage keeps an internally strict separation between functions and data.
 
-The "data" (data structures, dataclasses, Pydantic models, and types) are kept in a data folder.
+The data (data structures, dataclasses, Pydantic models, and types) are kept in a data folder.
 
-The "functions" (often "pure" functions, wherever possible) are kept in the functions folder.
+The functions (often "pure" functions, wherever possible) are kept in the functions folder.
 
 We maintain a strict 1:1 correspondence between functions and files: one function per file.
 
 We also maintain a strict 1:1 correspondence between files and tests: one file, one test suite.
+
+At the same level as the functions and data folders, there may also exist:
+
+- Traditional classes, if they are not "pure" and/or are not easily expressed as functions (this is VERY rare).
+- Protocols (see `src/electric_text/providers/model_provider.py`).
+- Subpackages, which themselves have the same data and functions structure as the subpackage they are in.
+
 
 ### Dependencies
 

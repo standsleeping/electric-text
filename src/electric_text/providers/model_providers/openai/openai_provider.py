@@ -4,17 +4,19 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.stream_chunk import StreamChunk
+from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.model_providers.openai.openai_provider_inputs import (
     OpenAIProviderInputs,
 )
 from electric_text.providers.model_providers.openai.convert_inputs import (
     convert_user_request_to_provider_inputs,
 )
-from electric_text.providers.stream_history import (
-    StreamChunk,
+from electric_text.providers.data.stream_history import (
     StreamHistory,
-    StreamChunkType,
+)
+from electric_text.providers.functions.categorize_stream_line import (
     categorize_stream_line,
 )
 

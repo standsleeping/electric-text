@@ -4,8 +4,8 @@ from typing import (
     runtime_checkable,
 )
 
-from electric_text.providers.stream_history import StreamHistory
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.stream_history import StreamHistory
+from electric_text.providers.data.user_request import UserRequest
 
 
 @runtime_checkable

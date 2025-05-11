@@ -1,4 +1,4 @@
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.user_request import UserRequest
 from electric_text.providers.model_providers.openai.openai_provider_inputs import (
     OpenAIProviderInputs,
 )

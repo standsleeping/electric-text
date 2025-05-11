@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import AsyncMock, patch
 
 from electric_text.providers.model_providers.anthropic import AnthropicProvider
-from electric_text.providers.stream_history import StreamChunkType, StreamHistory
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.stream_history import StreamChunkType, StreamHistory
+from electric_text.providers.data.user_request import UserRequest
 
 
 def test_constructor_with_defaults():

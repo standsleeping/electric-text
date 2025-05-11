@@ -4,18 +4,16 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.user_request import UserRequest
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
 from electric_text.providers.model_providers.anthropic.convert_inputs import (
     convert_user_request_to_provider_inputs,
 )
-from electric_text.providers.stream_history import (
-    StreamChunk,
-    StreamHistory,
-    StreamChunkType,
-)
+from electric_text.providers.data.stream_history import StreamHistory
+from electric_text.providers.data.stream_chunk import StreamChunk
+from electric_text.providers.data.stream_chunk_type import StreamChunkType
 
 
 class ModelProviderError(Exception):

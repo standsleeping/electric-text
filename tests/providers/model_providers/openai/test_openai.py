@@ -4,11 +4,11 @@ from unittest.mock import patch, AsyncMock
 from electric_text.providers.model_providers.openai import (
     OpenaiProvider,
 )
-from electric_text.providers.stream_history import (
+from electric_text.providers.data.stream_history import (
     StreamChunkType,
     StreamHistory,
 )
-from electric_text.providers.user_request import UserRequest
+from electric_text.providers.data.user_request import UserRequest
 
 
 def test_constructor_with_defaults():
