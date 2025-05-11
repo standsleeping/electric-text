@@ -1,7 +1,8 @@
 import pytest
 from pathlib import Path
 from textwrap import dedent
-from electric_text.prompting.data.prompt_config import PromptConfig, ModelLoadError
+from electric_text.prompting.data.prompt_config import PromptConfig
+from electric_text.prompting.data.model_load_error import ModelLoadError
 
 
 def test_prompt_config_model():
