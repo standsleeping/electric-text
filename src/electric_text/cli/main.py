@@ -5,6 +5,7 @@ from typing import List, Optional
 from electric_text.prompting import process_text
 from electric_text.logging import configure_logging, get_logger
 from electric_text.cli.parse_args import parse_args
+from electric_text.cli.functions.parse_provider_model import parse_provider_model
 
 
 async def main(args: Optional[List[str]] = None) -> int:
@@ -25,9 +26,13 @@ async def main(args: Optional[List[str]] = None) -> int:
     try:
         logger.debug(f"Processing arguments: {parsed_args}")
 
+        # Split the model string to get provider and model name
+        provider_name, model_name = parse_provider_model(parsed_args.model)
+
         await process_text(
             text_input=parsed_args.text_input,
-            model=parsed_args.model,
+            provider_name=provider_name,
+            model_name=model_name,
             api_key=parsed_args.api_key,
             max_tokens=parsed_args.max_tokens,
             prompt_name=parsed_args.prompt_name,

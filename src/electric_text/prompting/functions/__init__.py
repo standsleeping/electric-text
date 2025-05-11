@@ -5,7 +5,6 @@ from electric_text.prompting.functions.execute_prompt import (
     get_prompt_config_and_model,
 )
 from electric_text.prompting.functions.process_text import process_text
-from electric_text.prompting.functions.parse_provider_model import parse_provider_model
 from electric_text.prompting.functions.split_model_string import split_model_string
 
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     "execute_prompt",
     "get_prompt_config_and_model",
     "process_text",
-    "parse_provider_model",
     "split_model_string",
 ]

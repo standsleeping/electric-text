@@ -6,7 +6,6 @@ from electric_text.clients import resolve_api_key
 from electric_text.clients import Client
 from electric_text.clients import ProviderResponse
 from electric_text.tools import load_tools_from_tool_boxes
-from electric_text.prompting.functions.parse_provider_model import parse_provider_model
 from electric_text.prompting.functions.execute_prompt import execute_prompt
 
 logger = get_logger(__name__)
@@ -15,7 +14,8 @@ logger = get_logger(__name__)
 async def process_text(
     *,
     text_input: str,
-    model: str,
+    provider_name: str,
+    model_name: str,
     api_key: Optional[str] = None,
     max_tokens: Optional[int] = None,
     prompt_name: Optional[str] = None,
@@ -26,7 +26,8 @@ async def process_text(
 
     Args:
         text_input: The text to be processed
-        model: The model to use in format "provider:model_name"
+        provider_name: The provider to use
+        model_name: The model to use in format "provider:model_name"
         api_key: Optional API key for providers that require authentication
         max_tokens: Maximum number of tokens to generate
         prompt_name: Optional name of the prompt to use
@@ -36,10 +37,9 @@ async def process_text(
     Returns:
         The processed text
     """
-    logger.debug(f"Processing {text_input} with model {model}")
-
-    # Split the model string to get provider and model name
-    provider_name, model_name = parse_provider_model(model)
+    logger.debug(f"Processing {text_input}")
+    logger.debug(f"Model name: {model_name}")
+    logger.debug(f"Provider: {provider_name}")
 
     # Configure client with API key if available
     config = {}
@@ -52,15 +52,12 @@ async def process_text(
         config=config,
     )
 
-    logger.debug(f"Model name: {model_name}")
-    logger.debug(f"Provider: {provider_name}")
-
     # Parse tool_boxes string into a list if provided
     tool_box_list: List[str] = []
     if tool_boxes:
         tool_box_list = [tb.strip() for tb in tool_boxes.split(",")]
         logger.debug(f"Using tool boxes: {tool_box_list}")
-        
+
         # Load and process tools from the specified tool boxes
         tools = load_tools_from_tool_boxes(tool_box_list)
         logger.debug(f"Loaded {len(tools)} tools from {len(tool_box_list)} tool boxes")
