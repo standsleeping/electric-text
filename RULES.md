@@ -20,7 +20,7 @@ Run tests:
 uv run python -m pytest
 ```
 
-## Architecture
+## System Architecture
 
 This project follows a strict "hexagonal" architecture. Other names for this architectural style include "functional core, imperative shell" and "ports and adapters."
 
@@ -74,6 +74,10 @@ The following dependencies are allowed:
 #### `tools` depends on nothing.
 
 #### `shorthand` depends on nothing.
+
+## Data Architecture
+
+(Coming soon).
 
 ## Testing
 

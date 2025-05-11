@@ -3,16 +3,18 @@ import argparse
 from typing import List, Optional
 
 from electric_text.shorthand import build_user_shorthand_models
+from electric_text.cli.data.system_input import SystemInput
+from electric_text.cli.functions.parse_provider_model import parse_provider_model
 
 
-def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
+def parse_args(args: Optional[List[str]] = None) -> SystemInput:
     """Parse command-line arguments.
 
     Args:
         args: Command-line arguments (defaults to sys.argv[1:])
 
     Returns:
-        Parsed arguments namespace
+        SystemInput instance with parsed arguments
     """
     parser = argparse.ArgumentParser(
         prog="electric_text",
@@ -87,4 +89,19 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         help="List of tool boxes to use (comma-separated, e.g., 'meteorology,travel')",
     )
 
-    return parser.parse_args(args)
+    parsed_args = parser.parse_args(args)
+
+    # Split model string into provider_name and model_name
+    provider_name, model_name = parse_provider_model(parsed_args.model)
+
+    return SystemInput(
+        text_input=parsed_args.text_input,
+        provider_name=provider_name,
+        model_name=model_name,
+        log_level=parsed_args.log_level,
+        api_key=parsed_args.api_key,
+        max_tokens=parsed_args.max_tokens,
+        prompt_name=parsed_args.prompt_name,
+        stream=parsed_args.stream,
+        tool_boxes=parsed_args.tool_boxes,
+    )
