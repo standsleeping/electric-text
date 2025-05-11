@@ -2,10 +2,10 @@ from electric_text.clients.data import ParseResult
 from electric_text.clients.data import PromptResult
 from electric_text.clients.data import ProviderResponse
 from electric_text.clients.client import Client
+from electric_text.clients.functions.build_simple_prompt import build_simple_prompt
 from electric_text.clients.functions.parse_partial_response import (
     parse_partial_response,
 )
-from electric_text.clients.functions.build_simple_prompt import build_simple_prompt
 from electric_text.clients.functions.convert_prompt_to_messages import (
     convert_prompt_to_messages,
 )

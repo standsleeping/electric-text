@@ -4,16 +4,14 @@ from typing import (
     cast,
     Any,
 )
-
 from electric_text.providers import ModelProvider
-
+from electric_text.clients.functions.create_parse_result import create_parse_result
 from electric_text.clients.data import (
     PromptResult,
     ResponseModel,
     UserRequest,
     ProviderResponse,
 )
-from electric_text.clients.functions.create_parse_result import create_parse_result
 
 
 class Client:
