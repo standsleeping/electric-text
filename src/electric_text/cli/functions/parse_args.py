@@ -3,7 +3,7 @@ import argparse
 from typing import List, Optional
 
 from electric_text.shorthand import build_user_shorthand_models
-from electric_text.cli.data.system_input import SystemInput
+from electric_text.prompting.data.system_input import SystemInput
 from electric_text.cli.functions.parse_provider_model import parse_provider_model
 
 

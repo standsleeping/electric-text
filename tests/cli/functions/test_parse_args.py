@@ -1,7 +1,7 @@
 """Tests for the command-line interface."""
 
 from electric_text.cli.functions.parse_args import parse_args
-from electric_text.cli.data.system_input import SystemInput
+from electric_text.prompting.data.system_input import SystemInput
 
 
 def test_parse_args() -> None:

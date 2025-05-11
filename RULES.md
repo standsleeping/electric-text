@@ -32,11 +32,10 @@ The data (data structures, dataclasses, Pydantic models, and types) are kept in 
 
 The functions (often "pure" functions, wherever possible) are kept in the functions folder.
 
-We maintain a strict 1:1 correspondence between functions and files: one function per file.
-
-We also maintain a strict 1:1 correspondence between data and files: one data structure per file.
-
-We also maintain a strict 1:1 correspondence between files and tests: one file, one test suite.
+We maintain a strict 1:1 correspondence between:
+1. functions and files: one function per file (in the functions folder).
+2. data and files: one data structure per file (in the data folder).
+3. files and tests: one file, one test suite.
 
 At the same level as the functions and data folders, there may also exist:
 
@@ -53,14 +52,16 @@ Run the following command to visualize the dependency graph:
 uv run pydeps src/electric_text --max-module-depth=2 --rankdir RL --rmprefix electric_text.
 ```
 
+There should be no blue boxes in the above graph (blue boxes and two-way arrows indicate circular dependencies).
+
 The following dependencies are allowed:
 
 #### `__main__.py` depends on:
-- `cli`
+- `cli` (calls the `main` function, returns an exit code).
 
 #### `cli` depends on:
 - `shorthand`
-- `prompting`
+- `prompting` (in: `SystemInput`, out: `None` (prints content)).
 
 #### `prompting` depends on:
 - `clients`
@@ -74,10 +75,6 @@ The following dependencies are allowed:
 #### `tools` depends on nothing.
 
 #### `shorthand` depends on nothing.
-
-## Data Architecture
-
-(Coming soon).
 
 ## Testing
 

@@ -7,7 +7,7 @@ from electric_text.clients import Client
 from electric_text.clients import ProviderResponse
 from electric_text.tools import load_tools_from_tool_boxes
 from electric_text.prompting.functions.execute_prompt import execute_prompt
-from electric_text.cli.data.system_input import SystemInput
+from electric_text.prompting.data.system_input import SystemInput
 
 logger = get_logger(__name__)
 

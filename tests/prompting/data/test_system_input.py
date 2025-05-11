@@ -1,6 +1,6 @@
 """Tests for the SystemInput dataclass."""
 
-from electric_text.cli.data.system_input import SystemInput
+from electric_text.prompting.data.system_input import SystemInput
 
 
 def test_system_input_defaults():
