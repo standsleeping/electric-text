@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Type, Any
 
-from electric_text.clients.data.validation_model import ModelLoadResult
+from electric_text.clients.data.model_load_result import ModelLoadResult
 from electric_text.prompting.data.model_load_error import ModelLoadError
 
 

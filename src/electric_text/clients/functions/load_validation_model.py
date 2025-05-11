@@ -1,6 +1,7 @@
 import sys
 import importlib.util
-from electric_text.clients.data.validation_model import ValidationModel, ModelLoadResult
+from electric_text.clients.data.validation_model import ValidationModel
+from electric_text.clients.data.model_load_result import ModelLoadResult
 
 
 def load_validation_model(model_path: str) -> ModelLoadResult:
