@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.openai.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.model_providers.openai.openai_provider_inputs import (
     OpenAIProviderInputs,
@@ -10,19 +10,23 @@ from electric_text.providers.model_providers.openai.openai_provider_inputs impor
 
 
 def test_convert_basic_request():
-    """Test conversion of basic UserRequest to OpenAIProviderInputs."""
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(provider_name="openai", messages=messages, model="test-model")
+    """Test conversion of basic ProviderRequest to OpenAIProviderInputs."""
+    request = ProviderRequest(
+        provider_name="openai",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
+    )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, OpenAIProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
 
 
 def test_convert_with_response_model():
-    """Test conversion of UserRequest with response_model to OpenAIProviderInputs."""
+    """Test conversion of ProviderRequest with response_model to OpenAIProviderInputs."""
     # The OpenAI converter doesn't currently use response_model, but the test
     # ensures it handles the parameter without errors
 
@@ -30,16 +34,16 @@ def test_convert_with_response_model():
         name: str
         value: int
 
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(
+    request = ProviderRequest(
         provider_name="openai",
-        messages=messages,
-        model="test-model",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
         response_model=ExampleModel,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, OpenAIProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"

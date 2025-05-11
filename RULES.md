@@ -64,11 +64,11 @@ The following dependencies are allowed:
 - `prompting` (in: `SystemInput`, out: `None` (prints content)).
 
 #### `prompting` depends on:
-- `clients`
 - `tools`
+- `clients` (in: `ClientRequest`, out: `ClientResponse`)
 
 #### `clients` depends on:
-- `providers`
+- `providers` (in: `ProviderRequest`, out: `StreamHistory`)
 
 #### `providers` depends on nothing.
 

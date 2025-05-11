@@ -1,10 +1,8 @@
-from typing import Any, List
+from typing import List
 
 from electric_text.logging import get_logger
-from electric_text.clients import create_user_request
 from electric_text.clients import resolve_api_key
 from electric_text.clients import Client
-from electric_text.clients import ProviderResponse
 from electric_text.tools import load_tools_from_tool_boxes
 from electric_text.prompting.functions.execute_prompt import execute_prompt
 from electric_text.prompting.data.system_input import SystemInput
@@ -38,6 +36,7 @@ async def process_text(system_input: SystemInput) -> None:
 
     # Parse tool_boxes string into a list if provided
     tool_box_list: List[str] = []
+    tools = []
     if system_input.tool_boxes:
         tool_box_list = [tb.strip() for tb in system_input.tool_boxes.split(",")]
         logger.debug(f"Using tool boxes: {tool_box_list}")
@@ -45,33 +44,15 @@ async def process_text(system_input: SystemInput) -> None:
         # Load and process tools from the specified tool boxes
         tools = load_tools_from_tool_boxes(tool_box_list)
         logger.debug(f"Loaded {len(tools)} tools from {len(tool_box_list)} tool boxes")
-    else:
-        tools = []
 
-    if system_input.prompt_name:
-        # Use the execute_prompt function with the provided parameters
-        await execute_prompt(
-            model_name=system_input.model_name,
-            provider_name=system_input.provider_name,
-            text_input=system_input.text_input,
-            client=client,
-            prompt_name=system_input.prompt_name,
-            stream=system_input.stream,
-            tool_boxes=tool_box_list,
-        )
-    else:
-        # Use the original simple approach with no specific prompt
-        request = create_user_request(
-            model_name=system_input.model_name,
-            provider_name=system_input.provider_name,
-            text_input=system_input.text_input,
-            max_tokens=system_input.max_tokens,
-            tool_boxes=tool_box_list,
-            tools=tools,
-        )
-
-        result: ProviderResponse[Any] = await client.generate(
-            request=request,
-        )
-
-        print(result.raw_content)
+    # Execute the prompt
+    await execute_prompt(
+        client=client,
+        tools=tools,
+        model_name=system_input.model_name,
+        provider_name=system_input.provider_name,
+        text_input=system_input.text_input,
+        prompt_name=system_input.prompt_name,
+        stream=system_input.stream,
+        max_tokens=system_input.max_tokens,
+    )

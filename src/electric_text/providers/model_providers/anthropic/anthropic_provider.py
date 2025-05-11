@@ -4,12 +4,12 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
 from electric_text.providers.model_providers.anthropic.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk import StreamChunk
@@ -150,7 +150,7 @@ class AnthropicProvider(ModelProvider):
 
     async def generate_stream(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Anthropic.
@@ -165,17 +165,16 @@ class AnthropicProvider(ModelProvider):
 
         # From this point, inputs is treated as AnthropicProviderInputs
         anthropic_inputs: AnthropicProviderInputs = (
-            convert_user_request_to_provider_inputs(request)
+            convert_provider_inputs(request)
         )
 
         messages = anthropic_inputs.messages
         model = anthropic_inputs.model
-        prefill_content = anthropic_inputs.prefill_content
         structured_prefill = anthropic_inputs.structured_prefill
 
         prefill = None
-        if structured_prefill or prefill_content:
-            prefill = self.prefill_content() if structured_prefill else prefill_content
+        if structured_prefill:
+            prefill = self.prefill_content()
 
             prefill_chunk = StreamChunk(
                 type=StreamChunkType.PREFILLED_CONTENT,
@@ -271,7 +270,7 @@ class AnthropicProvider(ModelProvider):
 
     async def generate_completion(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> StreamHistory:
         """
         Get a complete response from Anthropic.
@@ -285,17 +284,16 @@ class AnthropicProvider(ModelProvider):
         history = StreamHistory()
 
         anthropic_inputs: AnthropicProviderInputs = (
-            convert_user_request_to_provider_inputs(request)
+            convert_provider_inputs(request)
         )
 
         messages = anthropic_inputs.messages
         model = anthropic_inputs.model
-        prefill_content = anthropic_inputs.prefill_content
         structured_prefill = anthropic_inputs.structured_prefill
 
         prefill = None
-        if structured_prefill or prefill_content:
-            prefill = self.prefill_content() if structured_prefill else prefill_content
+        if structured_prefill:
+            prefill = self.prefill_content()
             prefill_chunk = StreamChunk(
                 type=StreamChunkType.PREFILLED_CONTENT,
                 raw_line="",

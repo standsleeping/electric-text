@@ -1,16 +1,28 @@
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
+from electric_text.providers.functions.convert_prompt_to_messages import (
+    convert_prompt_to_messages,
+)
 
 
-def convert_user_request_to_provider_inputs(
-    request: UserRequest,
+def convert_provider_inputs(
+    request: ProviderRequest,
 ) -> AnthropicProviderInputs:
+    messages = convert_prompt_to_messages(
+        system_messages=request.system_messages,
+        prompt_text=request.prompt_text
+    )
+
+    if request.response_model:
+        structured_prefill = True
+    else:
+        structured_prefill = False
+
     return AnthropicProviderInputs(
-        messages=request.messages,
-        model=request.model,
-        prefill_content=request.prefill_content,
-        structured_prefill=True,
+        messages=messages,
+        model=request.model_name,
+        structured_prefill=structured_prefill,
         max_tokens=request.max_tokens,
     )

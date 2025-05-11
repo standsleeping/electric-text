@@ -4,12 +4,12 @@ from electric_text.providers.model_providers.openai.openai_provider import (
     FormatError,
 )
 from electric_text.providers.model_providers.openai.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 
 __all__ = [
     "OpenaiProvider",
     "ModelProviderError",
     "FormatError",
-    "convert_user_request_to_provider_inputs",
+    "convert_provider_inputs",
 ]

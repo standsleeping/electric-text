@@ -10,14 +10,14 @@
         "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
         "31",
-        // "--model",
-        // "ollama:llama3.1:8b"
-        // "--log-level",
-        // "DEBUG",
       ],
       "env": {
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
-        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31"
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
       }
     },
     {
@@ -33,9 +33,13 @@
         "prose_to_schema"
       ],
       "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
         "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs"
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
       }
     },
     {
@@ -52,9 +56,13 @@
         "--stream"
       ],
       "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
         "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs"
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
       }
     },
     {
@@ -70,9 +78,13 @@
         "poetry"
       ],
       "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
         "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs"
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
       }
     },
     {
@@ -83,15 +95,19 @@
       "args": [
         "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
-        "31",
+        "4o",
         "--prompt-name",
         "poetry",
         "--stream"
       ],
       "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
         "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
         "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs"
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
       }
     },
     {

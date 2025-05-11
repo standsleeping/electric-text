@@ -3,12 +3,12 @@ import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 from electric_text.providers import ModelProvider
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
     OllamaProviderInputs,
 )
 from electric_text.providers.model_providers.ollama.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import (
     StreamHistory,
@@ -95,7 +95,7 @@ class OllamaProvider(ModelProvider):
 
     async def generate_stream(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from Ollama.
@@ -109,7 +109,7 @@ class OllamaProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # From this point, inputs is treated as OllamaProviderInputs
-        ollama_inputs: OllamaProviderInputs = convert_user_request_to_provider_inputs(
+        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(
             request
         )
 
@@ -178,7 +178,7 @@ class OllamaProvider(ModelProvider):
 
     async def generate_completion(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> StreamHistory:
         """
         Get a complete response from Ollama.
@@ -191,7 +191,7 @@ class OllamaProvider(ModelProvider):
         """
         history = StreamHistory()
 
-        ollama_inputs: OllamaProviderInputs = convert_user_request_to_provider_inputs(
+        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(
             request
         )
 

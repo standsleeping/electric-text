@@ -1,16 +1,12 @@
-import json
-from typing import AsyncGenerator, Any, Optional, Type, TypeVar, Tuple, List
+from typing import Any, List, Optional, Type, Tuple
 
 from electric_text.logging import get_logger
-from electric_text.clients.functions.create_user_request import create_user_request
-from electric_text.clients import Client
-from electric_text.clients.data.provider_response import ProviderResponse
 from electric_text.prompting.functions.get_prompt_by_name import get_prompt_by_name
-from electric_text.tools import load_tools_from_tool_boxes
+from electric_text.prompting.functions.create_client_request import create_client_request
+from electric_text.prompting.functions.execute_client_request import execute_client_request
+from electric_text.clients import Client
 
 logger = get_logger(__name__)
-
-T = TypeVar("T")
 
 
 async def get_prompt_config_and_model(
@@ -39,86 +35,73 @@ async def get_prompt_config_and_model(
 
 
 async def execute_prompt(
-    model_name: str,
+    *,
     provider_name: str,
+    model_name: str,
     text_input: str,
     client: Client,
-    prompt_name: str,
+    tools: Optional[List[Any]] = None,
+    prompt_name: Optional[str] = None,
     stream: bool = False,
-    tool_boxes: Optional[List[str]] = None,
+    max_tokens: Optional[int] = None,
 ) -> None:
     """Execute a prompt with the given parameters.
 
     This function handles both structured and unstructured prompts,
     with or without streaming, based on the prompt configuration.
+    If no prompt_name is provided, it will create a simple user request.
 
     Args:
         model_name: Name of the model to use
         provider_name: Name of the provider to use
         text_input: Input text to process
         client: Client instance to use for the request
-        prompt_name: Name of the prompt to use
+        prompt_name: Optional name of the prompt to use
         stream: Whether to stream the response
         tool_boxes: Optional list of tool box names to use
+        max_tokens: Optional maximum number of tokens for completion
+        tools: Optional list of pre-loaded tools
     """
-    # Get prompt config and model if needed
+    # If no prompt_name, handle as a simple request with default system message
+    if not prompt_name:
+        request = create_client_request(
+            provider_name=provider_name,
+            model_name=model_name,
+            text_input=text_input,
+            tools=tools,
+            max_tokens=max_tokens,
+        )
+        
+        await execute_client_request(
+            client=client,
+            request=request,
+            stream=stream,
+        )
+        
+        return
+
+    # Get prompt config and model if needed for structured prompts
     config_result = await get_prompt_config_and_model(prompt_name)
     if not config_result[0]:
         return
 
     prompt_config, model_class = config_result
 
-    # Create request
-    request_args = {
-        "model_name": model_name,
-        "provider_name": provider_name,
-        "system_message": prompt_config.get_system_message(),
-        "text_input": text_input,
-        "stream": stream,
-    }
-
-    # Load tools if tool_boxes are provided
-    if tool_boxes:
-        request_args["tool_boxes"] = tool_boxes
-        # Load the tools
-        tools = load_tools_from_tool_boxes(tool_boxes)
-        request_args["tools"] = tools
-
-    if model_class:
-        request_args["response_model"] = model_class
-
-    user_request = create_user_request(**request_args)
-
-    if not stream:
-        # Handle non-streaming request
-        response_result: ProviderResponse[Any] = await client.generate(
-            request=user_request
-        )
-
-        if model_class and response_result.is_valid and response_result.parsed_model:
-            print(f"Result: {response_result.parsed_model}")
-            print(response_result.parsed_model.model_dump_json(indent=2))
-        else:
-            print(f"Raw content: {response_result.raw_content}")
-    else:
-        # Handle streaming request
-        generator: AsyncGenerator[ProviderResponse[Any], None] = client.stream(
-            request=user_request
-        )
-
-        async for chunk in generator:
-            if model_class and chunk.is_valid and chunk.parsed_model:
-                print(f"Valid chunk: {chunk.parsed_model}")
-                print(chunk.parsed_model.model_dump_json(indent=2))
-
-            print(f"Raw chunk content: {chunk.raw_content}")
-
-        full_content = client.provider.stream_history.get_full_content()
-        print(f"Full content: {full_content}")
-
-        if model_class:
-            try:
-                print(f"JSON: {json.loads(full_content)}")
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON: {e}")
-                print(f"Structured full content: {full_content}")
+    # Create request with custom system message from prompt config
+    request = create_client_request(
+        provider_name=provider_name,
+        model_name=model_name,
+        text_input=text_input,
+        system_message=prompt_config.get_system_message(),
+        tools=tools,
+        max_tokens=max_tokens,
+        response_model=model_class,
+    )
+    
+    # Execute the request with the appropriate model class
+    await execute_client_request(
+        client=client,
+        request=request,
+        stream=stream,
+        model_class=model_class,
+    )

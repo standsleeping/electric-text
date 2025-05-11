@@ -8,7 +8,7 @@ from electric_text.providers.data.stream_history import (
     StreamChunkType,
     StreamHistory,
 )
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 
 
 def test_constructor_with_defaults():
@@ -96,10 +96,11 @@ async def test_generate_completion_successful_response():
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="openai",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4",
+            prompt_text="test prompt",
+            model_name="gpt-4",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
@@ -118,10 +119,11 @@ async def test_generate_completion_http_error():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="openai",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4",
+            prompt_text="test prompt",
+            model_name="gpt-4",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
@@ -153,10 +155,11 @@ async def test_generate_completion_missing_content():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
 
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="openai",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4",
+            prompt_text="test prompt",
+            model_name="gpt-4",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
@@ -174,10 +177,11 @@ async def test_generate_stream_http_error():
     with patch("httpx.AsyncClient.stream") as mock_stream:
         mock_stream.side_effect = httpx.HTTPError("Stream failed")
 
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="openai",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="gpt-4",
+            prompt_text="test prompt",
+            model_name="gpt-4",
+            system_messages=["You are a helpful assistant"],
         )
         histories = []
         async for history in provider.generate_stream(user_request):

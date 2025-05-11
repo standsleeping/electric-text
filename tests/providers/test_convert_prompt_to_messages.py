@@ -1,16 +1,15 @@
 import pytest
-from electric_text.clients import convert_prompt_to_messages
-from electric_text.clients.data.prompt import Prompt
-from electric_text.clients.data.template_fragment import TemplateFragment
+from electric_text.providers.functions.convert_prompt_to_messages import (
+    convert_prompt_to_messages,
+)
 
 
 def test_convert_prompt_to_messages_minimal():
     """Test convert_prompt_to_messages with minimal input."""
-    system_message = [TemplateFragment(text="You are a helpful assistant.")]
-    user_message = "What's the weather like today?"
-    prompt = Prompt(system_message=system_message, prompt=user_message)
+    system_messages = ["You are a helpful assistant."]
+    prompt_text = "What's the weather like today?"
 
-    messages = convert_prompt_to_messages(prompt)
+    messages = convert_prompt_to_messages(system_messages, prompt_text)
 
     expected_messages = [
         {"role": "system", "content": "You are a helpful assistant."},
@@ -20,16 +19,15 @@ def test_convert_prompt_to_messages_minimal():
     assert messages == expected_messages
 
 
-def test_convert_prompt_to_messages_multiple_system_fragments():
-    """Test convert_prompt_to_messages with multiple system message fragments."""
-    system_message = [
-        TemplateFragment(text="You are a helpful assistant."),
-        TemplateFragment(text="Always be polite."),
+def test_convert_prompt_to_messages_multiple_system_messages():
+    """Test convert_prompt_to_messages with multiple system messages."""
+    system_messages = [
+        "You are a helpful assistant.",
+        "Always be polite.",
     ]
-    user_message = "What's the weather like today?"
-    prompt = Prompt(system_message=system_message, prompt=user_message)
+    prompt_text = "What's the weather like today?"
 
-    messages = convert_prompt_to_messages(prompt)
+    messages = convert_prompt_to_messages(system_messages, prompt_text)
 
     expected_messages = [
         {"role": "system", "content": "You are a helpful assistant."},
@@ -42,20 +40,22 @@ def test_convert_prompt_to_messages_multiple_system_fragments():
 
 def test_convert_prompt_to_messages_no_system_message():
     """Test convert_prompt_to_messages with no system message raises error."""
-    prompt = Prompt(system_message=None, prompt="Hello")
+    system_messages = None
+    prompt_text = "Hello"
 
     with pytest.raises(ValueError) as exc_info:
-        convert_prompt_to_messages(prompt)
+        convert_prompt_to_messages(system_messages, prompt_text)
 
     assert "System message is required" in str(exc_info.value)
 
 
 def test_convert_prompt_to_messages_empty_system_message():
     """Test convert_prompt_to_messages with empty system message list."""
-    prompt = Prompt(system_message=[], prompt="Hello")
+    system_messages = []
+    prompt_text = "Hello"
 
     # Empty list is valid, should not raise an error
-    messages = convert_prompt_to_messages(prompt)
+    messages = convert_prompt_to_messages(system_messages, prompt_text)
 
     # Should only have the user message since system_message is empty
     expected_messages = [

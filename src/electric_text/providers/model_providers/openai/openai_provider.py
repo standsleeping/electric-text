@@ -4,14 +4,14 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.model_providers.openai.openai_provider_inputs import (
     OpenAIProviderInputs,
 )
 from electric_text.providers.model_providers.openai.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import (
     StreamHistory,
@@ -122,7 +122,7 @@ class OpenaiProvider(ModelProvider):
 
     async def generate_stream(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from OpenAI.
@@ -136,7 +136,7 @@ class OpenaiProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_provider_inputs(
+        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(
             request
         )
 
@@ -162,7 +162,7 @@ class OpenaiProvider(ModelProvider):
 
     async def generate_completion(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> StreamHistory:
         """
         Get a complete response from OpenAI.
@@ -176,7 +176,7 @@ class OpenaiProvider(ModelProvider):
         history = StreamHistory()
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_user_request_to_provider_inputs(
+        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(
             request
         )
 

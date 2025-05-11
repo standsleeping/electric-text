@@ -5,7 +5,7 @@ from typing import (
 )
 
 from electric_text.providers.data.stream_history import StreamHistory
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 
 
 @runtime_checkable
@@ -16,7 +16,7 @@ class ModelProvider(Protocol):
 
     def generate_stream(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> AsyncGenerator[StreamHistory, None]:
         """
         Stream responses from the provider.
@@ -31,7 +31,7 @@ class ModelProvider(Protocol):
 
     async def generate_completion(
         self,
-        request: UserRequest,
+        request: ProviderRequest,
     ) -> StreamHistory:
         """
         Get a complete response from the provider.

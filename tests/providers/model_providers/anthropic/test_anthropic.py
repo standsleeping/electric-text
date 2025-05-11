@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from electric_text.providers.model_providers.anthropic import AnthropicProvider
 from electric_text.providers.data.stream_history import StreamChunkType, StreamHistory
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 
 
 def test_constructor_with_defaults():
@@ -141,68 +141,23 @@ async def test_generate_completion_successful_response():
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="anthropic",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="claude-3-sonnet-20240229",
-            prefill_content=None,
-            structured_prefill=True,
+            prompt_text="test prompt",
+            model_name="claude-3-sonnet-20240229",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 2
+        assert len(result.chunks) == 1
 
-        # First chunk should be the prefill content
-        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert result.chunks[0].content == "{"
+        # Chunk should be the completion response
+        assert result.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
+        assert result.chunks[0].content == json.dumps(RESULT)
 
-        # Second chunk should be the completion response
-        assert result.chunks[1].type == StreamChunkType.COMPLETE_RESPONSE
-        assert result.chunks[1].content == json.dumps(RESULT)
-
-        # Full content should combine prefill and response
-        assert result.get_full_content() == "{" + json.dumps(RESULT)
-
-
-@pytest.mark.asyncio
-async def test_generate_completion_with_custom_prefill():
-    """Uses custom prefill content correctly."""
-    provider = AnthropicProvider(api_key="test_key")
-
-    RESULT = {"value": "test result"}
-    RESPONSE_CONTENT = {"content": [{"text": json.dumps(RESULT), "type": "text"}]}
-
-    mock_request = httpx.Request(
-        "POST",
-        "http://test",
-    )
-
-    mock_response = httpx.Response(
-        200,
-        json=RESPONSE_CONTENT,
-        request=mock_request,
-    )
-
-    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
-        mock_post.return_value = mock_response
-        # When structured_prefill is False, it should use the custom prefill
-        # but with the current implementation, it will always use "{"
-        # when structured_prefill is True
-        user_request = UserRequest(
-            provider_name="anthropic",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="claude-3-sonnet-20240229",
-            prefill_content="<response>",
-            structured_prefill=True,
-        )
-        result = await provider.generate_completion(user_request)
-
-        assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 2
-        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert result.chunks[0].content == "{"
-        assert result.get_full_content() == "{" + json.dumps(RESULT)
+        # Full content should be the response
+        assert result.get_full_content() == json.dumps(RESULT)
 
 
 @pytest.mark.asyncio
@@ -213,25 +168,21 @@ async def test_generate_completion_http_error():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.side_effect = httpx.HTTPError("Connection failed")
 
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="anthropic",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="claude-3-sonnet-20240229",
-            structured_prefill=True,
+            prompt_text="test prompt",
+            model_name="claude-3-sonnet-20240229",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 2  # Now includes prefill content chunk
+        assert len(result.chunks) == 1
 
-        # First chunk should be the prefill content
-        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert result.chunks[0].content == "{"
-
-        # Second chunk should be the HTTP error
-        assert result.chunks[1].type == StreamChunkType.HTTP_ERROR
-        assert result.chunks[1].error == "Complete request failed: Connection failed"
-        assert result.chunks[1].raw_line == ""
+        # Chunk should be the HTTP error
+        assert result.chunks[0].type == StreamChunkType.HTTP_ERROR
+        assert result.chunks[0].error == "Complete request failed: Connection failed"
+        assert result.chunks[0].raw_line == ""
 
 
 @pytest.mark.asyncio
@@ -251,25 +202,21 @@ async def test_generate_completion_missing_content():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
 
-        user_request = UserRequest(
+        user_request = ProviderRequest(
             provider_name="anthropic",
-            messages=[{"role": "user", "content": "test prompt"}],
-            model="claude-3-sonnet-20240229",
-            structured_prefill=True,
+            prompt_text="test prompt",
+            model_name="claude-3-sonnet-20240229",
+            system_messages=["You are a helpful assistant"],
         )
         result = await provider.generate_completion(user_request)
 
         assert isinstance(result, StreamHistory)
-        assert len(result.chunks) == 2  # Now includes prefill content chunk
+        assert len(result.chunks) == 1
 
-        # First chunk should be the prefill content
-        assert result.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert result.chunks[0].content == "{"
-
-        # Second chunk should be the format error
-        assert result.chunks[1].type == StreamChunkType.FORMAT_ERROR
-        assert "Failed to parse response" in result.chunks[1].error
-        assert result.chunks[1].raw_line == "{}"
+        # Chunk should be the format error
+        assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
+        assert "Failed to parse response" in result.chunks[0].error
+        assert result.chunks[0].raw_line == "{}"
 
 
 @pytest.mark.asyncio
@@ -277,15 +224,11 @@ async def test_generate_stream_yields_chunks():
     """Yields stream history objects containing accumulated chunks."""
     provider = AnthropicProvider(api_key="test_key")
 
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant"},
-        {"role": "user", "content": "Hello"},
-    ]
-    user_request = UserRequest(
+    user_request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        structured_prefill=True,
+        prompt_text="Hello",
+        model_name="claude-3-sonnet-20240229",
+        system_messages=["You are a helpful assistant"],
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -317,85 +260,27 @@ async def test_generate_stream_yields_chunks():
             histories.append(history)
 
         # We should get four history objects (same object, updated)
-        # First yield is the initial prefill, then 3 more yields from the stream
+        # One for initial yield plus one for each yield from the stream
         assert len(histories) == 4
         assert histories[0] is histories[1] is histories[2] is histories[3]
 
         # Final history should have all chunks
         final_history = histories[-1]
-        assert len(final_history.chunks) == 4
-
-        # First chunk should be the prefilled content
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[0].content == "{"
-
-        # Second chunk should be the first part of content
-        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[1].content == "Hello"
-
-        # Third chunk should be the second part of content
-        assert final_history.chunks[2].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[2].content == " world"
-
-        # Fourth chunk should be the completion marker
-        assert final_history.chunks[3].type == StreamChunkType.COMPLETION_END
-
-        # Full content should combine prefill and all content chunks
-        assert final_history.get_full_content() == "{Hello world"
-
-
-@pytest.mark.asyncio
-async def test_generate_stream_with_custom_prefill():
-    """Tests streaming with custom prefill content."""
-    provider = AnthropicProvider(api_key="test_key")
-
-    messages = [
-        {"role": "user", "content": "Hello"},
-    ]
-    # The AnthropicProvider implementation will use the standard "{" prefill
-    # when structured_prefill is True, regardless of prefill_content
-    user_request = UserRequest(
-        provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        prefill_content="<",
-        structured_prefill=True,  # This will make it use "{" instead of "<"
-    )
-
-    mock_request = httpx.Request("POST", "http://test")
-    mock_response = httpx.Response(
-        200,
-        content=b"",
-        request=mock_request,
-    )
-
-    async def mock_aiter_lines():
-        yield 'data: {"delta": {"text": "response"}, "type": "content_block_delta"}'
-        yield 'data: {"type": "message_stop"}'
-
-    mock_response.aiter_lines = mock_aiter_lines
-
-    class AsyncContextManagerMock:
-        async def __aenter__(self):
-            return mock_response
-
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-
-    with patch("httpx.AsyncClient.stream") as mock_stream:
-        mock_stream.return_value = AsyncContextManagerMock()
-        histories = []
-
-        async for history in provider.generate_stream(user_request):
-            histories.append(history)
-
-        final_history = histories[-1]
         assert len(final_history.chunks) == 3
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert (
-            final_history.chunks[0].content == "{"
-        )  # Should match the provider's prefill_content() method
-        assert final_history.get_full_content() == "{response"
+
+        # First chunk should be the first part of content
+        assert final_history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[0].content == "Hello"
+
+        # Second chunk should be the second part of content
+        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[1].content == " world"
+
+        # Third chunk should be the completion marker
+        assert final_history.chunks[2].type == StreamChunkType.COMPLETION_END
+
+        # Full content should be the concatenated content chunks
+        assert final_history.get_full_content() == "Hello world"
 
 
 @pytest.mark.asyncio
@@ -403,14 +288,11 @@ async def test_generate_stream_http_error():
     """Returns StreamHistory with HTTP_ERROR chunk when stream request fails."""
     provider = AnthropicProvider(api_key="test_key")
 
-    messages = [
-        {"role": "user", "content": "Hello"},
-    ]
-    user_request = UserRequest(
+    user_request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        structured_prefill=True,
+        prompt_text="Hello",
+        model_name="claude-3-sonnet-20240229",
+        system_messages=["You are a helpful assistant"],
     )
 
     # Mock the get_client method to raise an exception
@@ -421,13 +303,12 @@ async def test_generate_stream_http_error():
         async for history in provider.generate_stream(user_request):
             histories.append(history)
 
-        # Verify the final stream history has both prefill and error
+        # Verify the final stream history has the error
         final_history = histories[-1]
-        assert len(final_history.chunks) == 2
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[1].type == StreamChunkType.HTTP_ERROR
+        assert len(final_history.chunks) == 1
+        assert final_history.chunks[0].type == StreamChunkType.HTTP_ERROR
         assert (
-            final_history.chunks[1].error == "Stream request failed: Connection failed"
+            final_history.chunks[0].error == "Stream request failed: Connection failed"
         )
 
 
@@ -436,14 +317,11 @@ async def test_generate_stream_json_error():
     """Records JSON errors in stream history."""
     provider = AnthropicProvider(api_key="test_key")
 
-    messages = [
-        {"role": "user", "content": "Hello"},
-    ]
-    user_request = UserRequest(
+    user_request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        structured_prefill=True,
+        prompt_text="Hello",
+        model_name="claude-3-sonnet-20240229",
+        system_messages=["You are a helpful assistant"],
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -472,15 +350,14 @@ async def test_generate_stream_json_error():
         async for history in provider.generate_stream(user_request):
             histories.append(history)
 
-        # Verify the final stream history has both prefill and error
+        # Verify the final stream history has the error
         final_history = histories[-1]
-        assert len(final_history.chunks) == 2
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[1].type == StreamChunkType.PARSE_ERROR
-        assert final_history.chunks[1].raw_line == "data: invalid json"
+        assert len(final_history.chunks) == 1
+        assert final_history.chunks[0].type == StreamChunkType.PARSE_ERROR
+        assert final_history.chunks[0].raw_line == "data: invalid json"
         assert (
-            "JSONDecodeError" in final_history.chunks[1].error
-            or "Expecting value" in final_history.chunks[1].error
+            "JSONDecodeError" in final_history.chunks[0].error
+            or "Expecting value" in final_history.chunks[0].error
         )
 
 
@@ -489,14 +366,11 @@ async def test_generate_stream_api_error():
     """Records API errors in stream history."""
     provider = AnthropicProvider(api_key="test_key")
 
-    messages = [
-        {"role": "user", "content": "Hello"},
-    ]
-    user_request = UserRequest(
+    user_request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        structured_prefill=True,
+        prompt_text="Hello",
+        model_name="claude-3-sonnet-20240229",
+        system_messages=["You are a helpful assistant"],
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -525,12 +399,11 @@ async def test_generate_stream_api_error():
         async for history in provider.generate_stream(user_request):
             histories.append(history)
 
-        # Verify the final stream history has both prefill and error
+        # Verify the final stream history has the error
         final_history = histories[-1]
-        assert len(final_history.chunks) == 2
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[1].type == StreamChunkType.FORMAT_ERROR
-        assert final_history.chunks[1].error == "API rate limit exceeded"
+        assert len(final_history.chunks) == 1
+        assert final_history.chunks[0].type == StreamChunkType.FORMAT_ERROR
+        assert final_history.chunks[0].error == "API rate limit exceeded"
 
 
 @pytest.mark.asyncio
@@ -538,14 +411,11 @@ async def test_generate_stream_empty_line():
     """Skips empty lines in stream history."""
     provider = AnthropicProvider(api_key="test_key")
 
-    messages = [
-        {"role": "user", "content": "Hello"},
-    ]
-    user_request = UserRequest(
+    user_request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="claude-3-sonnet-20240229",
-        structured_prefill=True,
+        prompt_text="Hello",
+        model_name="claude-3-sonnet-20240229",
+        system_messages=["You are a helpful assistant"],
     )
 
     mock_request = httpx.Request("POST", "http://test")
@@ -576,12 +446,11 @@ async def test_generate_stream_empty_line():
         async for history in provider.generate_stream(user_request):
             histories.append(history)
 
-        # Verify the final stream history has both prefill and content
+        # Verify the final stream history has the content
         final_history = histories[-1]
-        assert len(final_history.chunks) == 2
-        assert final_history.chunks[0].type == StreamChunkType.PREFILLED_CONTENT
-        assert final_history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-        assert final_history.chunks[1].content == "Hello"
+        assert len(final_history.chunks) == 1
+        assert final_history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
+        assert final_history.chunks[0].content == "Hello"
 
-        # Full content should combine both chunks
-        assert final_history.get_full_content() == "{Hello"
+        # Full content should be the content
+        assert final_history.get_full_content() == "Hello"

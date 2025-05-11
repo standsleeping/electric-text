@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.ollama.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
     OllamaProviderInputs,
@@ -19,32 +19,38 @@ class SampleResponseModel(BaseModel):
 
 
 def test_convert_without_response_model():
-    """Test conversion of UserRequest to OllamaProviderInputs without response_model."""
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(provider_name="ollama", messages=messages, model="test-model")
+    """Test conversion of ProviderRequest to OllamaProviderInputs without response_model."""
 
-    result = convert_user_request_to_provider_inputs(request)
+    request = ProviderRequest(
+        provider_name="ollama",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
+    )
+
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, OllamaProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
     assert result.format_schema is None
 
 
 def test_convert_with_pydantic_response_model():
-    """Test conversion of UserRequest to OllamaProviderInputs with a Pydantic response_model."""
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(
+    """Test conversion of ProviderRequest to OllamaProviderInputs with a Pydantic response_model."""
+
+    request = ProviderRequest(
         provider_name="ollama",
-        messages=messages,
-        model="test-model",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
         response_model=SampleResponseModel,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, OllamaProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
     assert result.format_schema is not None
     assert isinstance(result.format_schema, dict)
@@ -60,18 +66,19 @@ def test_convert_with_pydantic_response_model():
 
 
 def test_convert_with_none_response_model():
-    """Test conversion of UserRequest to OllamaProviderInputs with response_model=None."""
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(
+    """Test conversion of ProviderRequest to OllamaProviderInputs with response_model=None."""
+
+    request = ProviderRequest(
         provider_name="ollama",
-        messages=messages,
-        model="test-model",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
         response_model=None,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, OllamaProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
     assert result.format_schema is None

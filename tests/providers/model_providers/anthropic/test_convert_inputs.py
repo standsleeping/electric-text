@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from electric_text.providers.data.user_request import UserRequest
+from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.anthropic.convert_inputs import (
-    convert_user_request_to_provider_inputs,
+    convert_provider_inputs,
 )
 from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
     AnthropicProviderInputs,
@@ -10,66 +10,67 @@ from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs
 
 
 def test_convert_basic_request():
-    """Test conversion of basic UserRequest to AnthropicProviderInputs."""
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(
-        provider_name="anthropic", messages=messages, model="test-model"
+    """Test conversion of basic ProviderRequest to AnthropicProviderInputs."""
+    request = ProviderRequest(
+        provider_name="anthropic",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
-    assert result.prefill_content is None
-    assert result.structured_prefill is True
+    assert result.structured_prefill is False
     assert result.max_tokens is None
 
 
 def test_convert_with_prefill():
-    """Test conversion of UserRequest with prefill to AnthropicProviderInputs."""
-    messages = [{"role": "user", "content": "Hello"}]
-    prefill = "This is a prefill"
-    request = UserRequest(
+    """Test conversion of ProviderRequest with prefill to AnthropicProviderInputs."""
+
+    prefill = "This is a prefill"  # TODO: come back to this
+
+    request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="test-model",
-        prefill_content=prefill,
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
+        max_tokens=None,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
-    assert result.prefill_content == prefill
-    assert result.structured_prefill is True
+    assert result.structured_prefill is False
     assert result.max_tokens is None
 
 
 def test_convert_with_max_tokens():
-    """Test conversion of UserRequest with max_tokens to AnthropicProviderInputs."""
-    messages = [{"role": "user", "content": "Hello"}]
+    """Test conversion of ProviderRequest with max_tokens to AnthropicProviderInputs."""
     max_tokens = 1000
-    request = UserRequest(
+    request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="test-model",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
         max_tokens=max_tokens,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
-    assert result.prefill_content is None
-    assert result.structured_prefill is True
+    assert result.structured_prefill is False
     assert result.max_tokens == max_tokens
 
 
 def test_convert_with_response_model():
-    """Test conversion of UserRequest with response_model to AnthropicProviderInputs."""
+    """Test conversion of ProviderRequest with response_model to AnthropicProviderInputs."""
     # The Anthropic converter doesn't currently use response_model, but the test
     # ensures it handles the parameter without errors
 
@@ -77,19 +78,18 @@ def test_convert_with_response_model():
         name: str
         value: int
 
-    messages = [{"role": "user", "content": "Hello"}]
-    request = UserRequest(
+    request = ProviderRequest(
         provider_name="anthropic",
-        messages=messages,
-        model="test-model",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
         response_model=ExampleModel,
     )
 
-    result = convert_user_request_to_provider_inputs(request)
+    result = convert_provider_inputs(request)
 
     assert isinstance(result, AnthropicProviderInputs)
-    assert result.messages == messages
+    assert len(result.messages) == 2  # system message + user message
     assert result.model == "test-model"
-    assert result.prefill_content is None
     assert result.structured_prefill is True
     assert result.max_tokens is None

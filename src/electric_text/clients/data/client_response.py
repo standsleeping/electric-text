@@ -9,7 +9,7 @@ ResponseModel = TypeVar("ResponseModel")
 
 
 @dataclass
-class ProviderResponse(Generic[ResponseModel]):
+class ClientResponse(Generic[ResponseModel]):
     """
     Represents a unified response from a provider.
     Contains either a raw prompt result or a parsed structured result.
@@ -55,13 +55,13 @@ class ProviderResponse(Generic[ResponseModel]):
         return None
 
     @classmethod
-    def from_prompt_result(cls, result: PromptResult) -> "ProviderResponse[Any]":
-        """Create a ProviderResponse from a PromptResult."""
+    def from_prompt_result(cls, result: PromptResult) -> "ClientResponse[Any]":
+        """Create a ClientResponse from a PromptResult."""
         return cls(raw_result=result)
 
     @classmethod
     def from_parse_result(
         cls, result: ParseResult[ResponseModel]
-    ) -> "ProviderResponse[ResponseModel]":
-        """Create a ProviderResponse from a ParseResult."""
+    ) -> "ClientResponse[ResponseModel]":
+        """Create a ClientResponse from a ParseResult."""
         return cls(raw_result=result)
