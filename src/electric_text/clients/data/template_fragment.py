@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class TemplateFragment(BaseModel):
+@dataclass
+class TemplateFragment:
     text: str

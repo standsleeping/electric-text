@@ -1,6 +1,7 @@
 from enum import Enum
+from dataclasses import dataclass
 
-
+@dataclass
 class StreamChunkType(Enum):
     INITIAL_MESSAGE = "initial_message"  # First chunk with role/content
     CONTENT_CHUNK = "content_chunk"  # Regular content chunk
