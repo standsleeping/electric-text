@@ -48,7 +48,7 @@ def test_get_system_message(temp_prompt_dir, monkeypatch):
 
 
 def write_test_model_file(path):
-    """Write a test Pydantic model file for testing."""
+    """Write a test validation model file for testing."""
     model_code = dedent("""
     from pydantic import BaseModel
     from typing import Optional, List
@@ -56,7 +56,7 @@ def write_test_model_file(path):
     class TestResponse(BaseModel):
         response: str
         details: Optional[List[str]] = None
-        
+
         model_config = {
             "json_schema_extra": {
                 "examples": [
@@ -174,7 +174,7 @@ def test_nonexistent_model_file():
     result = config.get_model_class()
     assert not result.is_valid
     assert result.error == ModelLoadError.OTHER
-    assert "Error loading Pydantic model" in result.error_message
+    assert "Error loading validation model" in result.error_message
 
     # get_schema should return None
     schema = config.get_schema()
@@ -205,4 +205,4 @@ def test_invalid_model_file(temp_prompt_dir):
     # Check that it's invalid with the expected error
     assert not result.is_valid
     assert result.error == ModelLoadError.NO_MODEL
-    assert "No Pydantic model found" in result.error_message
+    assert "No validation model found" in result.error_message

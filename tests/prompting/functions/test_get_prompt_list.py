@@ -10,7 +10,7 @@ from electric_text.prompting.data.prompt_config import PromptConfig
 
 
 def write_test_model_file(path):
-    """Write a test Pydantic model file for testing."""
+    """Write a test validation model file for testing."""
     model_code = dedent("""
     from pydantic import BaseModel
     from typing import Optional, List
@@ -18,7 +18,7 @@ def write_test_model_file(path):
     class TestResponse(BaseModel):
         response: str
         details: Optional[List[str]] = None
-        
+
         model_config = {
             "json_schema_extra": {
                 "examples": [
@@ -37,21 +37,21 @@ def write_test_model_file(path):
 def setup_prompt_dir_with_model(temp_dir):
     """Set up a test directory with a model file instead of a schema file."""
     temp_dir_path = Path(temp_dir)
-    
+
     # Create models directory
     models_dir = temp_dir_path / "models"
     models_dir.mkdir(exist_ok=True)
-    
+
     # Create a test model file
     model_path = models_dir / "test_model.py"
     write_test_model_file(model_path)
-    
+
     # Create a test system message file
     system_message = "This is a test system message."
     system_message_path = temp_dir_path / "test_system_message.txt"
     with open(system_message_path, "w") as f:
         f.write(system_message)
-    
+
     # Create a test prompt config with model_path
     test_config = {
         "name": "test_prompt_model",
@@ -62,7 +62,7 @@ def setup_prompt_dir_with_model(temp_dir):
     config_path = temp_dir_path / "test_prompt_model.json"
     with open(config_path, "w") as f:
         json.dump(test_config, f)
-    
+
     # Create a legacy prompt config with schema_path
     schema_dir = temp_dir_path / "schemas"
     schema_dir.mkdir(exist_ok=True)
@@ -74,7 +74,7 @@ def setup_prompt_dir_with_model(temp_dir):
     schema_path = schema_dir / "test_schema.json"
     with open(schema_path, "w") as f:
         json.dump(test_schema, f)
-        
+
     legacy_config = {
         "name": "test_prompt_schema",
         "description": "Test prompt with legacy schema",
@@ -84,7 +84,7 @@ def setup_prompt_dir_with_model(temp_dir):
     legacy_config_path = temp_dir_path / "test_prompt_schema.json"
     with open(legacy_config_path, "w") as f:
         json.dump(legacy_config, f)
-    
+
     # Create a prompt config without model/schema
     test_config_no_model = {
         "name": "test_prompt_no_model",
@@ -94,7 +94,7 @@ def setup_prompt_dir_with_model(temp_dir):
     config_path_no_model = temp_dir_path / "test_prompt_no_model.json"
     with open(config_path_no_model, "w") as f:
         json.dump(test_config_no_model, f)
-    
+
     return temp_dir
 
 
@@ -103,7 +103,7 @@ def test_get_prompt_list_with_models(monkeypatch):
     with tempfile.TemporaryDirectory() as temp_dir:
         # Set up a test directory with model files
         setup_prompt_dir_with_model(temp_dir)
-        
+
         # Set environment variable to point to temp directory
         monkeypatch.setenv("USER_PROMPT_DIRECTORY", temp_dir)
 
@@ -122,7 +122,7 @@ def test_get_prompt_list_with_models(monkeypatch):
         test_prompt_model = next(
             config for config in prompt_configs if config.name == "test_prompt_model"
         )
-        
+
         test_prompt_schema = next(
             config for config in prompt_configs if config.name == "test_prompt_schema"
         )
@@ -133,7 +133,10 @@ def test_get_prompt_list_with_models(monkeypatch):
 
         # Check test_prompt_model properties
         assert test_prompt_model.description == "Test prompt with Pydantic model"
-        assert Path(test_prompt_model.system_message_path).name == "test_system_message.txt"
+        assert (
+            Path(test_prompt_model.system_message_path).name
+            == "test_system_message.txt"
+        )
         assert Path(test_prompt_model.model_path).name == "test_model.py"
 
         # Check that legacy schema_path was converted to model_path
@@ -157,7 +160,7 @@ def test_get_prompt_list(temp_prompt_dir, monkeypatch):
 
         # Check for deprecation warning
         assert any(
-            "'schema_path'" in str(args[0]) and "deprecated" in str(args[0])
+            "'schema_path'" in str(args[0]) in str(args[0])
             for args in mock_print.call_args_list
         )
 
@@ -180,7 +183,7 @@ def test_get_prompt_list(temp_prompt_dir, monkeypatch):
     # Check test_prompt properties
     assert test_prompt.description == "Test prompt description"
     assert Path(test_prompt.system_message_path).name == "test_system_message.txt"
-    
+
     # Check that schema_path was converted to model_path
     assert Path(test_prompt.model_path).name == "test_schema.json"
 

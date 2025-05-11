@@ -1,8 +1,9 @@
-import importlib.util
-import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Dict, Any, Type, cast
+from typing import Optional, Dict, Any, Type
+
+from electric_text.clients.data.validation_model import ModelLoadResult
+from electric_text.clients.functions.load_validation_model import load_validation_model
 
 
 class ModelLoadError(Enum):
@@ -14,7 +15,8 @@ class ModelLoadError(Enum):
 
 @dataclass
 class ModelResult:
-    """Result of loading a Pydantic model from a Python file."""
+    """Result of loading a validation model from a Python file."""
+
     model_class: Optional[Type[Any]] = None
     error: Optional[ModelLoadError] = None
     error_message: Optional[str] = None
@@ -23,6 +25,26 @@ class ModelResult:
     def is_valid(self) -> bool:
         """Returns True if a valid model was loaded."""
         return self.model_class is not None and self.error is None
+
+    @classmethod
+    def from_load_result(cls, result: ModelLoadResult) -> "ModelResult":
+        """Convert a ModelLoadResult to a ModelResult."""
+        error = None
+        if result.error:
+            if result.error == "NOT_FOUND":
+                error = ModelLoadError.NOT_FOUND
+            elif result.error == "IMPORT_ERROR":
+                error = ModelLoadError.IMPORT_ERROR
+            elif result.error == "NO_MODEL":
+                error = ModelLoadError.NO_MODEL
+            else:
+                error = ModelLoadError.OTHER
+
+        return cls(
+            model_class=result.model_class,
+            error=error,
+            error_message=result.error_message,
+        )
 
 
 @dataclass
@@ -39,7 +61,7 @@ class PromptConfig:
     """Path to the text file containing the system message"""
 
     model_path: Optional[str] = None
-    """Path to Python file containing a Pydantic model for response validation"""
+    """Path to Python file containing a validation model for response validation"""
 
     def get_system_message(self) -> str:
         """Load the system message from the specified path."""
@@ -48,10 +70,10 @@ class PromptConfig:
 
     def get_schema(self) -> Optional[Dict[str, Any]]:
         """
-        Load the schema from the Pydantic model in the specified Python file.
-        
+        Load the schema from the validation model in the specified Python file.
+
         Returns:
-            Optional[Dict[str, Any]]: The JSON schema derived from the Pydantic model,
+            Optional[Dict[str, Any]]: The JSON schema derived from the validation model,
                                      or None if no model_path is specified or an error occurred.
         """
         result = self.get_model_class()
@@ -64,46 +86,15 @@ class PromptConfig:
 
     def get_model_class(self) -> ModelResult:
         """
-        Get the Pydantic model class from the Python file if it exists.
-        
+        Get the validation model class from the Python file if it exists.
+
         Returns:
             ModelResult: Result of loading the model class, with error information if applicable.
         """
         if not self.model_path:
-            return ModelResult(error=ModelLoadError.NOT_FOUND, error_message="No model path specified")
-            
-        try:
-            # Import the module dynamically
-            spec = importlib.util.spec_from_file_location("schema_module", self.model_path)
-            if spec is None or spec.loader is None:
-                return ModelResult(
-                    error=ModelLoadError.IMPORT_ERROR,
-                    error_message=f"Could not load module from {self.model_path}"
-                )
-            
-            module = importlib.util.module_from_spec(spec)
-            sys.modules["schema_module"] = module
-            spec.loader.exec_module(module)
-            
-            # Find the first class that inherits from BaseModel
-            from pydantic import BaseModel
-            
-            for attr_name in dir(module):
-                attr = getattr(module, attr_name)
-                if (
-                    isinstance(attr, type) 
-                    and issubclass(attr, BaseModel) 
-                    and attr != BaseModel
-                ):
-                    return ModelResult(model_class=attr)
-            
             return ModelResult(
-                error=ModelLoadError.NO_MODEL,
-                error_message=f"No Pydantic model found in {self.model_path}"
+                error=ModelLoadError.NOT_FOUND, error_message="No model path specified"
             )
-        
-        except Exception as e:
-            return ModelResult(
-                error=ModelLoadError.OTHER,
-                error_message=f"Error loading Pydantic model from {self.model_path}: {str(e)}"
-            )
+
+        load_result = load_validation_model(self.model_path)
+        return ModelResult.from_load_result(load_result)
