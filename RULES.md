@@ -22,9 +22,9 @@ uv run python -m pytest
 
 ## Architecture
 
-This project follows a strict "hexagonal" or "ports and adapters" architecture. Another name for this architectural style is "functional core, imperative shell."
+This project follows a strict "hexagonal" architecture. Other names for this architectural style include "functional core, imperative shell" and "ports and adapters."
 
-The system is organized into a set of subpackages. Each subpackage is an independent unit, often with a clear/independent API, complete with types, usage guidelines, and documentation.
+The codebase is organized into a set of subpackages. Each subpackage is an independent unit, often with a clear/independent API, complete with types, usage guidelines, and documentation. Circular dependencies between subpackages are strictly forbidden!
 
 Each subpackage keeps an internally strict separation between functions and data.
 
@@ -33,6 +33,8 @@ The data (data structures, dataclasses, Pydantic models, and types) are kept in 
 The functions (often "pure" functions, wherever possible) are kept in the functions folder.
 
 We maintain a strict 1:1 correspondence between functions and files: one function per file.
+
+We also maintain a strict 1:1 correspondence between data and files: one data structure per file.
 
 We also maintain a strict 1:1 correspondence between files and tests: one file, one test suite.
 
