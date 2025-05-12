@@ -123,6 +123,15 @@ Notes on integrators:
 - Size of test suite is proportional to variety of return conditions.
 - Never mocks or stubs user code, always runs code that it depends on.
 
+## Style
+
+We follow a strictly functional programming style:
+1. Prefer functions and composition over classes and inheritance.
+2. Functions are almost always pure and have no side effects.
+3. Functions follow SRP and are small/focused.
+4. Functions always have clear input and output types.
+5. Functions never mutate their arguments.
+
 ## Progress
 
 Some code predates these rules and is not yet in compliance. Before making changes to existing functionality, please review the code and determine if it is in compliance with the rules. If it is not in compliance, please highlight the code in question and ask for guidance as to whether it should be changed before proceeding.
