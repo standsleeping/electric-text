@@ -32,7 +32,7 @@ async def execute_client_request(
             print(f"Result: {response.parsed_model}")
             print(response.parsed_model.model_dump_json(indent=2))
         else:
-            print(f"Raw content: {response.raw_content}")
+            print(f"Raw content (no model class): {response.raw_content}")
     else:
         # Handle streaming execution
         stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream(

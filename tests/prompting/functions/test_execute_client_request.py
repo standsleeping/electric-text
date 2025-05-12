@@ -72,7 +72,7 @@ async def test_execute_client_request_non_streaming(
 
     # Verify output
     captured = capsys.readouterr()
-    assert "Raw content: Test response content" in captured.out
+    assert "Raw content (no model class): Test response content" in captured.out
 
 
 @pytest.mark.asyncio
