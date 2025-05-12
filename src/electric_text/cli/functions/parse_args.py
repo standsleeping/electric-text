@@ -35,6 +35,7 @@ def parse_args(args: Optional[List[str]] = None) -> SystemInput:
         "ollama:llama3.1:8b",
         "anthropic:claude-3-7-sonnet-20250219",
         "openai:gpt-4o-mini",
+        "openai:gpt-4o-2024-08-06",
     ]
 
     parser.add_argument(
@@ -71,7 +72,7 @@ def parse_args(args: Optional[List[str]] = None) -> SystemInput:
         "--prompt-name",
         "-p",
         type=str,
-        choices=["prose_to_schema", "poetry"],
+        choices=["prose_to_schema", "structured_poem", "poetry"],
         help="Name of the prompt to use (if not specified, uses default system message)",
     )
 

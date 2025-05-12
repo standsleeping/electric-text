@@ -1,0 +1,6 @@
+{
+    "name": "structured_poem",
+    "description": "Generates a structured poem with a title, author, stanzas, form, rhyme scheme, meter, themes, and year published",
+    "system_message_path": "structured_poem/system_message.txt",
+    "model_path": "structured_poem/poem_model.py"
+  }
