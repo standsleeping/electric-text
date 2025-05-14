@@ -2,6 +2,7 @@ import json
 import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
+import logging
 
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
@@ -19,6 +20,12 @@ from electric_text.providers.data.stream_history import (
 from electric_text.providers.functions.categorize_stream_line import (
     categorize_stream_line,
 )
+from electric_text.providers.model_providers.openai.functions.set_text_format import (
+    set_text_format,
+)
+from electric_text.providers.model_providers.openai.data.openai_response import (
+    OpenAIResponse,
+)
 
 
 class ModelProviderError(Exception):
@@ -27,17 +34,11 @@ class ModelProviderError(Exception):
     pass
 
 
-class FormatError(ModelProviderError):
-    """Error raised when response format is invalid."""
-
-    pass
-
-
 class OpenaiProvider(ModelProvider):
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://api.openai.com/v1/chat/completions",
+        base_url: str = "https://api.openai.com/v1/responses",
         default_model: str = "gpt-4o-mini",
         timeout: float = 30.0,
         **kwargs: Any,
@@ -70,6 +71,8 @@ class OpenaiProvider(ModelProvider):
         messages: list[dict[str, str]],
         model: Optional[str],
         stream: bool,
+        format_schema: Optional[Dict[str, Any]] = None,
+        strict_schema: bool = True,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
@@ -78,15 +81,20 @@ class OpenaiProvider(ModelProvider):
             messages: The list of messages to send
             model: Model override (optional)
             stream: Whether to stream the response
+            format_schema: Optional JSON schema for structured outputs
+            strict_schema: Whether to enforce strict schema validation (default: True)
 
         Returns:
             Dict containing the formatted payload
         """
         payload = {
             "model": model or self.default_model,
-            "messages": messages,
+            "input": messages,
             "stream": stream,
         }
+
+        if format_schema:
+            payload["text"] = set_text_format(format_schema, strict=strict_schema)
 
         return payload
 
@@ -136,14 +144,20 @@ class OpenaiProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(
-            request
-        )
+        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(request)
 
         messages = openai_inputs.messages
         model = openai_inputs.model
+        format_schema = openai_inputs.format_schema
+        strict_schema = getattr(openai_inputs, "strict_schema", True)
 
-        payload = self.create_payload(messages, model, stream=True)
+        payload = self.create_payload(
+            messages=messages,
+            model=model,
+            stream=True,
+            format_schema=format_schema,
+            strict_schema=strict_schema,
+        )
 
         try:
             async with self.get_client() as client:
@@ -176,14 +190,25 @@ class OpenaiProvider(ModelProvider):
         history = StreamHistory()
 
         # Convert the request to OpenAI inputs
-        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(
-            request
-        )
+        openai_inputs: OpenAIProviderInputs = convert_provider_inputs(request)
 
         messages = openai_inputs.messages
         model = openai_inputs.model
+        format_schema = openai_inputs.format_schema
+        strict_schema = getattr(openai_inputs, "strict_schema", True)
 
-        payload = self.create_payload(messages, model, stream=False)
+        payload = self.create_payload(
+            messages=messages,
+            model=model,
+            stream=False,
+            format_schema=format_schema,
+            strict_schema=strict_schema,
+        )
+
+        # Debug log the payload to inspect schema structure
+        if format_schema:
+            log_line = f"Open AI schema: {json.dumps(payload.get('text', {}), indent=2)}"
+            logging.debug(log_line)
 
         try:
             async with self.get_client() as client:
@@ -192,7 +217,19 @@ class OpenaiProvider(ModelProvider):
 
                 try:
                     data = response.json()
-                    raw_content = data["choices"][0]["message"]["content"]
+                    openai_response = OpenAIResponse.from_dict(data)
+
+                    # Get the content text from the response
+                    raw_content = openai_response.get_content_text()
+
+                    if raw_content is None:
+                        error_chunk = StreamChunk(
+                            type=StreamChunkType.FORMAT_ERROR,
+                            raw_line=response.text,
+                            error="No content found in response",
+                        )
+                        history.add_chunk(error_chunk)
+                        return history
 
                     chunk = StreamChunk(
                         type=StreamChunkType.COMPLETE_RESPONSE,

@@ -15,7 +15,7 @@ def test_constructor_with_defaults():
     """Constructor uses reasonable defaults."""
     provider = OpenaiProvider(api_key="test_key")
 
-    assert provider.base_url == "https://api.openai.com/v1/chat/completions"
+    assert provider.base_url == "https://api.openai.com/v1/responses"
     assert provider.default_model == "gpt-4o-mini"
     assert provider.timeout == 30.0
     assert provider.client_kwargs["headers"]["Authorization"] == "Bearer test_key"
@@ -50,7 +50,7 @@ def test_create_payload():
 
     assert payload["model"] == "gpt-4"
     assert payload["stream"] is True
-    assert len(payload["messages"]) == 2
+    assert len(payload["input"]) == 2
 
 
 @pytest.mark.asyncio
@@ -79,7 +79,9 @@ async def test_get_client_closes_after_context():
 
 
 @pytest.mark.asyncio
-async def test_generate_completion_successful_response():
+async def test_generate_completion_successful_response(
+    sample_openai_response_with_plain_text,
+):
     """Successfully parses a complete response from the API."""
     provider = OpenaiProvider(api_key="test_key")
 
@@ -90,12 +92,13 @@ async def test_generate_completion_successful_response():
 
     mock_response = httpx.Response(
         200,
-        json={"choices": [{"message": {"content": "test result"}}]},
+        json=sample_openai_response_with_plain_text,
         request=mock_request,
     )
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
+
         user_request = ProviderRequest(
             provider_name="openai",
             prompt_text="test prompt",
@@ -107,7 +110,6 @@ async def test_generate_completion_successful_response():
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
         assert result.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
-        assert result.chunks[0].content == "test result"
         assert result.get_full_content() == "test result"
 
 
@@ -135,20 +137,22 @@ async def test_generate_completion_http_error():
 
 
 @pytest.mark.asyncio
-async def test_generate_completion_missing_content():
+async def test_generate_completion_missing_content(
+    sample_openai_response_with_plain_text,
+):
     """Returns StreamHistory with FORMAT_ERROR chunk when response is missing required content."""
     provider = OpenaiProvider(api_key="test_key")
+
+    # Create a copy and modify it to have empty content
+    import copy
+
+    data = copy.deepcopy(sample_openai_response_with_plain_text)
+    data["output"][0]["content"] = []  # Empty content
 
     mock_request = httpx.Request("POST", "http://test")
     mock_response = httpx.Response(
         200,
-        json={
-            "choices": [
-                {
-                    "message": {}  # Missing content field
-                }
-            ]
-        },
+        json=data,
         request=mock_request,
     )
 
@@ -166,7 +170,7 @@ async def test_generate_completion_missing_content():
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
         assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
-        assert "Failed to parse response" in result.chunks[0].error
+        assert "No content found in response" in result.chunks[0].error
 
 
 @pytest.mark.asyncio

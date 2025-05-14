@@ -3,6 +3,7 @@ import json
 import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Dict, Any
 
 
 @pytest.fixture
@@ -176,3 +177,140 @@ def temp_tool_configs_dir():
             os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = original_env
         else:
             del os.environ["USER_TOOL_CONFIGS_DIRECTORY"]
+
+
+def base_openai_response() -> Dict[str, Any]:
+    """Return base OpenAI response data used by all fixtures."""
+    return {
+        "id": "resp_123",
+        "object": "response",
+        "created_at": 1747012692,
+        "status": "completed",
+        "model": "gpt-4o-2024-08-06",
+        "parallel_tool_calls": True,
+        "reasoning": {"effort": None, "summary": None},
+        "service_tier": "default",
+        "store": True,
+        "temperature": 1.0,
+        "tool_choice": "auto",
+        "tools": [],
+        "top_p": 1.0,
+        "truncation": "disabled",
+        "usage": {
+            "input_tokens": 100,
+            "output_tokens": 50,
+            "total_tokens": 150,
+            "input_tokens_details": {"cached_tokens": 0},
+            "output_tokens_details": {"reasoning_tokens": 0},
+        },
+        "metadata": {},
+        "error": None,
+        "incomplete_details": None,
+        "instructions": None,
+        "max_output_tokens": None,
+        "previous_response_id": None,
+        "user": None,
+    }
+
+
+@pytest.fixture
+def sample_openai_response() -> Dict[str, Any]:
+    """Fixture providing a sample OpenAI response with JSON content."""
+    data = base_openai_response()
+    data.update(
+        {
+            "output": [
+                {
+                    "id": "msg_123",
+                    "type": "message",
+                    "status": "completed",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "annotations": [],
+                            "text": '{"key": "value"}',
+                        }
+                    ],
+                    "role": "assistant",
+                }
+            ],
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "description": None,
+                    "name": "test_schema",
+                    "schema": {"type": "object", "properties": {}},
+                    "strict": True,
+                }
+            },
+        }
+    )
+    return data
+
+
+@pytest.fixture
+def sample_openai_response_with_content() -> Dict[str, Any]:
+    """Fixture providing a sample OpenAI response with specific content text."""
+    data = base_openai_response()
+    data.update(
+        {
+            "output": [
+                {
+                    "id": "msg_123",
+                    "type": "message",
+                    "status": "completed",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "annotations": [],
+                            "text": "test content",
+                        }
+                    ],
+                    "role": "assistant",
+                }
+            ],
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "test",
+                    "schema": {"type": "object"},
+                    "strict": True,
+                }
+            },
+        }
+    )
+    return data
+
+
+@pytest.fixture
+def sample_openai_response_with_plain_text() -> Dict[str, Any]:
+    """Fixture providing a sample OpenAI response with plain text content."""
+    data = base_openai_response()
+    data.update(
+        {
+            "output": [
+                {
+                    "id": "msg_123",
+                    "type": "message",
+                    "status": "completed",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "annotations": [],
+                            "text": "test result",
+                        }
+                    ],
+                    "role": "assistant",
+                }
+            ],
+            "text": {
+                "format": {
+                    "type": "text",
+                    "name": "text",
+                    "schema": {"type": "string"},
+                    "strict": True,
+                }
+            },
+        }
+    )
+    return data
