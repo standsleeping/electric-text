@@ -109,9 +109,7 @@ class OllamaProvider(ModelProvider):
         self.stream_history = StreamHistory()  # Reset stream history
 
         # From this point, inputs is treated as OllamaProviderInputs
-        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(
-            request
-        )
+        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(request)
 
         messages = ollama_inputs.messages
         model = ollama_inputs.model
@@ -191,9 +189,7 @@ class OllamaProvider(ModelProvider):
         """
         history = StreamHistory()
 
-        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(
-            request
-        )
+        ollama_inputs: OllamaProviderInputs = convert_provider_inputs(request)
 
         messages = ollama_inputs.messages
         model = ollama_inputs.model

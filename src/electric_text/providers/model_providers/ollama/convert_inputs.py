@@ -11,8 +11,17 @@ from electric_text.providers.functions.convert_prompt_to_messages import (
 def convert_provider_inputs(
     request: ProviderRequest,
 ) -> OllamaProviderInputs:
+    """Convert a ProviderRequest to an OllamaProviderInputs instance.
+
+    Args:
+        request: The ProviderRequest to convert
+
+    Returns:
+        OllamaProviderInputs instance
+    """
     # Convert response_model (Type) to format_schema (Dict)
     format_schema: Optional[Dict[str, Any]] = None
+
     if request.response_model is not None:
         # Check if response_model is a Pydantic model with model_json_schema method
         if hasattr(request.response_model, "model_json_schema"):
@@ -22,7 +31,7 @@ def convert_provider_inputs(
 
     messages = convert_prompt_to_messages(
         system_messages=request.system_messages,
-        prompt_text=request.prompt_text
+        prompt_text=request.prompt_text,
     )
 
     return OllamaProviderInputs(
