@@ -1,0 +1,14 @@
+# Electric Text Configuration Example
+# This file can be placed in one of the following locations:
+# - ./config.yaml
+# - ~/.electric_text/config.yaml
+# - /etc/electric_text/config.yaml
+# Or you can set the ELECTRIC_TEXT_CONFIG environment variable to point to a custom location
+
+# Default settings for providers
+provider_defaults:
+  default_model: "ollama:llama3.1:8b"
+
+# Logging configuration
+logging:
+  level: "ERROR" 

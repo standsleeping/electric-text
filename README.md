@@ -6,7 +6,7 @@ Get any response from any AI model.
 
 Basic usage:
 ```bash
-python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." --model ollama:llama3.1:8b
+python -m electric_text "Write a haiku about how rain smells in the early summer."
 ```
 
 ### Options
@@ -19,10 +19,11 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
 - `--prompt-name`, `-p`: Name of the prompt to use (see below)
 - `--stream`, `-st`: Stream the response (flag)
 - `--tool-boxes`, `-tb`: List of tool boxes to use (comma-separated, e.g., "meteorology,travel")
+- `--config`, `-c`: Path to configuration file
 
 Example with options:
 ```bash
-python -m electric_text "Write a haiku about how rain smells when early summer arrives in the American Midwest." \
+python -m electric_text "Write a haiku about how rain smells in the early summer." \
   --model ollama:llama3.1:8b \
   --log-level DEBUG \
   --api-key your_api_key \
@@ -30,11 +31,59 @@ python -m electric_text "Write a haiku about how rain smells when early summer a
   --tool-boxes meteorology
 ```
 
-## Setting up your environment
+## Configuration
 
-The following environment variables control the behavior of Electric Text. More details on these variables are provided below.
+Electric Text supports YAML configuration files for centralizing your settings. This allows you to configure the default model and logging settings.
+
+### Setting Up Your Config
+
+Copy the example configuration file to one of the standard locations:
 
 ```bash
+# Copy to your home directory (recommended)
+mkdir -p ~/.electric_text
+cp examples/config.yaml ~/.electric_text/
+```
+
+You can also set the environment variable to point to your configuration:
+
+```bash
+export ELECTRIC_TEXT_CONFIG="/path/to/your/config.yaml"
+```
+
+### Configuration File Locations
+
+The system looks for configuration files in the following order:
+
+1. Path specified via the `--config` command-line argument
+2. Path specified in the `ELECTRIC_TEXT_CONFIG` environment variable
+3. Default locations:
+   - `./config.yaml` (current directory)
+   - `~/.electric_text/config.yaml` (user's home directory)
+   - `/etc/electric_text/config.yaml` (system-wide)
+
+### Checking Your Configuration
+
+To view and validate your current configuration, use the config command:
+
+```bash
+python -m electric_text config
+```
+
+You can also specify a different configuration file:
+
+```bash
+python -m electric_text config --config path/to/config.yaml
+```
+
+## Environment
+
+Behavior can also be controlled by environment variables. Currently, the only config that may ONLY be set in environment variables are provider API keys. See below for examples on how these are used.
+
+```bash
+# Specify the path to your configuration file.
+export ELECTRIC_TEXT_CONFIG=path/to/your/config.yaml
+
 # Specify a provider API key.
 # General pattern: [PROVIDER]_API_KEY=your_api_key
 export ANTHROPIC_API_KEY=your_api_key
@@ -54,14 +103,6 @@ export USER_PROMPT_DIRECTORY=path/to/your/prompt_configs
 export USER_TOOL_CONFIGS_DIRECTORY=path/to/your/tool_configs
 ```
 
-## Canonical names
-
-The following are the canonical names for the providers and models that Electric Text supports.
-
-```bash
-(Coming soon...)
-```
-
 ## Reusable Prompts
 
 Configure reusable prompts with structured responses by creating a JSON file in the `USER_PROMPT_DIRECTORY` directory.
@@ -72,7 +113,7 @@ Configure reusable prompts with structured responses by creating a JSON file in 
 export USER_PROMPT_DIRECTORY="/path/to/electric-text/examples/prompt_configs"
 ```
 
-### Example reusable prompts
+### Examples
 
 These examples are provided to help you get started. You can find more examples in the `examples/prompt_configs` directory.
 
@@ -188,7 +229,13 @@ python -m electric_text "What is the capital of Nebraska?" --model gpt4
 
 ### Defining Custom Shorthands
 
-You can define custom shorthands by setting environment variables:
+You can define custom shorthands in the YAML config:
+
+```
+(Coming Soon)
+```
+
+You can also define custom shorthands by setting environment variables:
 
 1. **Provider Shorthands**: Maps a shorthand to a provider name
    ```
@@ -200,7 +247,7 @@ You can define custom shorthands by setting environment variables:
    export PROVIDER_MODEL_SHORTHAND_NAME="canonical_model++shorthand"
    ```
 
-#### Model shorthand examples:
+#### Examples
 
 ```bash
 # Define "antro" as a shorthand for "anthropic" provider
@@ -218,6 +265,33 @@ After setting these environment variables, you can use the shorthands in your co
 ```bash
 python -m electric_text "Hello world" --model claude3
 ```
+
+## Subcommands
+
+Electric Text supports subcommands. Right now, we just support a `config` subcommand.
+
+#### config
+
+View and validate your configuration:
+
+```bash
+python -m electric_text config
+```
+
+Options:
+- `--config`, `-c`: Path to configuration file
+- `--no-validate`, `-n`: Skip validation (only print configuration)
+
+Example:
+```bash
+# Check configuration using a specific file
+python -m electric_text config --config path/to/config.yaml
+
+# Print configuration without validation
+python -m electric_text config --no-validate
+```
+
+For more details, see the [Configuration System Documentation](src/electric_text/configuration/README.md).
 
 ## Note for AI Coding Assistants
 
