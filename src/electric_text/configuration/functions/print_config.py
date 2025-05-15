@@ -1,85 +1,12 @@
 import os
 import sys
-from typing import Dict, Any, Optional, List, TextIO, Tuple
+from typing import Optional, List, TextIO, Tuple
 
 from electric_text.configuration.data.config import Config
 from electric_text.configuration.functions.load_config import load_config
-
-
-def validate_logging_section(logging_config: Dict[str, Any]) -> List[str]:
-    """Validate the logging section of the configuration.
-
-    Args:
-        logging_config: The logging configuration to validate
-
-    Returns:
-        List of validation issues
-    """
-    issues: List[str] = []
-
-    valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-    log_level = logging_config.get("level")
-    if log_level and log_level not in valid_log_levels:
-        issues.append(
-            f"Invalid log level: {log_level}. Must be one of {valid_log_levels}"
-        )
-
-    return issues
-
-
-def validate_tool_boxes_section(tool_boxes: Dict[str, Any]) -> List[str]:
-    """Validate the tool_boxes section of the configuration.
-
-    Args:
-        tool_boxes: The tool_boxes configuration to validate
-
-    Returns:
-        List of validation issues
-    """
-    issues: List[str] = []
-
-    for box_name, tools in tool_boxes.items():
-        if not isinstance(tools, list):
-            issues.append(
-                f"Invalid tools list for tool box {box_name}. Must be a list."
-            )
-
-    return issues
-
-
-def validate_configuration(config: Config) -> List[str]:
-    """Validate the configuration and return a list of issues.
-
-    Args:
-        config: Configuration to validate
-
-    Returns:
-        List of validation issues (empty if configuration is valid)
-    """
-    issues: List[str] = []
-
-    # Check for required sections
-    required_sections = ["provider_defaults", "logging"]
-    for section in required_sections:
-        if not getattr(config, section, None):
-            issues.append(f"Missing required section: {section}")
-
-    # Validate that provider_defaults has default_model
-    provider_defaults = config.provider_defaults
-    if provider_defaults and "default_model" not in provider_defaults:
-        issues.append("Missing default_model in provider_defaults section")
-
-    # Validate logging configuration
-    logging_config = config.logging
-    if logging_config:
-        issues.extend(validate_logging_section(logging_config))
-
-    # Validate tool box configuration (if present)
-    tool_boxes = config.tool_boxes
-    if tool_boxes:
-        issues.extend(validate_tool_boxes_section(tool_boxes))
-
-    return issues
+from electric_text.configuration.functions.validate_configuration import (
+    validate_configuration,
+)
 
 
 def print_config(
@@ -165,5 +92,3 @@ def print_config(
     except Exception as e:
         print(f"\nError loading configuration: {str(e)}", file=output)
         return None, [f"Error loading configuration: {str(e)}"]
-
-

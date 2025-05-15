@@ -1,15 +1,8 @@
-"""Tests for the print_config function."""
-
-import tempfile
 import io
+import tempfile
 from textwrap import dedent
 
-
-from electric_text.configuration.data.config import Config
-from electric_text.configuration.functions.print_config import (
-    print_config,
-    validate_configuration,
-)
+from electric_text.configuration.functions.print_config import print_config
 
 
 def test_print_config_valid_file() -> None:
@@ -118,23 +111,3 @@ def test_print_config_no_validation() -> None:
         output_text = output.getvalue()
         assert "Configuration is valid" not in output_text
         assert "Configuration validation issues" not in output_text
-
-
-def test_validate_configuration() -> None:
-    """Validates configuration and returns issues."""
-    # Create a Config object with issues
-    config = Config(
-        provider_defaults={"some_setting": "value"},  # Missing default_model
-        tool_boxes={"default": "not_a_list"},  # Not a list
-        logging={"level": "INVALID"},  # Invalid log level
-        raw_config={},
-    )
-
-    # Validate the config
-    issues = validate_configuration(config)
-
-    # Verify specific issues are detected
-    assert len(issues) >= 2
-    assert any("Missing default_model" in issue for issue in issues)
-    assert any("Invalid log level" in issue for issue in issues)
-    assert any("Invalid tools list" in issue for issue in issues)
