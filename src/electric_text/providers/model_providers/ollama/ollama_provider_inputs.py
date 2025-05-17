@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from electric_text.providers.data.base_provider_inputs import BaseProviderInputs
 
 
@@ -9,3 +9,4 @@ class OllamaProviderInputs(BaseProviderInputs):
 
     messages: list[dict[str, str]]
     format_schema: Optional[Dict[str, Any]] = None
+    tools: Optional[List[Dict[str, Any]]] = None

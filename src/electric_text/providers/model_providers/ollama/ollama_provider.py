@@ -1,7 +1,7 @@
 import json
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, AsyncGenerator
+from typing import Any, Dict, Optional, AsyncGenerator, List
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
@@ -62,6 +62,7 @@ class OllamaProvider(ModelProvider):
         model: Optional[str],
         stream: bool,
         format_schema: Optional[Dict[str, Any]] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
@@ -71,6 +72,7 @@ class OllamaProvider(ModelProvider):
             model: Model override (optional)
             stream: Whether to stream the response
             format_schema: Optional JSON schema for structured output (already converted to dict)
+            tools: Optional list of tools to make available to the model
 
         Returns:
             Dict containing the formatted payload
@@ -84,6 +86,10 @@ class OllamaProvider(ModelProvider):
         # Add format if schema is provided (already converted to dict)
         if format_schema is not None:
             payload["format"] = format_schema
+
+        # Add tools if provided
+        if tools is not None and len(tools) > 0:
+            payload["tools"] = tools
 
         return payload
 
@@ -114,10 +120,11 @@ class OllamaProvider(ModelProvider):
         messages = ollama_inputs.messages
         model = ollama_inputs.model
         format_schema = ollama_inputs.format_schema
+        tools = ollama_inputs.tools
 
         # Create the payload
         payload = self.create_payload(
-            messages, model, stream=True, format_schema=format_schema
+            messages, model, stream=True, format_schema=format_schema, tools=tools
         )
 
         try:
@@ -135,14 +142,43 @@ class OllamaProvider(ModelProvider):
 
                         try:
                             chunk = json.loads(line)
-                            stream_chunk = StreamChunk(
-                                type=StreamChunkType.CONTENT_CHUNK,
-                                raw_line=line,
-                                parsed_data=chunk,
-                                content=chunk.get("message", {}).get("content"),
-                            )
-                            self.stream_history.add_chunk(stream_chunk)
-                            yield self.stream_history
+                            message = chunk.get("message", {})
+                            content = message.get("content")
+                            tool_calls = message.get("tool_calls")
+
+                            if tool_calls:
+                                # Process tool calls
+                                for tool_call in tool_calls:
+                                    stream_chunk = StreamChunk(
+                                        type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
+                                        raw_line=line,
+                                        parsed_data=tool_call,
+                                        content=json.dumps(
+                                            tool_call.get("function", {})
+                                        ),
+                                    )
+                                    self.stream_history.add_chunk(stream_chunk)
+                                    yield self.stream_history
+
+                                # Mark function call arguments as done
+                                stream_chunk = StreamChunk(
+                                    type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE,
+                                    raw_line=line,
+                                    parsed_data=tool_calls,
+                                    content="",
+                                )
+                                self.stream_history.add_chunk(stream_chunk)
+                                yield self.stream_history
+                            elif content:
+                                # Regular content chunk
+                                stream_chunk = StreamChunk(
+                                    type=StreamChunkType.CONTENT_CHUNK,
+                                    raw_line=line,
+                                    parsed_data=chunk,
+                                    content=content,
+                                )
+                                self.stream_history.add_chunk(stream_chunk)
+                                yield self.stream_history
 
                             # Check for done flag
                             if chunk.get("done", False):
@@ -194,12 +230,14 @@ class OllamaProvider(ModelProvider):
         messages = ollama_inputs.messages
         model = ollama_inputs.model
         format_schema = ollama_inputs.format_schema
+        tools = ollama_inputs.tools
 
         payload = self.create_payload(
             messages,
             model,
             stream=False,
             format_schema=format_schema,
+            tools=tools,
         )
 
         try:
@@ -209,17 +247,52 @@ class OllamaProvider(ModelProvider):
 
                 try:
                     data = response.json()
+                    message = data.get("message", {})
+
+                    # Check if the response contains tool calls
+                    tool_calls = message.get("tool_calls")
+
+                    if tool_calls:
+                        # Process tool calls
+                        for tool_call in tool_calls:
+                            tool_chunk = StreamChunk(
+                                type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
+                                raw_line=json.dumps(tool_call),
+                                parsed_data=tool_call,
+                                content=json.dumps(tool_call.get("function", {})),
+                            )
+                            history.add_chunk(tool_chunk)
+
+                        # Add completion of function call
+                        history.add_chunk(
+                            StreamChunk(
+                                type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE,
+                                raw_line=json.dumps(tool_calls),
+                                parsed_data=tool_calls,
+                                content="",
+                            )
+                        )
+
                     # The content in Ollama's response is in the content field of the message
-                    raw_content = data["message"]["content"]
+                    raw_content = message.get("content", "")
 
-                    chunk = StreamChunk(
-                        type=StreamChunkType.COMPLETE_RESPONSE,
-                        raw_line=json.dumps(data),
-                        parsed_data=data,
-                        content=raw_content,
-                    )
+                    if not raw_content and not tool_calls:
+                        # If both content and tool_calls are missing, this is an error
+                        error_chunk = StreamChunk(
+                            type=StreamChunkType.FORMAT_ERROR,
+                            raw_line=json.dumps(data),
+                            error="No content or tool calls found in response",
+                        )
+                        history.add_chunk(error_chunk)
+                    elif raw_content:
+                        chunk = StreamChunk(
+                            type=StreamChunkType.COMPLETE_RESPONSE,
+                            raw_line=json.dumps(data),
+                            parsed_data=data,
+                            content=raw_content,
+                        )
+                        history.add_chunk(chunk)
 
-                    history.add_chunk(chunk)
                     return history
 
                 except (KeyError, json.JSONDecodeError) as e:

@@ -1,4 +1,5 @@
 import httpx
+import json
 import pytest
 from unittest.mock import AsyncMock, patch
 
@@ -137,8 +138,8 @@ async def test_generate_completion_missing_content():
         assert isinstance(result, StreamHistory)
         assert len(result.chunks) == 1
         assert result.chunks[0].type == StreamChunkType.FORMAT_ERROR
-        assert "Failed to parse response" in result.chunks[0].error
-        assert result.chunks[0].raw_line == '{"message":{}}'
+        assert "No content or tool calls found in response" in result.chunks[0].error
+        assert result.chunks[0].raw_line == '{"message": {}}'
 
 
 @pytest.mark.asyncio
@@ -261,3 +262,194 @@ async def test_generate_stream_invalid_json():
         assert histories[0].chunks[0].type == StreamChunkType.PARSE_ERROR
         assert histories[0].chunks[0].raw_line == "invalid json"
         assert histories[0].chunks[0].error is not None
+
+
+@pytest.mark.asyncio
+async def test_generate_completion_with_tools():
+    """Successfully handles a response with tool calls."""
+    provider = OllamaProvider()
+
+    # Create a mock response with tool calls
+    tool_call = {
+        "id": "tool_call_1",
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "arguments": '{"location":"Chicago","unit":"celsius"}',
+        },
+    }
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(
+        200,
+        json={
+            "message": {
+                "tool_calls": [tool_call],
+                "content": "I'll check the weather for you.",
+            }
+        },
+        request=mock_request,
+    )
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = mock_response
+
+        # Create a request with tools
+        weather_tool = {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA",
+                        },
+                        "unit": {
+                            "type": "string",
+                            "enum": ["celsius", "fahrenheit"],
+                            "description": "The temperature unit to use",
+                        },
+                    },
+                    "required": ["location"],
+                },
+            },
+        }
+
+        user_request = ProviderRequest(
+            provider_name="ollama",
+            prompt_text="What's the weather in Chicago?",
+            model_name="llama3.1:8b",
+            system_messages=["You are a helpful assistant"],
+            tools=[weather_tool],
+        )
+
+        result = await provider.generate_completion(user_request)
+
+        # Check that tools were included in the payload
+        payload = mock_post.call_args[1]["json"]
+        assert "tools" in payload
+        assert payload["tools"] == [weather_tool]
+
+        # Check that the tool calls were properly parsed in the result
+        assert isinstance(result, StreamHistory)
+
+        # Should have at least 3 chunks: tool call, tool call done, and content
+        assert len(result.chunks) == 3
+
+        # First chunk should be the function call
+        assert result.chunks[0].type == StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA
+        assert "get_weather" in result.chunks[0].content
+
+        # Second chunk should mark function call as done
+        assert result.chunks[1].type == StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE
+
+        # Last chunk should be the text content
+        assert result.chunks[2].type == StreamChunkType.COMPLETE_RESPONSE
+        assert result.chunks[2].content == "I'll check the weather for you."
+
+
+@pytest.mark.asyncio
+async def test_generate_stream_with_tools():
+    """Yields stream history objects containing tool call chunks."""
+    provider = OllamaProvider()
+
+    # Create a request with tools
+    weather_tool = {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    "unit": {
+                        "type": "string",
+                        "enum": ["celsius", "fahrenheit"],
+                        "description": "The temperature unit to use",
+                    },
+                },
+                "required": ["location"],
+            },
+        },
+    }
+
+    user_request = ProviderRequest(
+        provider_name="ollama",
+        prompt_text="What's the weather in Omaha?",
+        model_name="llama3.1:8b",
+        system_messages=["You are a helpful assistant"],
+        tools=[weather_tool],
+    )
+
+    mock_request = httpx.Request("POST", "http://test")
+    mock_response = httpx.Response(200, request=mock_request)
+
+    tool_call = {
+        "id": "tool_call_1",
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "arguments": '{"location":"Omaha","unit":"celsius"}',
+        },
+    }
+
+    async def mock_aiter_lines():
+        yield '{"message": {"tool_calls": [' + json.dumps(tool_call) + "]}}"
+        yield '{"message": {"content": "I\'ll check the weather for you."}, "done": true}'
+
+    mock_response.aiter_lines = mock_aiter_lines
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_response
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("httpx.AsyncClient.stream") as mock_stream:
+        mock_stream.return_value = AsyncContextManagerMock()
+
+        # Check that tools were included in the payload
+        histories = []
+
+        async for history in provider.generate_stream(user_request):
+            histories.append(history)
+
+        # Check that payload contains tools
+        payload = mock_stream.call_args[1]["json"]
+        assert "tools" in payload
+        assert payload["tools"] == [weather_tool]
+
+        # We should have accumulated several history objects:
+        # 1. After tool call chunk
+        # 2. After tool call done
+        # 3. After content chunk
+        # 4. After completion end
+        assert len(histories) == 4
+
+        # All histories should be the same object with more chunks
+        assert histories[0] is histories[-1]
+
+        # First chunk should be the function call
+        assert (
+            histories[0].chunks[0].type == StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA
+        )
+
+        # Second chunk should mark function call as done
+        assert (
+            histories[1].chunks[1].type == StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE
+        )
+
+        # Third chunk should be the text content
+        assert histories[2].chunks[2].type == StreamChunkType.CONTENT_CHUNK
+        assert histories[2].chunks[2].content == "I'll check the weather for you."
+
+        # Last chunk should be completion end
+        assert histories[3].chunks[3].type == StreamChunkType.COMPLETION_END

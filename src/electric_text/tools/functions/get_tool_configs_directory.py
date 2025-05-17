@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+from typing import Optional
 
 
 def get_tool_configs_directory() -> str:
@@ -15,15 +15,9 @@ def get_tool_configs_directory() -> str:
     Raises:
         ValueError: If the tool configs directory doesn't exist
     """
-    config_dir = os.environ.get("USER_TOOL_CONFIGS_DIRECTORY")
+    config_dir: Optional[str] = os.environ.get("USER_TOOL_CONFIGS_DIRECTORY")
 
-    # Fall back to the default if not specified
     if not config_dir:
-        # Get the root directory of the package
-        root_dir = Path(__file__).parent.parent.parent.parent
-        config_dir = str(root_dir / "examples" / "tool_configs")
-
-    if not os.path.exists(config_dir):
-        raise ValueError(f"Tool configs directory does not exist: {config_dir}")
+        raise ValueError("Tool configs directory is not set")
 
     return config_dir

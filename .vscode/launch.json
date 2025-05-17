@@ -33,7 +33,7 @@
       }
     },
     {
-      "name": "Structured Schema Generation",
+      "name": "Structured schema generation",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -55,7 +55,7 @@
       }
     },
     {
-      "name": "Streaming Structured Schema",
+      "name": "Streaming structured schema",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -78,7 +78,7 @@
       }
     },
     {
-      "name": "Poetry Generation",
+      "name": "Poetry generation",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -100,7 +100,7 @@
       }
     },
     {
-      "name": "Streaming Poetry",
+      "name": "Streaming poetry",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -123,7 +123,7 @@
       }
     },
     {
-      "name": "Structured Poem Generation",
+      "name": "Structured poem generation",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -142,6 +142,24 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
+      }
+    },
+    {
+      "name": "Tool box",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "electric_text",
+      "args": [
+        "What is the weather in Omaha?",
+        "-m",
+        "31",
+        "--tool-boxes",
+        "meteorology"
+      ],
+      "env": {
+        "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
+        "USER_TOOL_CONFIGS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
       }
     },
     {
