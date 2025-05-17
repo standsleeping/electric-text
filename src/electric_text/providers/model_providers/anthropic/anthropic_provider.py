@@ -14,6 +14,9 @@ from electric_text.providers.model_providers.anthropic.functions.convert_inputs 
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
+from electric_text.providers.model_providers.anthropic.functions.process_stream_response import (
+    process_stream_response,
+)
 
 
 class ModelProviderError(Exception):
@@ -163,7 +166,6 @@ class AnthropicProvider(ModelProvider):
         """
         self.stream_history = StreamHistory()  # Reset stream history
 
-        # From this point, inputs is treated as AnthropicProviderInputs
         anthropic_inputs: AnthropicProviderInputs = (
             convert_provider_inputs(request)
         )
@@ -188,7 +190,10 @@ class AnthropicProvider(ModelProvider):
         final_messages = self.transform_messages(messages, prefill)
 
         payload = self.create_payload(
-            final_messages, model, stream=True, max_tokens=anthropic_inputs.max_tokens
+            final_messages,
+            model,
+            stream=True,
+            max_tokens=anthropic_inputs.max_tokens,
         )
 
         yield self.stream_history  # Yield immediately so consumer gets the prefill
@@ -201,72 +206,16 @@ class AnthropicProvider(ModelProvider):
                     json=payload,
                 ) as response:
                     response.raise_for_status()
-
                     async for line in response.aiter_lines():
-                        if not line.strip():
-                            continue
-
-                        # Anthropic format: "event: <event_type>\ndata: <json_data>\n\n"
-                        if line.startswith("data:"):
-                            data_str = line[5:].strip()
-
-                            try:
-                                data = json.loads(data_str)
-
-                                if "delta" in data and "text" in data["delta"]:
-                                    content = data["delta"]["text"]
-                                    stream_chunk = StreamChunk(
-                                        type=StreamChunkType.CONTENT_CHUNK,
-                                        raw_line=line,
-                                        parsed_data=data,
-                                        content=content,
-                                    )
-                                    self.stream_history.add_chunk(stream_chunk)
-                                    yield self.stream_history
-                                elif "type" in data and data["type"] == "message_stop":
-                                    # Final message indicating completion
-                                    stream_chunk = StreamChunk(
-                                        type=StreamChunkType.COMPLETION_END,
-                                        raw_line=line,
-                                        parsed_data=data,
-                                        content="",
-                                    )
-                                    self.stream_history.add_chunk(stream_chunk)
-                                    yield self.stream_history
-                                elif "error" in data:
-                                    # Handle API errors
-                                    error_chunk = StreamChunk(
-                                        type=StreamChunkType.FORMAT_ERROR,
-                                        raw_line=line,
-                                        error=data["error"]["message"],
-                                    )
-                                    self.stream_history.add_chunk(error_chunk)
-                                    yield self.stream_history
-
-                            except json.JSONDecodeError as e:
-                                error_chunk = StreamChunk(
-                                    type=StreamChunkType.PARSE_ERROR,
-                                    raw_line=line,
-                                    error=str(e),
-                                )
-                                self.stream_history.add_chunk(error_chunk)
-                                yield self.stream_history
-                        else:
-                            error_chunk = StreamChunk(
-                                type=StreamChunkType.UNHANDLED_LINE,
-                                raw_line=line,
-                                error=f"Unhandled line: {line}",
-                            )
-                            self.stream_history.add_chunk(error_chunk)
-                            yield self.stream_history
+                        yield process_stream_response(line, self.stream_history)
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Stream request failed: {e}",
+            yield self.stream_history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Stream request failed: {e}",
+                )
             )
-            self.stream_history.add_chunk(error_chunk)
-            yield self.stream_history
 
     async def generate_completion(
         self,
