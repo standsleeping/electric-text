@@ -1,5 +1,5 @@
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
+from electric_text.providers.model_providers.anthropic.data.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
 from electric_text.providers.functions.convert_prompt_to_messages import (

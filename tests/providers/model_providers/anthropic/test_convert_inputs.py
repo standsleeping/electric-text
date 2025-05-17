@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.anthropic.convert_inputs import (
+from electric_text.providers.model_providers.anthropic.functions.convert_inputs import (
     convert_provider_inputs,
 )
-from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
+from electric_text.providers.model_providers.anthropic.data.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
 

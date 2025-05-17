@@ -5,10 +5,10 @@ from typing import Any, Dict, Optional, AsyncGenerator
 
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.anthropic.anthropic_provider_inputs import (
+from electric_text.providers.model_providers.anthropic.data.anthropic_provider_inputs import (
     AnthropicProviderInputs,
 )
-from electric_text.providers.model_providers.anthropic.convert_inputs import (
+from electric_text.providers.model_providers.anthropic.functions.convert_inputs import (
     convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import StreamHistory
