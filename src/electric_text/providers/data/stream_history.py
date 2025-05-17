@@ -10,8 +10,9 @@ from electric_text.providers.data.stream_chunk_type import StreamChunkType
 class StreamHistory:
     chunks: List[StreamChunk] = field(default_factory=list)
 
-    def add_chunk(self, chunk: StreamChunk) -> None:
+    def add_chunk(self, chunk: StreamChunk) -> "StreamHistory":
         self.chunks.append(chunk)
+        return self
 
     def get_full_content(self) -> str:
         """
