@@ -117,6 +117,7 @@ class OllamaProvider(ModelProvider):
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
+        self.stream_history = StreamHistory()  # Reset stream history
 
         ollama_inputs: OllamaProviderInputs = convert_provider_inputs(request)
 
