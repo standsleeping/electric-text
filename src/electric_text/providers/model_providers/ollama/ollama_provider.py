@@ -21,6 +21,9 @@ from electric_text.providers.model_providers.ollama.ollama_provider_inputs impor
 from electric_text.providers.model_providers.ollama.functions.process_completion_response import (
     process_completion_response,
 )
+from electric_text.providers.model_providers.ollama.functions.process_stream_response import (
+    process_stream_response,
+)
 
 
 class ModelProviderError(Exception):
@@ -118,7 +121,6 @@ class OllamaProvider(ModelProvider):
         Yields:
             StreamHistory object containing the full stream history after each chunk
         """
-        self.stream_history = StreamHistory()  # Reset stream history
 
         # From this point, inputs is treated as OllamaProviderInputs
         ollama_inputs: OllamaProviderInputs = convert_provider_inputs(request)
@@ -148,73 +150,30 @@ class OllamaProvider(ModelProvider):
 
                         try:
                             chunk = json.loads(line)
-                            message = chunk.get("message", {})
-                            content = message.get("content")
-                            tool_calls = message.get("tool_calls")
 
-                            if tool_calls:
-                                # Process tool calls
-                                for tool_call in tool_calls:
-                                    stream_chunk = StreamChunk(
-                                        type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
-                                        raw_line=line,
-                                        parsed_data=tool_call,
-                                        content=json.dumps(
-                                            tool_call.get("function", {})
-                                        ),
-                                    )
-                                    self.stream_history.add_chunk(stream_chunk)
-                                    yield self.stream_history
+                            # Process the chunk using our dedicated function and get updated history
+                            updated_history = process_stream_response(chunk, line, self.stream_history)
 
-                                # Mark function call arguments as done
-                                stream_chunk = StreamChunk(
-                                    type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE,
-                                    raw_line=line,
-                                    parsed_data=tool_calls,
-                                    content="",
-                                )
-                                self.stream_history.add_chunk(stream_chunk)
-                                yield self.stream_history
-                            elif content:
-                                # Regular content chunk
-                                stream_chunk = StreamChunk(
-                                    type=StreamChunkType.CONTENT_CHUNK,
-                                    raw_line=line,
-                                    parsed_data=chunk,
-                                    content=content,
-                                )
-                                self.stream_history.add_chunk(stream_chunk)
-                                yield self.stream_history
-
-                            # Check for done flag
-                            if chunk.get("done", False):
-                                # Final message indicating completion
-                                stream_chunk = StreamChunk(
-                                    type=StreamChunkType.COMPLETION_END,
-                                    raw_line=line,
-                                    parsed_data=chunk,
-                                    content="",
-                                )
-                                self.stream_history.add_chunk(stream_chunk)
-                                yield self.stream_history
+                            # Yield the updated history
+                            yield updated_history
 
                         except json.JSONDecodeError as e:
-                            error_chunk = StreamChunk(
-                                type=StreamChunkType.PARSE_ERROR,
-                                raw_line=line,
-                                error=str(e),
+                            yield self.stream_history.add_chunk(
+                                StreamChunk(
+                                    type=StreamChunkType.PARSE_ERROR,
+                                    raw_line=line,
+                                    error=str(e),
+                                )
                             )
-                            self.stream_history.add_chunk(error_chunk)
-                            yield self.stream_history
 
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Stream request failed: {e}",
+            yield self.stream_history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Stream request failed: {e}",
+                )
             )
-            self.stream_history.add_chunk(error_chunk)
-            yield self.stream_history
 
     async def generate_completion(
         self,

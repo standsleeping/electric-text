@@ -30,6 +30,7 @@ class StreamHistory:
                     StreamChunkType.CONTENT_CHUNK,
                     StreamChunkType.COMPLETE_RESPONSE,
                     StreamChunkType.PREFILLED_CONTENT,
+                    StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
                 ]
                 and chunk.content
             ):
