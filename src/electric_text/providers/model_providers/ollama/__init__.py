@@ -1,7 +1,7 @@
 from electric_text.providers.model_providers.ollama.ollama_provider import (
     OllamaProvider,
 )
-from electric_text.providers.model_providers.ollama.convert_inputs import (
+from electric_text.providers.model_providers.ollama.functions.convert_inputs import (
     convert_provider_inputs,
 )
 

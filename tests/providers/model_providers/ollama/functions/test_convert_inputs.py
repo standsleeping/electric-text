@@ -2,10 +2,10 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.ollama.convert_inputs import (
+from electric_text.providers.model_providers.ollama.functions.convert_inputs import (
     convert_provider_inputs,
 )
-from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
+from electric_text.providers.model_providers.ollama.data.ollama_provider_inputs import (
     OllamaProviderInputs,
 )
 

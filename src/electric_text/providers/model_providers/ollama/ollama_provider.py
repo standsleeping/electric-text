@@ -5,13 +5,13 @@ from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
-from electric_text.providers.model_providers.ollama.convert_inputs import (
+from electric_text.providers.model_providers.ollama.functions.convert_inputs import (
     convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import (
     StreamHistory,
 )
-from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
+from electric_text.providers.model_providers.ollama.data.ollama_provider_inputs import (
     OllamaProviderInputs,
 )
 from electric_text.providers.model_providers.ollama.functions.process_completion_response import (

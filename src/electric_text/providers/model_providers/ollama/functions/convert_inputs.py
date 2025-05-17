@@ -1,5 +1,5 @@
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
+from electric_text.providers.model_providers.ollama.data.ollama_provider_inputs import (
     OllamaProviderInputs,
 )
 from typing import Dict, Any, Optional, List
