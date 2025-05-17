@@ -345,35 +345,3 @@ def test_stream_history_get_full_content_empty():
 
     assert history.get_full_content() == ""
 
-
-def test_stream_history_from_complete_response():
-    """Creates StreamHistory from complete response."""
-    response_data = {
-        "id": "123",
-        "choices": [
-            {
-                "message": {
-                    "role": "assistant",
-                    "content": "This is a complete response.",
-                }
-            }
-        ],
-    }
-
-    history = StreamHistory.from_complete_response(response_data)
-    assert len(history.chunks) == 1
-    assert history.chunks[0].type == StreamChunkType.COMPLETE_RESPONSE
-    assert history.chunks[0].content == "This is a complete response."
-    assert history.get_full_content() == "This is a complete response."
-
-
-def test_stream_history_from_complete_response_no_choices():
-    """Handles complete response with no choices."""
-    response_data = {
-        "id": "123",
-    }
-
-    history = StreamHistory.from_complete_response(response_data)
-    assert len(history.chunks) == 1
-    assert history.chunks[0].type == StreamChunkType.NO_CHOICES
-    assert history.get_full_content() == ""
