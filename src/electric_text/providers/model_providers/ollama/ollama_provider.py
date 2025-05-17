@@ -4,17 +4,23 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator, List
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
-    OllamaProviderInputs,
-)
+from electric_text.providers.data.stream_chunk import StreamChunk
+from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.model_providers.ollama.convert_inputs import (
     convert_provider_inputs,
 )
 from electric_text.providers.data.stream_history import (
     StreamHistory,
 )
-from electric_text.providers.data.stream_chunk import StreamChunk
-from electric_text.providers.data.stream_chunk_type import StreamChunkType
+from electric_text.providers.model_providers.ollama.data.model_response import (
+    ModelResponse,
+)
+from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
+    OllamaProviderInputs,
+)
+from electric_text.providers.model_providers.ollama.functions.process_completion_response import (
+    process_completion_response,
+)
 
 
 class ModelProviderError(Exception):
@@ -244,79 +250,14 @@ class OllamaProvider(ModelProvider):
             async with self.get_client() as client:
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
-
-                try:
-                    data = response.json()
-                    message = data.get("message", {})
-
-                    # Check if the response contains tool calls
-                    tool_calls = message.get("tool_calls")
-
-                    if tool_calls:
-                        # Process tool calls
-                        for tool_call in tool_calls:
-                            tool_chunk = StreamChunk(
-                                type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
-                                raw_line=json.dumps(tool_call),
-                                parsed_data=tool_call,
-                                content=json.dumps(tool_call.get("function", {})),
-                            )
-                            history.add_chunk(tool_chunk)
-
-                        # Add completion of function call
-                        history.add_chunk(
-                            StreamChunk(
-                                type=StreamChunkType.FUNCTION_CALL_ARGUMENTS_DONE,
-                                raw_line=json.dumps(tool_calls),
-                                parsed_data=tool_calls,
-                                content="",
-                            )
-                        )
-
-                    # The content in Ollama's response is in the content field of the message
-                    raw_content = message.get("content", "")
-
-                    if not raw_content and not tool_calls:
-                        # If both content and tool_calls are missing, this is an error
-                        error_chunk = StreamChunk(
-                            type=StreamChunkType.FORMAT_ERROR,
-                            raw_line=json.dumps(data),
-                            error="No content or tool calls found in response",
-                        )
-                        history.add_chunk(error_chunk)
-                    elif raw_content:
-                        chunk = StreamChunk(
-                            type=StreamChunkType.COMPLETE_RESPONSE,
-                            raw_line=json.dumps(data),
-                            parsed_data=data,
-                            content=raw_content,
-                        )
-                        history.add_chunk(chunk)
-
-                    return history
-
-                except (KeyError, json.JSONDecodeError) as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Failed to parse response: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-                except TypeError as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Response doesn't match expected type: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-
+                raw_line = response.text
+                model_response = ModelResponse.from_dict(response.json(), raw_line)
+                return process_completion_response(model_response, history)
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Complete request failed: {e}",
+            return history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Complete request failed: {e}",
+                )
             )
-            history.add_chunk(error_chunk)
-            return history
