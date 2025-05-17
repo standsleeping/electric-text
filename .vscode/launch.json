@@ -107,7 +107,7 @@
       "args": [
         "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
         "-m",
-        "4o",
+        "31",
         "--prompt-name",
         "poetry",
         "--stream"
