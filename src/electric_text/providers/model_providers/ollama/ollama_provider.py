@@ -1,4 +1,3 @@
-import json
 import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator, List
@@ -11,9 +10,6 @@ from electric_text.providers.model_providers.ollama.convert_inputs import (
 )
 from electric_text.providers.data.stream_history import (
     StreamHistory,
-)
-from electric_text.providers.model_providers.ollama.data.model_response import (
-    ModelResponse,
 )
 from electric_text.providers.model_providers.ollama.ollama_provider_inputs import (
     OllamaProviderInputs,
@@ -122,7 +118,6 @@ class OllamaProvider(ModelProvider):
             StreamHistory object containing the full stream history after each chunk
         """
 
-        # From this point, inputs is treated as OllamaProviderInputs
         ollama_inputs: OllamaProviderInputs = convert_provider_inputs(request)
 
         messages = ollama_inputs.messages
@@ -130,9 +125,12 @@ class OllamaProvider(ModelProvider):
         format_schema = ollama_inputs.format_schema
         tools = ollama_inputs.tools
 
-        # Create the payload
         payload = self.create_payload(
-            messages, model, stream=True, format_schema=format_schema, tools=tools
+            messages,
+            model,
+            stream=True,
+            format_schema=format_schema,
+            tools=tools,
         )
 
         try:
@@ -145,27 +143,7 @@ class OllamaProvider(ModelProvider):
                     response.raise_for_status()
 
                     async for line in response.aiter_lines():
-                        if not line:
-                            continue
-
-                        try:
-                            chunk = json.loads(line)
-
-                            # Process the chunk using our dedicated function and get updated history
-                            updated_history = process_stream_response(chunk, line, self.stream_history)
-
-                            # Yield the updated history
-                            yield updated_history
-
-                        except json.JSONDecodeError as e:
-                            yield self.stream_history.add_chunk(
-                                StreamChunk(
-                                    type=StreamChunkType.PARSE_ERROR,
-                                    raw_line=line,
-                                    error=str(e),
-                                )
-                            )
-
+                        yield process_stream_response(line, self.stream_history)
         except httpx.HTTPError as e:
             yield self.stream_history.add_chunk(
                 StreamChunk(
@@ -209,9 +187,8 @@ class OllamaProvider(ModelProvider):
             async with self.get_client() as client:
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
-                raw_line = response.text
-                model_response = ModelResponse.from_dict(response.json(), raw_line)
-                return process_completion_response(model_response, history)
+                line = response.text
+                return process_completion_response(line, history)
         except httpx.HTTPError as e:
             return history.add_chunk(
                 StreamChunk(

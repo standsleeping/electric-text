@@ -1,36 +1,59 @@
+import json
 from electric_text.providers.data.stream_history import StreamHistory
-from electric_text.providers.model_providers.ollama.functions.process_content import (
-    process_content,
-)
-from electric_text.providers.model_providers.ollama.functions.process_tool_calls import (
-    process_tool_calls,
-)
-from electric_text.providers.model_providers.ollama.data.model_response import (
-    ModelResponse,
-)
+from electric_text.providers.data.stream_chunk import StreamChunk
+from electric_text.providers.data.stream_chunk_type import StreamChunkType
 
 
 def process_completion_response(
-    response: ModelResponse,
+    line: str,
     history: StreamHistory,
 ) -> StreamHistory:
     """
     Processes a completion response into a StreamHistory.
 
     Args:
-        response: ModelResponse to process
+        line: Line to process
         history: StreamHistory to add the chunks to
 
     Returns:
         StreamHistory containing all chunks from the response
     """
-    # Process content if present
-    if response.message.content:
-        history.add_chunk(process_content(response))
+
+    data = json.loads(line)
+
+    # Extract message data
+    message = data.get("message", {})
+    content = message.get("content")
+    tool_calls = message.get("tool_calls")
 
     # Process tool calls if present
-    if response.message.tool_calls:
-        for chunk in process_tool_calls(response):
-            history.add_chunk(chunk)
+    if tool_calls:
+        for tool_call in tool_calls:
+            history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.FULL_TOOL_CALL,
+                    raw_line=line,
+                    parsed_data=tool_call,
+                    content=json.dumps(tool_call.get("function", {})),
+                )
+            )
+
+    if content:
+        history.add_chunk(
+            StreamChunk(
+                type=StreamChunkType.CONTENT_CHUNK,
+                raw_line=line,
+                parsed_data=data,
+                content=content,
+            )
+        )
+
+    if data.get("done", False):
+        history.add_chunk(
+            StreamChunk(
+                type=StreamChunkType.COMPLETION_END,
+                raw_line=line,
+            )
+        )
 
     return history

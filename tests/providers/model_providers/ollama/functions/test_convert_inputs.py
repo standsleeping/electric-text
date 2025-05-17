@@ -57,6 +57,7 @@ def test_convert_with_pydantic_response_model():
 
     # Verify schema structure
     schema = result.format_schema
+    assert schema is not None
     assert "properties" in schema
     assert "name" in schema["properties"]
     assert "age" in schema["properties"]

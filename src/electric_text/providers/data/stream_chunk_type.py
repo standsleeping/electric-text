@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 @dataclass
 class StreamChunkType(Enum):
+    FULL_TOOL_CALL = "full_tool_call"
+    
     INITIAL_MESSAGE = "initial_message"  # First chunk with role/content
     CONTENT_CHUNK = "content_chunk"  # Regular content chunk
     COMPLETION_END = "completion_end"  # Empty delta with finish_reason "stop"

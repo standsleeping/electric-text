@@ -33,7 +33,7 @@
       }
     },
     {
-      "name": "Structured schema generation",
+      "name": "Structured schema",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -55,7 +55,7 @@
       }
     },
     {
-      "name": "Streaming structured schema",
+      "name": "Structured schema (streaming)",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -78,7 +78,7 @@
       }
     },
     {
-      "name": "Poetry generation",
+      "name": "Poetry",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -100,7 +100,7 @@
       }
     },
     {
-      "name": "Streaming poetry",
+      "name": "Poetry (streaming)",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -123,7 +123,7 @@
       }
     },
     {
-      "name": "Structured poem generation",
+      "name": "Structured poem",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -154,7 +154,26 @@
         "-m",
         "31",
         "--tool-boxes",
-        "meteorology"
+        "meteorology",
+      ],
+      "env": {
+        "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
+        "USER_TOOL_CONFIGS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
+      }
+    },
+    {
+      "name": "Tool box (streaming)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "electric_text",
+      "args": [
+        "What is the weather in Omaha?",
+        "-m",
+        "31",
+        "--tool-boxes",
+        "meteorology",
+        "--stream"
       ],
       "env": {
         "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
