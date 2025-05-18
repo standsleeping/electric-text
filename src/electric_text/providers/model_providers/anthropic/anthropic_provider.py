@@ -1,6 +1,6 @@
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
@@ -18,6 +18,9 @@ from electric_text.providers.model_providers.anthropic.functions.process_stream_
 )
 from electric_text.providers.model_providers.anthropic.functions.process_completion_response import (
     process_completion_response,
+)
+from electric_text.providers.model_providers.anthropic.functions.create_payload import (
+    create_payload,
 )
 
 
@@ -113,40 +116,6 @@ class AnthropicProvider(ModelProvider):
 
         return transformed_messages
 
-    def create_payload(
-        self,
-        messages: list[dict[str, str]],
-        model: Optional[str],
-        stream: bool,
-        max_tokens: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """
-        Create the API request payload.
-
-        Args:
-            messages: The list of messages to send
-            model: Model override (optional)
-            stream: Whether to stream the response
-            max_tokens: Maximum number of tokens to generate (optional)
-
-        Returns:
-            Dict containing the formatted payload
-        """
-
-        payload = {
-            "model": model or self.default_model,
-            "messages": messages,
-            "stream": stream,
-        }
-
-        # Use provided max_tokens or default to 4096
-        if max_tokens is not None:
-            payload["max_tokens"] = max_tokens
-        else:
-            payload["max_tokens"] = 4096
-
-        return payload
-
     @asynccontextmanager
     async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
         """Context manager for httpx client."""
@@ -168,9 +137,7 @@ class AnthropicProvider(ModelProvider):
         """
         self.stream_history = StreamHistory()  # Reset stream history
 
-        anthropic_inputs: AnthropicProviderInputs = (
-            convert_provider_inputs(request)
-        )
+        anthropic_inputs: AnthropicProviderInputs = convert_provider_inputs(request)
 
         messages = anthropic_inputs.messages
         model = anthropic_inputs.model
@@ -190,12 +157,15 @@ class AnthropicProvider(ModelProvider):
             self.stream_history.add_chunk(prefill_chunk)
 
         final_messages = self.transform_messages(messages, prefill)
+        tools = anthropic_inputs.tools
 
-        payload = self.create_payload(
-            final_messages,
-            model,
+        payload = create_payload(
+            model=model,
+            default_model=self.default_model,
+            messages=final_messages,
             stream=True,
             max_tokens=anthropic_inputs.max_tokens,
+            tools=tools,
         )
 
         yield self.stream_history  # Yield immediately so consumer gets the prefill
@@ -234,9 +204,7 @@ class AnthropicProvider(ModelProvider):
         """
         history = StreamHistory()
 
-        anthropic_inputs: AnthropicProviderInputs = (
-            convert_provider_inputs(request)
-        )
+        anthropic_inputs: AnthropicProviderInputs = convert_provider_inputs(request)
 
         messages = anthropic_inputs.messages
         model = anthropic_inputs.model
@@ -255,12 +223,15 @@ class AnthropicProvider(ModelProvider):
             history.add_chunk(prefill_chunk)
 
         final_messages = self.transform_messages(messages, prefill)
+        tools = anthropic_inputs.tools
 
-        payload = self.create_payload(
-            final_messages,
-            model,
+        payload = create_payload(
+            model=model,
+            default_model=self.default_model,
+            messages=final_messages,
             stream=False,
-            max_tokens=anthropic_inputs.max_tokens
+            max_tokens=anthropic_inputs.max_tokens,
+            tools=tools,
         )
 
         try:
