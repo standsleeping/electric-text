@@ -1,4 +1,3 @@
-import json
 import httpx
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional, AsyncGenerator
@@ -16,6 +15,9 @@ from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.model_providers.anthropic.functions.process_stream_response import (
     process_stream_response,
+)
+from electric_text.providers.model_providers.anthropic.functions.process_completion_response import (
+    process_completion_response,
 )
 
 
@@ -255,51 +257,23 @@ class AnthropicProvider(ModelProvider):
         final_messages = self.transform_messages(messages, prefill)
 
         payload = self.create_payload(
-            final_messages, model, stream=False, max_tokens=anthropic_inputs.max_tokens
+            final_messages,
+            model,
+            stream=False,
+            max_tokens=anthropic_inputs.max_tokens
         )
 
         try:
             async with self.get_client() as client:
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
-
-                try:
-                    data = response.json()
-                    # The content in Anthropic's response is in the content field of the message
-                    raw_content = data["content"][0]["text"]
-
-                    chunk = StreamChunk(
-                        type=StreamChunkType.COMPLETE_RESPONSE,
-                        raw_line=json.dumps(data),
-                        parsed_data=data,
-                        content=raw_content,
-                    )
-
-                    history.add_chunk(chunk)
-                    return history
-
-                except (KeyError, json.JSONDecodeError) as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Failed to parse response: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-                except TypeError as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Response doesn't match expected type: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-
+                line: str = response.text
+                return process_completion_response(line, history)
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Complete request failed: {e}",
+            return history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Complete request failed: {e}",
+                )
             )
-            history.add_chunk(error_chunk)
-            return history
