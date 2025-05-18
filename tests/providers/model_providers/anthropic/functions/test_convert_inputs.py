@@ -25,6 +25,7 @@ def test_convert_basic_request():
     assert result.model == "test-model"
     assert result.structured_prefill is False
     assert result.max_tokens is None
+    assert result.tools is None
 
 
 def test_convert_with_prefill():
@@ -47,6 +48,7 @@ def test_convert_with_prefill():
     assert result.model == "test-model"
     assert result.structured_prefill is False
     assert result.max_tokens is None
+    assert result.tools is None
 
 
 def test_convert_with_max_tokens():
@@ -67,6 +69,7 @@ def test_convert_with_max_tokens():
     assert result.model == "test-model"
     assert result.structured_prefill is False
     assert result.max_tokens == max_tokens
+    assert result.tools is None
 
 
 def test_convert_with_response_model():
@@ -93,3 +96,43 @@ def test_convert_with_response_model():
     assert result.model == "test-model"
     assert result.structured_prefill is True
     assert result.max_tokens is None
+    assert result.tools is None
+
+
+def test_convert_with_tools():
+    """Test conversion of ProviderRequest with tools to AnthropicProviderInputs."""
+    tools = [
+        {
+            "name": "get_weather",
+            "description": "Get the current weather in a location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    }
+                },
+                "required": ["location"],
+            },
+        }
+    ]
+
+    request = ProviderRequest(
+        provider_name="anthropic",
+        prompt_text="Hello",
+        model_name="test-model",
+        system_messages=["You are a helpful assistant"],
+        tools=tools,
+    )
+
+    result = convert_provider_inputs(request)
+
+    assert isinstance(result, AnthropicProviderInputs)
+    assert len(result.messages) == 2  # system message + user message
+    assert result.model == "test-model"
+    assert result.structured_prefill is False
+    assert result.max_tokens is None
+    assert result.tools == tools
+
+
