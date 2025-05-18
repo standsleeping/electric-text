@@ -33,51 +33,6 @@
       }
     },
     {
-      "name": "Structured schema",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "electric_text",
-      "args": [
-        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
-        "-m",
-        "31",
-        "--prompt-name",
-        "prose_to_schema"
-      ],
-      "env": {
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
-        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
-        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
-        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
-        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
-        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
-      }
-    },
-    {
-      "name": "Structured schema (streaming)",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "electric_text",
-      "args": [
-        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
-        "-m",
-        "31",
-        "--prompt-name",
-        "prose_to_schema",
-        "--stream"
-      ],
-      "env": {
-        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
-        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
-        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
-        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
-        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
-        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
-      }
-    },
-    {
       "name": "Poetry",
       "type": "debugpy",
       "request": "launch",
@@ -133,6 +88,51 @@
         "31",
         "--prompt-name",
         "structured_poem"
+      ],
+      "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
+        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
+      }
+    },
+    {
+      "name": "Structured schema",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "electric_text",
+      "args": [
+        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
+        "-m",
+        "31",
+        "--prompt-name",
+        "prose_to_schema"
+      ],
+      "env": {
+        "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
+        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
+        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
+        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
+        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
+        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
+        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o"
+      }
+    },
+    {
+      "name": "Structured schema (streaming)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "electric_text",
+      "args": [
+        "The car weighs 5,000 pounds, costs $25,000, and has a range of 400 miles.",
+        "-m",
+        "31",
+        "--prompt-name",
+        "prose_to_schema",
+        "--stream"
       ],
       "env": {
         "USER_PROMPT_DIRECTORY": "${workspaceFolder}/examples/prompt_configs",
