@@ -101,11 +101,30 @@ def test_convert_with_response_model():
 
 def test_convert_with_tools():
     """Test conversion of ProviderRequest with tools to AnthropicProviderInputs."""
+    # Standard tool format
     tools = [
         {
             "name": "get_weather",
             "description": "Get the current weather in a location",
             "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    }
+                },
+                "required": ["location"],
+            },
+        }
+    ]
+
+    # Expected Anthropic format
+    expected_anthropic_tools = [
+        {
+            "name": "get_weather",
+            "description": "Get the current weather in a location",
+            "input_schema": {
                 "type": "object",
                 "properties": {
                     "location": {
@@ -133,6 +152,6 @@ def test_convert_with_tools():
     assert result.model == "test-model"
     assert result.structured_prefill is False
     assert result.max_tokens is None
-    assert result.tools == tools
+    assert result.tools == expected_anthropic_tools
 
 

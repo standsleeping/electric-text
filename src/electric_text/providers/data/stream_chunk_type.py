@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 @dataclass
 class StreamChunkType(Enum):
+    # NEW
+    TOOL_CALL = "tool_call"
+
+    # OLD
     INITIAL_MESSAGE = "initial_message"
     INFO_MARKER = "info_marker"
     FULL_TOOL_CALL = "full_tool_call"

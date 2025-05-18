@@ -5,7 +5,9 @@ from electric_text.providers.model_providers.anthropic.data.anthropic_provider_i
 from electric_text.providers.functions.convert_prompt_to_messages import (
     convert_prompt_to_messages,
 )
-from typing import Dict, Any, Optional, List
+from electric_text.providers.model_providers.anthropic.functions.convert_tools import (
+    convert_tools,
+)
 
 
 def convert_provider_inputs(
@@ -28,13 +30,13 @@ def convert_provider_inputs(
     else:
         structured_prefill = False
 
-    # Get tools from the provider request
-    tools: Optional[List[Dict[str, Any]]] = request.tools
+    # Convert tools from the standard format to Anthropic's format
+    anthropic_tools = convert_tools(request.tools)
 
     return AnthropicProviderInputs(
         messages=messages,
         model=request.model_name,
         structured_prefill=structured_prefill,
         max_tokens=request.max_tokens,
-        tools=tools,
+        tools=anthropic_tools,
     )

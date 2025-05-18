@@ -14,6 +14,7 @@ from electric_text.providers.model_providers.anthropic.functions.process_complet
     process_completion_response,
 )
 
+
 def test_unstructured_content():
     history: StreamHistory = StreamHistory()
     raw_data: str = '{"id":"msg_01HfDWUPQJka4rnZKHhjkgGi","type":"message","role":"assistant","model":"claude-3-7-sonnet-20250219","content":[{"type":"text","text":"LINE1\\nLINE2\\nLINE3"}],"stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":99,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":99}}'
@@ -22,6 +23,7 @@ def test_unstructured_content():
     assert result.chunks[0].type == StreamChunkType.CONTENT_CHUNK
     assert result.chunks[0].content == "LINE1\nLINE2\nLINE3"
 
+
 def test_structured_content():
     history: StreamHistory = StreamHistory()
     raw_data: str = '{"id": "msg_01PfkFF5f3YRQsaHRX3GxBB6", "type": "message", "role": "assistant", "model": "claude-3-7-sonnet-20250219", "content": [{"type": "text", "text": "\\n  \\"type\\": \\"object\\",\\n  \\"description\\": \\"Information about a vehicle\\",\\n  \\"properties\\": {\\n    \\"weight\\": {\\n      \\"type\\": \\"number\\",\\n      \\"description\\": \\"The weight of the vehicle in pounds\\"\\n    },\\n    \\"cost\\": {\\n      \\"type\\": \\"number\\",\\n      \\"description\\": \\"The price of the vehicle in dollars\\"\\n    },\\n    \\"range\\": {\\n      \\"type\\": \\"number\\",\\n      \\"description\\": \\"The maximum driving distance of the vehicle in miles\\"\\n    }\\n  },\\n  \\"required\\": [\\"weight\\", \\"cost\\", \\"range\\"]\\n}"}], "stop_reason": "end_turn", "stop_sequence": null, "usage": {"input_tokens": 99, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 99}}'
@@ -29,6 +31,25 @@ def test_structured_content():
     assert len(result.chunks) == 1
     assert result.chunks[0].type == StreamChunkType.CONTENT_CHUNK
 
+
 def test_tool_calls():
-    # TODO: Implement this test
-    pass
+    history: StreamHistory = StreamHistory()
+    raw_data: str = '{"id":"msg_01Xr8iUvUY3DcGv2Kb3msXbD","type":"message","role":"assistant","model":"claude-3-7-sonnet-20250219","content":[{"type":"text","text":"I\'d be happy to check the current weather in Omaha for you. Let me get that information."},{"type":"tool_use","id":"toolu_01SDkdmBb7seNewqWJPnBDiR","name":"get_current_weather","input":{"location":"Omaha, NE"}}],"stop_reason":"tool_use","stop_sequence":null,"usage":{"input_tokens":544,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":83}}'
+    result: StreamHistory = process_completion_response(raw_data, history)
+    assert len(result.chunks) == 1
+
+    expected_tool_call = {
+        "type": "tool_use",
+        "id": "toolu_01SDkdmBb7seNewqWJPnBDiR",
+        "name": "get_current_weather",
+        "input": {"location": "Omaha, NE"},
+    }
+
+    assert result.tool_calls[0] == expected_tool_call
+
+    expected_text_msg = {
+        "type": "text",
+        "text": "I'd be happy to check the current weather in Omaha for you. Let me get that information.",
+    }
+
+    assert result.text_responses[0] == expected_text_msg
