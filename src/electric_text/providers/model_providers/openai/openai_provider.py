@@ -23,8 +23,8 @@ from electric_text.providers.model_providers.openai.functions.process_stream_res
 from electric_text.providers.model_providers.openai.functions.set_text_format import (
     set_text_format,
 )
-from electric_text.providers.model_providers.openai.data.openai_response import (
-    OpenAIResponse,
+from electric_text.providers.model_providers.openai.functions.process_completion_response import (
+    process_completion_response,
 )
 
 
@@ -194,55 +194,13 @@ class OpenaiProvider(ModelProvider):
             async with self.get_client() as client:
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
-
-                try:
-                    data = response.json()
-                    openai_response = OpenAIResponse.from_dict(data)
-
-                    # Get the content text from the response
-                    raw_content = openai_response.get_content_text()
-
-                    if raw_content is None:
-                        error_chunk = StreamChunk(
-                            type=StreamChunkType.FORMAT_ERROR,
-                            raw_line=response.text,
-                            error="No content found in response",
-                        )
-                        history.add_chunk(error_chunk)
-                        return history
-
-                    chunk = StreamChunk(
-                        type=StreamChunkType.COMPLETE_RESPONSE,
-                        raw_line=json.dumps(data),
-                        parsed_data=data,
-                        content=raw_content,
-                    )
-
-                    history.add_chunk(chunk)
-                    return history
-
-                except (KeyError, json.JSONDecodeError) as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Failed to parse response: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-                except TypeError as e:
-                    error_chunk = StreamChunk(
-                        type=StreamChunkType.FORMAT_ERROR,
-                        raw_line=response.text,
-                        error=f"Response doesn't match expected type: {e}",
-                    )
-                    history.add_chunk(error_chunk)
-                    return history
-
+                line = response.text
+                return process_completion_response(line, history)
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Complete request failed: {e}",
+            return history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Complete request failed: {e}",
+                )
             )
-            history.add_chunk(error_chunk)
-            return history
