@@ -1,64 +1,9 @@
 import json
+from typing import Any
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.data.stream_history import StreamHistory
 
-# if not line.strip():
-#     continue
-
-# # Anthropic format: "event: <event_type>\ndata: <json_data>\n\n"
-# if line.startswith("data:"):
-#     data_str = line[5:].strip()
-
-#     try:
-#         data = json.loads(data_str)
-
-#         if "delta" in data and "text" in data["delta"]:
-#             content = data["delta"]["text"]
-#             stream_chunk = StreamChunk(
-#                 type=StreamChunkType.CONTENT_CHUNK,
-#                 raw_line=line,
-#                 parsed_data=data,
-#                 content=content,
-#             )
-#             self.stream_history.add_chunk(stream_chunk)
-#             yield self.stream_history
-#         elif "type" in data and data["type"] == "message_stop":
-#             # Final message indicating completion
-#             stream_chunk = StreamChunk(
-#                 type=StreamChunkType.COMPLETION_END,
-#                 raw_line=line,
-#                 parsed_data=data,
-#                 content="",
-#             )
-#             self.stream_history.add_chunk(stream_chunk)
-#             yield self.stream_history
-#         elif "error" in data:
-#             # Handle API errors
-#             error_chunk = StreamChunk(
-#                 type=StreamChunkType.FORMAT_ERROR,
-#                 raw_line=line,
-#                 error=data["error"]["message"],
-#             )
-#             self.stream_history.add_chunk(error_chunk)
-#             yield self.stream_history
-
-#     except json.JSONDecodeError as e:
-#         error_chunk = StreamChunk(
-#             type=StreamChunkType.PARSE_ERROR,
-#             raw_line=line,
-#             error=str(e),
-#         )
-#         self.stream_history.add_chunk(error_chunk)
-#         yield self.stream_history
-# else:
-#     error_chunk = StreamChunk(
-#         type=StreamChunkType.UNHANDLED_LINE,
-#         raw_line=line,
-#         error=f"Unhandled line: {line}",
-#     )
-#     self.stream_history.add_chunk(error_chunk)
-#     yield self.stream_history
 
 def process_stream_response(
     raw_line: str,
@@ -67,7 +12,7 @@ def process_stream_response(
     """
     Processes a stream response line into a StreamHistory.
 
-    This function handles individual stream response chunks from Ollama
+    This function handles individual stream response chunks from Anthropic
     and adds the appropriate StreamChunk objects to the provided history.
 
     Args:
@@ -77,5 +22,85 @@ def process_stream_response(
     Returns:
         StreamHistory with the new chunk(s) added
     """
-    abc = 123
+    if not raw_line.strip():
+        return history
+
+    if raw_line.startswith("event:"):
+        return history
+
+    if raw_line.startswith("data:"):
+        data_str: str = raw_line[5:].strip()
+        try:
+            data: dict[str, Any] = json.loads(data_str)
+            event_type: str = data.get("type", "")
+
+            match event_type:
+                case "content_block_delta":
+                    if data.get("delta", {}).get("type") == "text_delta":
+                        content: str = data.get("delta", {}).get("text", "")
+                        return history.add_chunk(
+                            StreamChunk(
+                                type=StreamChunkType.CONTENT_CHUNK,
+                                raw_line=raw_line,
+                                parsed_data=data,
+                                content=content,
+                            )
+                        )
+
+                case "message_stop":
+                    # Final message indicating completion
+                    return history.add_chunk(
+                        StreamChunk(
+                            type=StreamChunkType.COMPLETION_END,
+                            raw_line=raw_line,
+                            parsed_data=data,
+                            content="",
+                        )
+                    )
+
+                case (
+                    "message_start"
+                    | "content_block_start"
+                    | "ping"
+                    | "content_block_stop"
+                    | "message_delta"
+                ):
+                    return history.add_chunk(
+                        StreamChunk(
+                            type=StreamChunkType.INFO_MARKER,
+                            raw_line=raw_line,
+                            parsed_data=data,
+                            content="",
+                        )
+                    )
+
+                case _:
+                    return history.add_chunk(
+                        StreamChunk(
+                            type=StreamChunkType.UNRECOGNIZED_EVENT,
+                            raw_line=raw_line,
+                            parsed_data=data,
+                            content="",
+                        )
+                    )
+
+        except json.JSONDecodeError:
+            return history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.PARSE_ERROR,
+                    raw_line=raw_line,
+                    parsed_data=None,
+                    content="",
+                )
+            )
+    else:
+        return history.add_chunk(
+            StreamChunk(
+                type=StreamChunkType.UNHANDLED_LINE,
+                raw_line=raw_line,
+                parsed_data=None,
+                content="",
+            )
+        )
+
     return history

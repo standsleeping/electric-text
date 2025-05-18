@@ -16,6 +16,7 @@ from electric_text.providers.model_providers.anthropic.functions.process_stream_
 
 def test_unstructured_content():
     history: StreamHistory = StreamHistory()
+
     chunks: list[str] = [
         "event: message_start",
         'data: {"type":"message_start","message":{"id":"msg_011H6dxt5XrHnyhEi6JBv57P","type":"message","role":"assistant","model":"claude-3-7-sonnet-20250219","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":131,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":5}}}',
@@ -55,11 +56,15 @@ def test_unstructured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 10
+    assert len(history.chunks) == 11
+    assert history.chunks[0].type == StreamChunkType.INFO_MARKER
+    assert history.chunks[3].type == StreamChunkType.CONTENT_CHUNK
+    assert history.chunks[9].type == StreamChunkType.COMPLETION_END
 
 
 def test_structured_content():
     history: StreamHistory = StreamHistory()
+
     chunks: list[str] = [
         "event: message_start",
         'data: {"type":"message_start","message":{"id":"msg_01CFsS5HEkAPzg4t3TRAkQoN","type":"message","role":"assistant","model":"claude-3-7-sonnet-20250219","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":447,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":5}}               }',
@@ -153,7 +158,9 @@ def test_structured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 10
+    assert len(history.chunks) == 29
+    assert history.chunks[0].type == StreamChunkType.INFO_MARKER
+    assert history.chunks[3].type == StreamChunkType.CONTENT_CHUNK
 
 
 def test_tool_calls():
