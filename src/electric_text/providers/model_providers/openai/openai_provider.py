@@ -17,8 +17,8 @@ from electric_text.providers.model_providers.openai.convert_inputs import (
 from electric_text.providers.data.stream_history import (
     StreamHistory,
 )
-from electric_text.providers.functions.categorize_stream_line import (
-    categorize_stream_line,
+from electric_text.providers.model_providers.openai.functions.process_stream_response import (
+    process_stream_response,
 )
 from electric_text.providers.model_providers.openai.functions.set_text_format import (
     set_text_format,
@@ -104,30 +104,6 @@ class OpenaiProvider(ModelProvider):
         async with httpx.AsyncClient(**self.client_kwargs) as client:
             yield client
 
-    async def stream_response(
-        self, client: httpx.AsyncClient, url: str, payload: Dict[str, Any]
-    ) -> AsyncGenerator[StreamChunk, None]:
-        """
-        Helper method to stream response chunks.
-
-        Args:
-            client: The HTTP client
-            url: The URL to stream from
-            payload: The request payload
-
-        Yields:
-            StreamChunk objects parsed from the response
-        """
-        async with client.stream(
-            "POST",
-            url,
-            json=payload,
-        ) as response:
-            response.raise_for_status()
-
-            async for line in response.aiter_lines():
-                yield categorize_stream_line(line)
-
     async def generate_stream(
         self,
         request: ProviderRequest,
@@ -161,18 +137,22 @@ class OpenaiProvider(ModelProvider):
 
         try:
             async with self.get_client() as client:
-                async for chunk in self.stream_response(client, self.base_url, payload):
-                    self.stream_history.add_chunk(chunk)
-                    yield self.stream_history
-
+                async with client.stream(
+                    "POST",
+                    self.base_url,
+                    json=payload,
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        yield process_stream_response(line, self.stream_history)
         except httpx.HTTPError as e:
-            error_chunk = StreamChunk(
-                type=StreamChunkType.HTTP_ERROR,
-                raw_line="",
-                error=f"Stream request failed: {e}",
+            yield self.stream_history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.HTTP_ERROR,
+                    raw_line="",
+                    error=f"Stream request failed: {e}",
+                )
             )
-            self.stream_history.add_chunk(error_chunk)
-            yield self.stream_history
 
     async def generate_completion(
         self,

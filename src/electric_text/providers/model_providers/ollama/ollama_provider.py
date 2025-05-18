@@ -142,7 +142,6 @@ class OllamaProvider(ModelProvider):
                     json=payload,
                 ) as response:
                     response.raise_for_status()
-
                     async for line in response.aiter_lines():
                         yield process_stream_response(line, self.stream_history)
         except httpx.HTTPError as e:
