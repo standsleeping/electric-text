@@ -3,6 +3,12 @@ from typing import Any
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
+from electric_text.providers.data.content_block import (
+    ContentBlock,
+    ContentBlockType,
+    TextData,
+    ToolCallData,
+)
 
 
 def process_completion_response(
@@ -30,7 +36,7 @@ def process_completion_response(
             history = add_content_to_history(history, content)
             return history.add_chunk(
                 StreamChunk(
-                    type=StreamChunkType.TOOL_CALL,
+                    type=StreamChunkType.FULL_TOOL_CALL,
                     raw_line=line,
                     parsed_data=data,
                     content="",
@@ -38,18 +44,27 @@ def process_completion_response(
             )
         case "end_turn":
             raw_content: str = data["content"][0]["text"]
-            return history.add_chunk(
-                StreamChunk(
-                    type=StreamChunkType.CONTENT_CHUNK,
-                    raw_line=line,
-                    parsed_data=data,
-                    content=raw_content,
+
+            history.content_blocks.append(
+                ContentBlock(
+                    type=ContentBlockType.TEXT,
+                    data=TextData(text=raw_content),
                 )
             )
+
+            return history.add_chunk(
+                StreamChunk(
+                    type=StreamChunkType.FULL_TEXT,
+                    raw_line=line,
+                    parsed_data=data,
+                    content="",
+                )
+            )
+
         case _:
             return history.add_chunk(
                 StreamChunk(
-                    type=StreamChunkType.UNRECOGNIZED_EVENT,
+                    type=StreamChunkType.UNHANDLED_EVENT,
                     raw_line=line,
                     parsed_data=data,
                     content="",
@@ -74,7 +89,24 @@ def add_content_to_history(
     """
     for item in content:
         if item.get("type") == "text":
-            history.text_responses.append(item)
+            history.content_blocks.append(
+                ContentBlock(
+                    type=ContentBlockType.TEXT,
+                    data=TextData(text=item.get("text", "")),
+                )
+            )
         elif item.get("type") == "tool_use":
-            history.tool_calls.append(item)
+            name = item.get("name", "")
+            input = item.get("input", {})
+            history.content_blocks.append(
+                ContentBlock(
+                    type=ContentBlockType.TOOL_CALL,
+                    data=ToolCallData(
+                        name=name,
+                        input=input,
+                        input_json_string=json.dumps(input),
+                    ),
+                )
+            )
+
     return history
