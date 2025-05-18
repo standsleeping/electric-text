@@ -26,10 +26,8 @@ class StreamHistory:
             if (
                 chunk.type
                 in [
-                    StreamChunkType.CONTENT_CHUNK,
-                    StreamChunkType.COMPLETE_RESPONSE,
                     StreamChunkType.PREFILLED_CONTENT,
-                    StreamChunkType.FUNCTION_CALL_ARGUMENTS_DELTA,
+                    StreamChunkType.CONTENT_CHUNK,
                 ]
                 and chunk.content
             ):
