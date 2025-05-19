@@ -1,3 +1,4 @@
+import json
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.data.content_block import (
@@ -13,8 +14,13 @@ from electric_text.providers.model_providers.anthropic.functions.handle_text_del
 def test_handle_text_delta():
     """Test handling text delta events from Anthropic."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_delta", "index": 0, "delta": {"text": "some-text"}}'
-    data = {"type": "content_block_delta", "index": 0, "delta": {"text": "some-text"}}
+    data = {
+        "type": "content_block_delta", 
+        "index": 0, 
+        "delta": {"text": "some-text"}
+    }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create StreamHistory with an existing content block
     history = StreamHistory()
@@ -42,8 +48,13 @@ def test_handle_text_delta():
 def test_handle_text_delta_with_existing_text():
     """Test handling text delta events when content already exists."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_delta", "index": 0, "delta": {"text": " continues"}}'
-    data = {"type": "content_block_delta", "index": 0, "delta": {"text": " continues"}}
+    data = {
+        "type": "content_block_delta", 
+        "index": 0, 
+        "delta": {"text": " continues"}
+    }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create StreamHistory with an existing content block that already has text
     history = StreamHistory()
@@ -71,13 +82,13 @@ def test_handle_text_delta_with_existing_text():
 def test_handle_text_delta_non_zero_index():
     """Test handling text delta events for a non-zero index."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_delta", "index": 1, "delta": {"text": "Second block"}}'
-
     data = {
         "type": "content_block_delta",
         "index": 1,
         "delta": {"text": "Second block"},
     }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create StreamHistory with multiple content blocks
     history = StreamHistory()

@@ -1,3 +1,4 @@
+import json
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.data.content_block import (
@@ -13,13 +14,13 @@ from electric_text.providers.model_providers.anthropic.functions.handle_text_sta
 def test_handle_text_start():
     """Test handling text start events from Anthropic."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": "Initial text"}}'
-
     data = {
         "type": "content_block_start",
         "index": 0,
         "content_block": {"type": "text", "text": "Initial text"},
     }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create empty StreamHistory
     history = StreamHistory()
@@ -42,13 +43,13 @@ def test_handle_text_start():
 def test_handle_text_start_with_existing_blocks():
     """Test handling text start events when blocks already exist."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": "Second block"}}'
-
     data = {
         "type": "content_block_start",
         "index": 1,
         "content_block": {"type": "text", "text": "Second block"},
     }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create StreamHistory with an existing content block
     history = StreamHistory()
@@ -76,13 +77,13 @@ def test_handle_text_start_with_existing_blocks():
 def test_handle_text_start_insert_at_beginning():
     """Test handling text start events with insertion at index 0."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": "New first block"}}'
-
     data = {
         "type": "content_block_start",
         "index": 0,
         "content_block": {"type": "text", "text": "New first block"},
     }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create StreamHistory with existing content blocks
     history = StreamHistory()
@@ -118,13 +119,13 @@ def test_handle_text_start_insert_at_beginning():
 def test_handle_text_start_empty_text():
     """Test handling text start events with empty text content."""
     # Set up initial test data
-    raw_line = 'data: {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}}'
-
     data = {
         "type": "content_block_start",
         "index": 0,
         "content_block": {"type": "text", "text": ""},
     }
+
+    raw_line = f"data: {json.dumps(data)}"
 
     # Create empty StreamHistory
     history = StreamHistory()
