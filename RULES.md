@@ -98,6 +98,7 @@ Additional general testing rules:
 - Tests focus on input/output pairs for our functional codebase.
 - Single pytest assertion per test where possible.
 - Never write code until tests have been written.
+- Never `patch` code! Integration tests *fully* run *all* user code.
 
 ## "Integrators" and "Units"
 
@@ -122,6 +123,20 @@ Notes on integrators:
 - Simple integration tests: one test function/suite-of-functions for each `return` inside integrator body.
 - Size of test suite is proportional to variety of return conditions.
 - Never mocks or stubs user code, always runs code that it depends on.
+
+## Workflows
+
+"Simple things should be simple, complex things should be possible." — Alan Kay
+
+Code changes in this project should typically start at the end-user's request, and cascade "all the way down" to the lower levels of, for example, a provider API call, making architectural and code changes as necessary along that path through the layers of abstraction. The reasoning behind this order of operations follows from the ultimate aim of this software: ease of use and power of expression. If we decide to add a feature or extend certain behavior of the system, we should first focus on how that specific behavior is *expressed* by the user of the software. How do _they_ see the world, how do they express the outcome they desire, and how then can our system most naturally model their intent? Always start with the user!
+
+### "Follow the Data"
+
+We model the world in the following sequence, getting less general/abstract and more granular/detailed as we go:
+
+```
+User request → SystemInput → ClientRequest/ClientResponse → ProviderRequest → StreamHistory
+```
 
 ## Style
 
