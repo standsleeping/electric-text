@@ -6,6 +6,9 @@ from electric_text.providers.model_providers.openai.openai_provider_inputs impor
 from electric_text.providers.functions.convert_prompt_to_messages import (
     convert_prompt_to_messages,
 )
+from electric_text.providers.model_providers.openai.functions.convert_tools import (
+    convert_tools as convert_tools_impl,
+)
 
 
 def convert_provider_inputs(
@@ -32,8 +35,12 @@ def convert_provider_inputs(
         prompt_text=request.prompt_text,
     )
 
+    # Convert tools from the standard format to OpenAI's format
+    openai_tools = convert_tools_impl(request.tools)
+
     return OpenAIProviderInputs(
         messages=messages,
         model=request.model_name,
         format_schema=format_schema,
+        tools=openai_tools,
     )

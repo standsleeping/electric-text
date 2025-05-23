@@ -4,6 +4,18 @@ from typing import Any
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.data.stream_history import StreamHistory
+from electric_text.providers.model_providers.openai.functions.handle_text_start import (
+    handle_text_start,
+)
+from electric_text.providers.model_providers.openai.functions.handle_text_delta import (
+    handle_text_delta,
+)
+from electric_text.providers.model_providers.openai.functions.handle_tool_start import (
+    handle_tool_start,
+)
+from electric_text.providers.model_providers.openai.functions.handle_tool_delta import (
+    handle_tool_delta,
+)
 
 
 def process_stream_response(
@@ -13,7 +25,7 @@ def process_stream_response(
     """
     Processes a stream response line into a StreamHistory.
 
-    This function handles individual stream response chunks from Ollama
+    This function handles individual stream response chunks from OpenAI
     and adds the appropriate StreamChunk objects to the provided history.
 
     Args:
@@ -39,34 +51,36 @@ def process_stream_response(
                 case "response.created":
                     return history.add_chunk(
                         StreamChunk(
-                            type=StreamChunkType.INITIAL_MESSAGE,
+                            type=StreamChunkType.STREAM_START,
                             raw_line=raw_line,
                             parsed_data=data,
                             content="",
                         )
                     )
-                case "response.output_text.delta":
-                    delta = data.get("delta", "")
-                    return history.add_chunk(
-                        StreamChunk(
-                            type=StreamChunkType.CONTENT_CHUNK,
-                            raw_line=raw_line,
-                            parsed_data=data,
-                            content=delta,
+                case "response.content_part.added":
+                    part = data.get("part", "")
+                    content_type = part.get("type", "")
+                    if content_type == "output_text":
+                        return handle_text_start(raw_line, data, history)
+                    elif content_type == "tool_use":
+                        return handle_tool_start(raw_line, data, history)
+                    else:
+                        return history.add_chunk(
+                            StreamChunk(
+                                type=StreamChunkType.UNHANDLED_EVENT,
+                                raw_line=raw_line,
+                                parsed_data=data,
+                                content="",
+                            )
                         )
-                    )
-                case (
-                    "response.in_progress"
-                    | "response.output_item.added"
-                    | "response.content_part.added"
-                    | "response.content_part.done"
-                    | "response.output_item.done"
-                    | "response.output_text.done"
-                    | "response.completed"
-                ):
+                case "response.output_text.delta":
+                    return handle_text_delta(raw_line, data, history)
+                case "response.tool_input.delta":
+                    return handle_tool_delta(raw_line, data, history)
+                case "response.done":
                     return history.add_chunk(
                         StreamChunk(
-                            type=StreamChunkType.INFO_MARKER,
+                            type=StreamChunkType.STREAM_STOP,
                             raw_line=raw_line,
                             parsed_data=data,
                             content="",
@@ -75,8 +89,8 @@ def process_stream_response(
                 case _:
                     return history.add_chunk(
                         StreamChunk(
-                            type=StreamChunkType.UNRECOGNIZED_EVENT,
-                            raw_line=raw_line,
+                            type=StreamChunkType.UNHANDLED_EVENT,
+                            raw_line="",
                             parsed_data=data,
                             content="",
                         )

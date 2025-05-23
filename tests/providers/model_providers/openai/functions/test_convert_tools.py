@@ -1,56 +1,10 @@
-from pydantic import BaseModel
-
-from electric_text.providers.data.provider_request import ProviderRequest
-from electric_text.providers.model_providers.openai.convert_inputs import (
-    convert_provider_inputs,
-)
-from electric_text.providers.model_providers.openai.openai_provider_inputs import (
-    OpenAIProviderInputs,
+from electric_text.providers.model_providers.openai.functions.convert_tools import (
+    convert_tools,
 )
 
 
-def test_convert_basic_request():
-    """Test conversion of basic ProviderRequest to OpenAIProviderInputs."""
-    request = ProviderRequest(
-        provider_name="openai",
-        prompt_text="Hello",
-        model_name="test-model",
-        system_messages=["You are a helpful assistant"],
-    )
-
-    result = convert_provider_inputs(request)
-
-    assert isinstance(result, OpenAIProviderInputs)
-    assert len(result.messages) == 2  # system message + user message
-    assert result.model == "test-model"
-
-
-def test_convert_with_response_model():
-    """Test conversion of ProviderRequest with response_model to OpenAIProviderInputs."""
-    # The OpenAI converter doesn't currently use response_model, but the test
-    # ensures it handles the parameter without errors
-
-    class ExampleModel(BaseModel):
-        name: str
-        value: int
-
-    request = ProviderRequest(
-        provider_name="openai",
-        prompt_text="Hello",
-        model_name="test-model",
-        system_messages=["You are a helpful assistant"],
-        response_model=ExampleModel,
-    )
-
-    result = convert_provider_inputs(request)
-
-    assert isinstance(result, OpenAIProviderInputs)
-    assert len(result.messages) == 2  # system message + user message
-    assert result.model == "test-model"
-
-
-def test_convert_with_tools():
-    """Test conversion of ProviderRequest with tools to OpenAIProviderInputs."""
+def test_convert_tools():
+    """Test converting standard tools format to OpenAI format."""
     # Standard tools format
     standard_tools = [
         {
@@ -63,13 +17,14 @@ def test_convert_with_tools():
                         "type": "string",
                         "description": "The city and state, e.g. Omaha, NE",
                     },
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
                 },
                 "required": ["location"],
             },
         }
     ]
 
-    # Expected OpenAI format (what the conversion should produce)
+    # Expected OpenAI format
     expected_openai_tools = [
         {
             "type": "function",
@@ -82,30 +37,32 @@ def test_convert_with_tools():
                         "type": "string",
                         "description": "The city and state, e.g. Omaha, NE",
                     },
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
                 },
                 "required": ["location"],
             },
         }
     ]
 
-    request = ProviderRequest(
-        provider_name="openai",
-        prompt_text="What's the weather?",
-        model_name="test-model",
-        system_messages=["You are a helpful assistant"],
-        tools=standard_tools,
-    )
+    # Convert tools
+    openai_tools = convert_tools(standard_tools)
 
-    result = convert_provider_inputs(request)
-
-    assert isinstance(result, OpenAIProviderInputs)
-    assert len(result.messages) == 2  # system message + user message
-    assert result.model == "test-model"
-    assert result.tools == expected_openai_tools
+    # Check result
+    assert openai_tools == expected_openai_tools
 
 
-def test_convert_with_multiple_tools():
-    """Test conversion of ProviderRequest with multiple tools to OpenAIProviderInputs."""
+def test_convert_tools_none():
+    """Test converting None tools."""
+    assert convert_tools(None) is None
+
+
+def test_convert_tools_empty():
+    """Test converting empty tools list."""
+    assert convert_tools([]) == []
+
+
+def test_convert_tools_multiple():
+    """Test converting multiple tools."""
     # Standard tools format with multiple tools
     standard_tools = [
         {
@@ -184,35 +141,8 @@ def test_convert_with_multiple_tools():
         },
     ]
 
-    request = ProviderRequest(
-        provider_name="openai",
-        prompt_text="What's the weather forecast?",
-        model_name="test-model",
-        system_messages=["You are a helpful assistant"],
-        tools=standard_tools,
-    )
+    # Convert tools
+    openai_tools = convert_tools(standard_tools)
 
-    result = convert_provider_inputs(request)
-
-    assert isinstance(result, OpenAIProviderInputs)
-    assert len(result.messages) == 2  # system message + user message
-    assert result.model == "test-model"
-    assert result.tools == expected_openai_tools
-
-
-def test_convert_with_no_tools():
-    """Test conversion of ProviderRequest with no tools to OpenAIProviderInputs."""
-    request = ProviderRequest(
-        provider_name="openai",
-        prompt_text="Hello there",
-        model_name="test-model",
-        system_messages=["You are a helpful assistant"],
-        tools=None,
-    )
-
-    result = convert_provider_inputs(request)
-
-    assert isinstance(result, OpenAIProviderInputs)
-    assert len(result.messages) == 2  # system message + user message
-    assert result.model == "test-model"
-    assert result.tools is None
+    # Check result
+    assert openai_tools == expected_openai_tools 

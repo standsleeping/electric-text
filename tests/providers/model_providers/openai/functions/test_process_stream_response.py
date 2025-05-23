@@ -7,7 +7,8 @@ A provider's test_process_stream_response.py file contains the following standar
 
 """
 
-from electric_text.providers.data.stream_chunk_type import StreamChunkType
+import json
+from electric_text.providers.data.content_block import ContentBlockType
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.model_providers.openai.functions.process_stream_response import (
     process_stream_response,
@@ -110,8 +111,13 @@ def test_unstructured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 29
-    assert history.chunks[0].type == StreamChunkType.INITIAL_MESSAGE
+    first_content_block = history.content_blocks[0]
+
+    assert first_content_block.type == ContentBlockType.TEXT
+
+    expected_text = "greenness spills from earth  \nunderfoot, soft whispers rise—  \nthunder sighs, then breaks"
+
+    assert first_content_block.data.text == expected_text
 
 
 def test_structured_content():
@@ -399,7 +405,30 @@ def test_structured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 92
+    first_content_block = history.content_blocks[0]
+
+    assert first_content_block.type == ContentBlockType.TEXT
+
+    raw_text = first_content_block.data.text
+
+    loaded_text = json.loads(raw_text)
+
+    annotation = "This schema defines the attributes of a car, including its weight, cost, and range."
+
+    assert loaded_text["response_annotation"] == annotation
+
+    loaded_json_schema = loaded_text["created_json_schema_definition"]
+
+    properties = loaded_json_schema["properties"]
+
+    assert properties["weight"]["type"] == "number"
+    assert properties["weight"]["description"] == "The weight of the car in pounds"
+
+    assert properties["cost"]["type"] == "number"
+    assert properties["cost"]["description"] == "The cost of the car in dollars"
+
+    assert properties["range"]["type"] == "number"
+    assert properties["range"]["description"] == "The range of the car in miles"
 
 
 def test_tool_calls():

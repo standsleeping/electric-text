@@ -1,7 +1,7 @@
 import json
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, AsyncGenerator
+from typing import Any, Dict, Optional, AsyncGenerator, List, Union
 import logging
 
 from electric_text.providers import ModelProvider
@@ -73,6 +73,7 @@ class OpenaiProvider(ModelProvider):
         stream: bool,
         format_schema: Optional[Dict[str, Any]] = None,
         strict_schema: bool = True,
+        tools: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         Create the API request payload.
@@ -83,6 +84,7 @@ class OpenaiProvider(ModelProvider):
             stream: Whether to stream the response
             format_schema: Optional JSON schema for structured outputs
             strict_schema: Whether to enforce strict schema validation (default: True)
+            tools: Optional list of tools to make available to the model
 
         Returns:
             Dict containing the formatted payload
@@ -95,6 +97,9 @@ class OpenaiProvider(ModelProvider):
 
         if format_schema:
             payload["text"] = set_text_format(format_schema, strict=strict_schema)
+
+        if tools:
+            payload["tools"] = tools
 
         return payload
 
@@ -126,6 +131,7 @@ class OpenaiProvider(ModelProvider):
         model = openai_inputs.model
         format_schema = openai_inputs.format_schema
         strict_schema = getattr(openai_inputs, "strict_schema", True)
+        tools = openai_inputs.tools
 
         payload = self.create_payload(
             messages=messages,
@@ -133,6 +139,7 @@ class OpenaiProvider(ModelProvider):
             stream=True,
             format_schema=format_schema,
             strict_schema=strict_schema,
+            tools=tools,
         )
 
         try:
@@ -176,6 +183,7 @@ class OpenaiProvider(ModelProvider):
         model = openai_inputs.model
         format_schema = openai_inputs.format_schema
         strict_schema = getattr(openai_inputs, "strict_schema", True)
+        tools = openai_inputs.tools
 
         payload = self.create_payload(
             messages=messages,
@@ -183,11 +191,12 @@ class OpenaiProvider(ModelProvider):
             stream=False,
             format_schema=format_schema,
             strict_schema=strict_schema,
+            tools=tools,
         )
 
         # Debug log the payload to inspect schema structure
         if format_schema:
-            log_line = f"Open AI schema: {json.dumps(payload.get('text', {}), indent=2)}"
+            log_line = f"OAI schema: {json.dumps(payload.get('text', {}), indent=2)}"
             logging.debug(log_line)
 
         try:

@@ -31,7 +31,9 @@ def handle_text_start(
     """
     # For OpenAI, we start with an empty text content
     # The content will be built up through deltas
-    text_content = ""
+
+    part = data.get("part", "")
+    text_content = part.get("text", "")
 
     output_index = data.get("output_index", 0)
 
