@@ -4,15 +4,6 @@ from electric_text.clients import Client
 from electric_text.clients.data.client_request import ClientRequest
 from electric_text.clients.data.client_response import ClientResponse
 from electric_text.logging import get_logger
-from electric_text.formatting.functions.format_non_streaming_response import (
-    format_non_streaming_response,
-)
-from electric_text.formatting.functions.format_streaming_chunk import (
-    format_streaming_chunk,
-)
-from electric_text.formatting.functions.format_streaming_final_output import (
-    format_streaming_final_output,
-)
 
 logger = get_logger(__name__)
 
@@ -36,13 +27,22 @@ async def execute_client_request(
     # Handle non-streaming execution
     if not stream:
         response: ClientResponse[Any] = await client.generate(request=request)
-        formatted_output = format_non_streaming_response(
-            content=response.get_formatted_content(),
-            is_valid=response.is_valid,
-            parsed_model=response.parsed_model,
-            model_class=model_class,
-        )
-        print(formatted_output)
+        content = ""
+        if response.prompt_result and response.prompt_result.content_blocks:
+            from electric_text.providers.functions.format_content_blocks import format_content_blocks
+            content = format_content_blocks(content_blocks=response.prompt_result.content_blocks)
+        
+        is_valid = response.parse_result.is_valid if response.parse_result else False
+        parsed_model = response.parse_result.model if response.parse_result else None
+        
+        if model_class and is_valid and parsed_model:
+            formatted_model = parsed_model.model_dump_json(indent=2)
+            print(f"RESULT (STRUCTURED): {parsed_model}\n{formatted_model}")
+        else:
+            if content:
+                print(f"RESULT (UNSTRUCTURED):\n{content}")
+            else:
+                print("RESULT (UNSTRUCTURED): [No content available]")
         return
 
     # Handle streaming execution - choose appropriate streaming method
@@ -53,22 +53,30 @@ async def execute_client_request(
         )
     else:
         # Use regular streaming for unstructured requests
-        stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream(
-            request=request
-        )
+        stream_generator = client.stream(request=request)
 
     # Keep track of the last chunk for final output
     last_chunk = None
 
     async for chunk in stream_generator:
-        formatted_chunk = format_streaming_chunk(
-            content=chunk.get_formatted_content(),
-            is_valid=chunk.is_valid,
-            parsed_model=chunk.parsed_model,
-            model_class=model_class,
-        )
+        content = ""
+        if chunk.prompt_result and chunk.prompt_result.content_blocks:
+            from electric_text.providers.functions.format_content_blocks import format_content_blocks
+            content = format_content_blocks(content_blocks=chunk.prompt_result.content_blocks)
+        
+        is_valid = chunk.parse_result.is_valid if chunk.parse_result else False
+        parsed_model = chunk.parse_result.model if chunk.parse_result else None
+        
+        if model_class and is_valid and parsed_model:
+            formatted_model = parsed_model.model_dump_json(indent=2)
+            print(f"PARTIAL RESULT (STRUCTURED): {parsed_model}\n{formatted_model}")
+        else:
+            # Format using provided content
+            if content:
+                print(f"PARTIAL RESULT (UNSTRUCTURED):\n{content}")
+            else:
+                print("PARTIAL RESULT (UNSTRUCTURED): [No content available]")
 
-        print(formatted_chunk)
 
         # Keep the last chunk to get final content
         last_chunk = chunk
@@ -77,19 +85,39 @@ async def execute_client_request(
     if last_chunk:
         if request.response_model is not None:
             # For structured responses, use the last chunk as the final result
-            formatted_final_output = format_non_streaming_response(
-                content=last_chunk.get_formatted_content(),
-                is_valid=last_chunk.is_valid,
-                parsed_model=last_chunk.parsed_model,
-                model_class=model_class,
-            )
+            content = ""
+            if last_chunk.prompt_result and last_chunk.prompt_result.content_blocks:
+                from electric_text.providers.functions.format_content_blocks import format_content_blocks
+                content = format_content_blocks(content_blocks=last_chunk.prompt_result.content_blocks)
+            
+            is_valid = last_chunk.parse_result.is_valid if last_chunk.parse_result else False
+            parsed_model = last_chunk.parse_result.model if last_chunk.parse_result else None
+            
+            if model_class and is_valid and parsed_model:
+                formatted_model = parsed_model.model_dump_json(indent=2)
+                print(f"RESULT (STRUCTURED): {parsed_model}\n{formatted_model}")
+            else:
+                # Format using provided content
+                if content:
+                    print(f"RESULT (UNSTRUCTURED):\n{content}")
+                else:
+                    print("RESULT (UNSTRUCTURED): [No content available]")
         else:
             # For unstructured responses, extract content from content blocks
             full_content = ""
-            full_content = last_chunk.get_formatted_content()
-            formatted_final_output = format_streaming_final_output(
-                full_content=full_content,
-                model_class=model_class,
-            )
+            if last_chunk.prompt_result and last_chunk.prompt_result.content_blocks:
+                from electric_text.providers.functions.format_content_blocks import format_content_blocks
+                full_content = format_content_blocks(content_blocks=last_chunk.prompt_result.content_blocks)
 
-        print(formatted_final_output)
+
+            result = f"FULL RESULT: {full_content}"
+
+            if model_class:
+                try:
+                    parsed_json = json.loads(full_content)
+                    result += f"\nRESULT TO JSON: {parsed_json}"
+                except json.JSONDecodeError as e:
+                    result += f"\nERROR PARSING JSON: {e}"
+                    result += f"\nSTRUCTURED FULL RESULT: {full_content}"
+
+            print(result)

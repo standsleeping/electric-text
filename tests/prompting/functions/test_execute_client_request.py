@@ -92,7 +92,7 @@ async def test_execute_client_request_non_streaming_with_model(
         validation_error=None,
         json_error=None
     )
-    response = ClientResponse.from_parse_result(parse_result)
+    response = ClientResponse(prompt_result=None, parse_result=parse_result)
     
     # Create test client with structured response
     test_client = ClientForTesting(response)
@@ -125,11 +125,13 @@ async def test_execute_client_request_streaming(
     from electric_text.clients.data.client_response import ClientResponse
     
     # Create streaming chunks
-    chunk1 = ClientResponse.from_prompt_result(
-        PromptResult(content_blocks=[])
+    chunk1 = ClientResponse(
+        prompt_result=PromptResult(content_blocks=[]),
+        parse_result=None
     )
-    chunk2 = ClientResponse.from_prompt_result(
-        PromptResult(content_blocks=[])
+    chunk2 = ClientResponse(
+        prompt_result=PromptResult(content_blocks=[]),
+        parse_result=None
     )
     
     # Create test client with streaming chunks

@@ -373,7 +373,7 @@ def sample_client_response_unstructured(sample_prompt_result):
     """Fixture providing a ClientResponse for unstructured data."""
     from electric_text.clients.data.client_response import ClientResponse
 
-    return ClientResponse.from_prompt_result(sample_prompt_result)
+    return ClientResponse(prompt_result=sample_prompt_result, parse_result=None)
 
 
 @pytest.fixture
@@ -381,4 +381,4 @@ def sample_client_response_with_tool_call(sample_prompt_result_with_tool_call):
     """Fixture providing a ClientResponse with tool call content blocks."""
     from electric_text.clients.data.client_response import ClientResponse
 
-    return ClientResponse.from_prompt_result(sample_prompt_result_with_tool_call)
+    return ClientResponse(prompt_result=sample_prompt_result_with_tool_call, parse_result=None)

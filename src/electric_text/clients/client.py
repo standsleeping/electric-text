@@ -46,10 +46,11 @@ class Client:
 
         # Call provider with request
         async for history in self.provider.generate_stream(provider_request):
-            yield ClientResponse.from_prompt_result(
-                PromptResult(
+            yield ClientResponse(
+                prompt_result=PromptResult(
                     content_blocks=history.content_blocks,
-                )
+                ),
+                parse_result=None
             )
 
     async def generate_raw(
@@ -74,7 +75,7 @@ class Client:
             content_blocks=history.content_blocks,
         )
 
-        return ClientResponse.from_prompt_result(prompt_result)
+        return ClientResponse(prompt_result=prompt_result, parse_result=None)
 
     async def stream_structured(
         self,
@@ -107,7 +108,8 @@ class Client:
 
                 content = extract_text_content(content_blocks=history.content_blocks)
             parse_result = create_parse_result(content, request.response_model)
-            yield ClientResponse.from_parse_result(parse_result)
+            prompt_result = PromptResult(content_blocks=history.content_blocks)
+            yield ClientResponse(prompt_result=prompt_result, parse_result=parse_result)
 
     async def generate_structured(
         self,
@@ -141,7 +143,8 @@ class Client:
 
             content = extract_text_content(content_blocks=history.content_blocks)
         parse_result = create_parse_result(content, request.response_model)
-        return ClientResponse.from_parse_result(parse_result)
+        prompt_result = PromptResult(content_blocks=history.content_blocks)
+        return ClientResponse(prompt_result=prompt_result, parse_result=parse_result)
 
     async def generate(
         self,
