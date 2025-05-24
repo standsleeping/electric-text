@@ -1,4 +1,5 @@
 import json
+from electric_text.providers.data.content_block import ContentBlock, ContentBlockType, TextData, ToolCallData
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
@@ -29,12 +30,27 @@ def process_completion_response(
     # Process tool calls if present
     if tool_calls:
         for tool_call in tool_calls:
+            function = tool_call.get("function", {})
+            func_name = function.get("name", "")
+            func_args = function.get("arguments", {})
+
             history.add_chunk(
                 StreamChunk(
                     type=StreamChunkType.FULL_TOOL_CALL,
                     raw_line=line,
                     parsed_data=tool_call,
-                    content=json.dumps(tool_call.get("function", {})),
+                    content=json.dumps(function),
+                )
+            )
+
+            history.content_blocks.append(
+                ContentBlock(
+                    type=ContentBlockType.TOOL_CALL,
+                    data=ToolCallData(
+                        name=func_name,
+                        input=func_args,
+                        input_json_string=json.dumps(func_args),
+                    ),
                 )
             )
 
@@ -45,6 +61,13 @@ def process_completion_response(
                 raw_line=line,
                 parsed_data=data,
                 content=content,
+            )
+        )
+
+        history.content_blocks.append(
+            ContentBlock(
+                type=ContentBlockType.TEXT,
+                data=TextData(text=content),
             )
         )
 

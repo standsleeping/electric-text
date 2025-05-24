@@ -7,6 +7,7 @@ A provider's test_process_stream_response.py file contains the following standar
 
 """
 
+from electric_text.providers.data.content_block import ContentBlock, ContentBlockType
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.model_providers.ollama.functions.process_stream_response import (
@@ -27,11 +28,15 @@ def test_unstructured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 4
-    assert history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
-    assert history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-    assert history.chunks[2].type == StreamChunkType.CONTENT_CHUNK
-    assert history.chunks[3].type == StreamChunkType.COMPLETION_END
+    content_block: ContentBlock = history.content_blocks[0]
+
+    assert content_block.type == ContentBlockType.TEXT
+
+    expected_text: str = "LINE1\nLINE2\nLINE3\n"
+
+    actual_text: str = content_block.data.text
+
+    assert actual_text == expected_text
 
 
 def test_structured_content():
