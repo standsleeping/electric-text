@@ -18,10 +18,6 @@ class ClientResponse(Generic[ResponseModel]):
     # Store the original result
     raw_result: Union[PromptResult, ParseResult[ResponseModel]]
 
-    @property
-    def raw_content(self) -> str:
-        """Get the raw content string from the response."""
-        return self.raw_result.raw_content
 
     @property
     def is_parsed(self) -> bool:

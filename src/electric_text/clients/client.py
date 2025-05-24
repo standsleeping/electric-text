@@ -48,7 +48,6 @@ class Client:
         async for history in self.provider.generate_stream(provider_request):
             yield ClientResponse.from_prompt_result(
                 PromptResult(
-                    raw_content="",
                     content_blocks=history.content_blocks,
                 )
             )
@@ -72,7 +71,6 @@ class Client:
         history = await self.provider.generate_completion(provider_request)
 
         prompt_result = PromptResult(
-            raw_content="",
             content_blocks=history.content_blocks,
         )
 

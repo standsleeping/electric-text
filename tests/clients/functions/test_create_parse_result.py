@@ -16,7 +16,6 @@ def test_create_parse_result_valid():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
     assert result.parsed_content == {"name": "test", "value": 123}
     assert isinstance(result.model, FakeModel)
     assert result.model.name == "test"
@@ -32,7 +31,6 @@ def test_create_parse_result_validation_error():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
     assert result.parsed_content == {"name": "test", "value": "not_an_int"}
     assert result.model is None
     assert isinstance(result.validation_error, ValidationError)
@@ -56,7 +54,6 @@ def test_create_parse_result_json_error():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
 
     # parse_partial_response recovers what it can, assigning None to incomplete values
     assert result.parsed_content == {"name": "test", "value": None}
@@ -77,7 +74,6 @@ def test_create_parse_result_partial_json():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
     assert result.parsed_content == {}
     assert result.model is None
     assert isinstance(result.validation_error, ValidationError)
@@ -91,7 +87,6 @@ def test_create_parse_result_partial_json_invalid_model():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
     assert result.parsed_content == {}
     assert result.model is None
     assert isinstance(result.validation_error, ValidationError)
@@ -105,7 +100,6 @@ def test_create_parse_result_no_json_found():
     result = create_parse_result(content, FakeModel)
 
     assert isinstance(result, ParseResult)
-    assert result.raw_content == content
     assert result.parsed_content == {}
     assert result.model is None
     assert isinstance(result.validation_error, ValidationError)

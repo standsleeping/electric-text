@@ -16,19 +16,16 @@ def create_parse_result(
         try:
             model_instance = response_model(**parsed_content)
             return ParseResult(
-                raw_content=content,
                 parsed_content=parsed_content,
                 model=model_instance,
             )
         except (ValidationError, TypeError) as error:
             return ParseResult(
-                raw_content=content,
                 parsed_content=parsed_content,
                 validation_error=error,
             )
     except json.JSONDecodeError as error:
         return ParseResult(
-            raw_content=content,
             parsed_content={},
             json_error=error,
         )

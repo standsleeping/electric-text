@@ -333,7 +333,7 @@ def sample_prompt_result():
     ]
 
     return PromptResult(
-        raw_content="Test response content", content_blocks=content_blocks
+        content_blocks=content_blocks
     )
 
 
@@ -364,7 +364,7 @@ def sample_prompt_result_with_tool_call():
     ]
 
     return PromptResult(
-        raw_content="I'll check the weather for you.", content_blocks=content_blocks
+        content_blocks=content_blocks
     )
 
 

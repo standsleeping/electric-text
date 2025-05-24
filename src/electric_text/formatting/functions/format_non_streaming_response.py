@@ -20,9 +20,9 @@ def format_non_streaming_response(
         formatted_model = response.parsed_model.model_dump_json(indent=2)
         return f"RESULT (STRUCTURED): {response.parsed_model}\n{formatted_model}"
     else:
-        # Try to format using content blocks if available
+        # Format using content blocks
         if hasattr(response.raw_result, 'content_blocks') and response.raw_result.content_blocks:
             formatted_content = format_content_blocks(content_blocks=response.raw_result.content_blocks)
             return f"RESULT (UNSTRUCTURED):\n{formatted_content}"
         else:
-            return f"RESULT (UNSTRUCTURED): {response.raw_content}"
+            return "RESULT (UNSTRUCTURED): [No content available]"

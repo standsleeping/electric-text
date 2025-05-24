@@ -12,17 +12,14 @@ class ExampleModel(BaseModel):
 
 def test_parse_result_valid():
     """Test ParseResult with valid model instance."""
-    raw_content = '{"name": "test", "value": 42}'
     parsed_content = {"name": "test", "value": 42}
     model = ExampleModel(name="test", value=42)
 
     result = ParseResult(
-        raw_content=raw_content,
         parsed_content=parsed_content,
         model=model,
     )
 
-    assert result.raw_content == raw_content
     assert result.parsed_content == parsed_content
     assert result.model == model
     assert result.validation_error is None
@@ -32,7 +29,6 @@ def test_parse_result_valid():
 
 def test_parse_result_validation_error():
     """Test ParseResult with validation error."""
-    raw_content = '{"name": "test", "value": "not_an_int"}'
     parsed_content = {"name": "test", "value": "not_an_int"}
 
     # Create a validation error
@@ -43,12 +39,10 @@ def test_parse_result_validation_error():
         validation_error = e
 
     result = ParseResult(
-        raw_content=raw_content,
         parsed_content=parsed_content,
         validation_error=validation_error,
     )
 
-    assert result.raw_content == raw_content
     assert result.parsed_content == parsed_content
     assert result.model is None
     assert result.validation_error is validation_error
@@ -58,10 +52,10 @@ def test_parse_result_validation_error():
 
 def test_parse_result_json_error():
     """Test ParseResult with JSON error."""
-    raw_content = '{"name": "test", "value": 42'  # Incomplete JSON
     parsed_content = {}
 
     # Create a JSON error
+    raw_content = '{"name": "test", "value": 42'  # Incomplete JSON
     try:
         json.loads(raw_content)
         pytest.fail("Should have raised JSONDecodeError")
@@ -69,12 +63,10 @@ def test_parse_result_json_error():
         json_error = e
 
     result = ParseResult(
-        raw_content=raw_content,
         parsed_content=parsed_content,
         json_error=json_error,
     )
 
-    assert result.raw_content == raw_content
     assert result.parsed_content == parsed_content
     assert result.model is None
     assert result.validation_error is None
@@ -86,12 +78,12 @@ def test_is_valid_property():
     """Test the is_valid property."""
     # Valid case
     valid_result = ParseResult(
-        raw_content="{}", parsed_content={}, model=ExampleModel(name="test", value=42)
+        parsed_content={}, model=ExampleModel(name="test", value=42)
     )
     assert valid_result.is_valid is True
 
     # Invalid cases
-    invalid_result1 = ParseResult(raw_content="{}", parsed_content={}, model=None)
+    invalid_result1 = ParseResult(parsed_content={}, model=None)
     assert invalid_result1.is_valid is False
 
     # Create a validation error directly
@@ -102,7 +94,6 @@ def test_is_valid_property():
         validation_error = e
 
     invalid_result2 = ParseResult(
-        raw_content="{}",
         parsed_content={},
         validation_error=validation_error,
     )

@@ -21,7 +21,6 @@ ResponseModel = TypeVar("ResponseModel", bound=ValidationModel)
 class ParseResult[ResponseModel]:
     """Wrapper for parsed response data that may be incomplete."""
 
-    raw_content: str
     parsed_content: dict[str, Any]
     model: Optional[ResponseModel] = None
     validation_error: Optional[Union[ValidationError, TypeError]] = None

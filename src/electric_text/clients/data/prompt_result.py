@@ -8,5 +8,4 @@ from electric_text.providers.data.content_block import ContentBlock
 class PromptResult:
     """Model response data."""
 
-    raw_content: str
     content_blocks: List[ContentBlock] = field(default_factory=list)

@@ -27,8 +27,8 @@ def test_format_streaming_chunk_without_model(sample_client_response_unstructure
 
 def test_format_streaming_chunk_with_invalid_model():
     """Formats streaming chunk when model class provided but chunk is invalid."""
-    # Create response with empty content blocks to test fallback to raw_content
-    prompt_result = PromptResult(raw_content="Invalid chunk", content_blocks=[])
+    # Create response with empty content blocks to test fallback
+    prompt_result = PromptResult(content_blocks=[])
     chunk = ClientResponse.from_prompt_result(prompt_result)
 
     result = format_streaming_chunk(
@@ -36,8 +36,8 @@ def test_format_streaming_chunk_with_invalid_model():
         model_class=SampleResponseModel
     )
 
-    # Should fall back to raw content since no content blocks
-    assert result == "PARTIAL RESULT (UNSTRUCTURED): Invalid chunk"
+    # Should fall back to no content message since no content blocks
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): [No content available]"
 
 
 def test_format_streaming_chunk_with_valid_model():
@@ -47,7 +47,6 @@ def test_format_streaming_chunk_with_valid_model():
 
     # Create valid parse result
     parse_result = ParseResult(
-        raw_content='{"content": "chunk1", "items": ["x", "y"]}',
         parsed_content={"content": "chunk1", "items": ["x", "y"]},
         model=model_instance,
         validation_error=None,
@@ -72,7 +71,6 @@ def test_format_streaming_chunk_with_valid_model_no_parsed_model():
     """Formats streaming chunk when model class provided, is_valid=True but no parsed_model."""
     # Create parse result that's valid but no model (edge case)
     parse_result = ParseResult(
-        raw_content="Some chunk content",
         parsed_content={},
         model=None,
         validation_error=None,
@@ -85,8 +83,8 @@ def test_format_streaming_chunk_with_valid_model_no_parsed_model():
         model_class=SampleResponseModel
     )
 
-    # Should fall back to raw content since no parsed_model
-    assert result == "PARTIAL RESULT (UNSTRUCTURED): Some chunk content"
+    # Should fall back to no content message since no parsed_model or content blocks
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): [No content available]"
 
 
 def test_format_streaming_chunk_with_tool_call_content_blocks(sample_client_response_with_tool_call):

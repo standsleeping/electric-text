@@ -20,9 +20,9 @@ def format_streaming_chunk(
         formatted_model = chunk.parsed_model.model_dump_json(indent=2)
         return f"PARTIAL RESULT (STRUCTURED): {chunk.parsed_model}\n{formatted_model}"
     else:
-        # Try to format using content blocks if available
+        # Format using content blocks
         if hasattr(chunk.raw_result, 'content_blocks') and chunk.raw_result.content_blocks:
             formatted_content = format_content_blocks(content_blocks=chunk.raw_result.content_blocks)
             return f"PARTIAL RESULT (UNSTRUCTURED):\n{formatted_content}"
         else:
-            return f"PARTIAL RESULT (UNSTRUCTURED): {chunk.raw_content}"
+            return "PARTIAL RESULT (UNSTRUCTURED): [No content available]"

@@ -87,7 +87,6 @@ async def test_execute_client_request_non_streaming_with_model(
 
     # Create valid parse result
     parse_result = ParseResult(
-        raw_content='{"content": "test", "items": ["a", "b"]}',
         parsed_content={"content": "test", "items": ["a", "b"]},
         model=model_instance,
         validation_error=None,
@@ -127,10 +126,10 @@ async def test_execute_client_request_streaming(
     
     # Create streaming chunks
     chunk1 = ClientResponse.from_prompt_result(
-        PromptResult(raw_content="Chunk 1", content_blocks=[])
+        PromptResult(content_blocks=[])
     )
     chunk2 = ClientResponse.from_prompt_result(
-        PromptResult(raw_content="Chunk 2", content_blocks=[])
+        PromptResult(content_blocks=[])
     )
     
     # Create test client with streaming chunks
@@ -149,8 +148,7 @@ async def test_execute_client_request_streaming(
 
     # Verify output
     captured = capsys.readouterr()
-    assert "PARTIAL RESULT (UNSTRUCTURED): Chunk 1" in captured.out
-    assert "PARTIAL RESULT (UNSTRUCTURED): Chunk 2" in captured.out
+    assert "PARTIAL RESULT (UNSTRUCTURED): [No content available]" in captured.out
     assert "FULL RESULT:" in captured.out
 
 
