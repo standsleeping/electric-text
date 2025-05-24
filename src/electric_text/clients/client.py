@@ -46,9 +46,12 @@ class Client:
 
         # Call provider with request
         async for history in self.provider.generate_stream(provider_request):
-            content = history.get_full_content()
-            prompt_result = PromptResult(raw_content=content)
-            yield ClientResponse.from_prompt_result(prompt_result)
+            yield ClientResponse.from_prompt_result(
+                PromptResult(
+                    raw_content="",
+                    content_blocks=history.content_blocks,
+                )
+            )
 
     async def generate_raw(
         self,
@@ -68,8 +71,11 @@ class Client:
         # Call provider with request
         history = await self.provider.generate_completion(provider_request)
 
-        content = history.get_full_content()
-        prompt_result = PromptResult(raw_content=content)
+        prompt_result = PromptResult(
+            raw_content="",
+            content_blocks=history.content_blocks,
+        )
+
         return ClientResponse.from_prompt_result(prompt_result)
 
     async def stream_structured(
@@ -94,7 +100,14 @@ class Client:
 
         # Call provider with request
         async for history in self.provider.generate_stream(provider_request):
-            content = history.get_full_content()
+            # Extract text content from content blocks for structured parsing
+            content = ""
+            if history.content_blocks:
+                from electric_text.formatting.functions.format_content_blocks import (
+                    format_content_blocks,
+                )
+
+                content = format_content_blocks(content_blocks=history.content_blocks)
             parse_result = create_parse_result(content, request.response_model)
             yield ClientResponse.from_parse_result(parse_result)
 
@@ -121,7 +134,14 @@ class Client:
         # Call provider with request
         history = await self.provider.generate_completion(provider_request)
 
-        content = history.get_full_content()
+        # Extract text content from content blocks for structured parsing
+        content = ""
+        if history.content_blocks:
+            from electric_text.formatting.functions.format_content_blocks import (
+                format_content_blocks,
+            )
+
+            content = format_content_blocks(content_blocks=history.content_blocks)
         parse_result = create_parse_result(content, request.response_model)
         return ClientResponse.from_parse_result(parse_result)
 
@@ -166,7 +186,9 @@ class Client:
         if request.response_model is not None:
             structured_stream = self.stream_structured(request)
             return cast(
-                AsyncGenerator[ClientResponse[ResponseModel], None], structured_stream
+                AsyncGenerator[ClientResponse[ResponseModel], None],
+                structured_stream,
             )
+
         raw_stream = self.stream_raw(request)
         return cast(AsyncGenerator[ClientResponse[ResponseModel], None], raw_stream)

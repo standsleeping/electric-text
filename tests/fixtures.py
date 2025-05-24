@@ -314,3 +314,71 @@ def sample_openai_response_with_plain_text() -> Dict[str, Any]:
         }
     )
     return data
+
+
+@pytest.fixture
+def sample_prompt_result():
+    """Fixture providing a PromptResult with content blocks."""
+    from electric_text.clients.data.prompt_result import PromptResult
+    from electric_text.providers.data.content_block import (
+        ContentBlock,
+        ContentBlockType,
+        TextData,
+    )
+
+    content_blocks = [
+        ContentBlock(
+            type=ContentBlockType.TEXT, data=TextData(text="Test response content")
+        )
+    ]
+
+    return PromptResult(
+        raw_content="Test response content", content_blocks=content_blocks
+    )
+
+
+@pytest.fixture
+def sample_prompt_result_with_tool_call():
+    """Fixture providing a PromptResult with text and tool call content blocks."""
+    from electric_text.clients.data.prompt_result import PromptResult
+    from electric_text.providers.data.content_block import (
+        ContentBlock,
+        ContentBlockType,
+        TextData,
+        ToolCallData,
+    )
+
+    content_blocks = [
+        ContentBlock(
+            type=ContentBlockType.TEXT,
+            data=TextData(text="I'll check the weather for you."),
+        ),
+        ContentBlock(
+            type=ContentBlockType.TOOL_CALL,
+            data=ToolCallData(
+                name="get_weather",
+                input={"location": "Chicago"},
+                input_json_string='{"location": "Chicago"}',
+            ),
+        ),
+    ]
+
+    return PromptResult(
+        raw_content="I'll check the weather for you.", content_blocks=content_blocks
+    )
+
+
+@pytest.fixture
+def sample_client_response_unstructured(sample_prompt_result):
+    """Fixture providing a ClientResponse for unstructured data."""
+    from electric_text.clients.data.client_response import ClientResponse
+
+    return ClientResponse.from_prompt_result(sample_prompt_result)
+
+
+@pytest.fixture
+def sample_client_response_with_tool_call(sample_prompt_result_with_tool_call):
+    """Fixture providing a ClientResponse with tool call content blocks."""
+    from electric_text.clients.data.client_response import ClientResponse
+
+    return ClientResponse.from_prompt_result(sample_prompt_result_with_tool_call)

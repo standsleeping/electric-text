@@ -43,22 +43,47 @@ async def execute_client_request(
         print(formatted_output)
         return
 
-    # Handle streaming execution
-    stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream(
-        request=request
-    )
+    # Handle streaming execution - choose appropriate streaming method
+    if request.response_model is not None:
+        # Use structured streaming for requests with response models
+        stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream_structured(
+            request=request
+        )
+    else:
+        # Use regular streaming for unstructured requests
+        stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream(
+            request=request
+        )
 
+    # Keep track of the last chunk for final output
+    last_chunk = None
+    
     async for chunk in stream_generator:
         formatted_chunk = format_streaming_chunk(
             chunk=chunk,
             model_class=model_class,
         )
         print(formatted_chunk)
+        
+        # Keep the last chunk to get final content
+        last_chunk = chunk
 
-    # Process the complete content after streaming is done
-    full_content = client.provider.stream_history.get_full_content()
-    formatted_final_output = format_streaming_final_output(
-        full_content=full_content,
-        model_class=model_class,
-    )
-    print(formatted_final_output)
+    # Process the complete content from the last chunk
+    if last_chunk:
+        if request.response_model is not None:
+            # For structured responses, use the last chunk as the final result
+            formatted_final_output = format_non_streaming_response(
+                response=last_chunk,
+                model_class=model_class,
+            )
+        else:
+            # For unstructured responses, extract content from content blocks
+            full_content = ""
+            if hasattr(last_chunk.raw_result, 'content_blocks') and last_chunk.raw_result.content_blocks:
+                from electric_text.formatting.functions.format_content_blocks import format_content_blocks
+                full_content = format_content_blocks(content_blocks=last_chunk.raw_result.content_blocks)
+            formatted_final_output = format_streaming_final_output(
+                full_content=full_content,
+                model_class=model_class,
+            )
+        print(formatted_final_output)

@@ -39,7 +39,7 @@ def convert_tools(
             "properties": {
                 "location": {
                     "type": "string",
-                    "description": "The city and state, e.g. San Francisco, CA"
+                    "description": "The city and state, e.g. Chicago, IL"
                 },
                 "unit": {
                     "type": "string",

@@ -1,5 +1,3 @@
-import pytest
-from unittest.mock import MagicMock
 from typing import Optional, List
 from pydantic import BaseModel
 
@@ -7,6 +5,8 @@ from electric_text.formatting.functions.format_streaming_chunk import (
     format_streaming_chunk,
 )
 from electric_text.clients.data.client_response import ClientResponse
+from electric_text.clients.data.prompt_result import PromptResult
+from electric_text.clients.data.parse_result import ParseResult
 
 
 class SampleResponseModel(BaseModel):
@@ -14,39 +14,29 @@ class SampleResponseModel(BaseModel):
     items: Optional[List[str]] = None
 
 
-def test_format_streaming_chunk_without_model():
+def test_format_streaming_chunk_without_model(sample_client_response_unstructured):
     """Formats streaming chunk when no model class is provided."""
-    # Create mock chunk
-    mock_chunk = MagicMock(spec=ClientResponse)
-    mock_chunk.raw_content = "Chunk content"
-    mock_chunk.is_valid = False
-    mock_chunk.parsed_model = None
-
-    # Execute function
     result = format_streaming_chunk(
-        chunk=mock_chunk, 
+        chunk=sample_client_response_unstructured, 
         model_class=None
     )
 
-    # Verify result
-    assert result == "PARTIAL RESULT (UNSTRUCTURED): Chunk content"
+    # Should use content blocks formatting since they're available
+    assert result == "PARTIAL RESULT (UNSTRUCTURED):\nTest response content"
 
 
 def test_format_streaming_chunk_with_invalid_model():
     """Formats streaming chunk when model class provided but chunk is invalid."""
-    # Create mock chunk
-    mock_chunk = MagicMock(spec=ClientResponse)
-    mock_chunk.raw_content = "Invalid chunk"
-    mock_chunk.is_valid = False
-    mock_chunk.parsed_model = None
+    # Create response with empty content blocks to test fallback to raw_content
+    prompt_result = PromptResult(raw_content="Invalid chunk", content_blocks=[])
+    chunk = ClientResponse.from_prompt_result(prompt_result)
 
-    # Execute function
     result = format_streaming_chunk(
-        chunk=mock_chunk, 
+        chunk=chunk, 
         model_class=SampleResponseModel
     )
 
-    # Verify result
+    # Should fall back to raw content since no content blocks
     assert result == "PARTIAL RESULT (UNSTRUCTURED): Invalid chunk"
 
 
@@ -55,15 +45,18 @@ def test_format_streaming_chunk_with_valid_model():
     # Create model instance
     model_instance = SampleResponseModel(content="chunk1", items=["x", "y"])
 
-    # Create mock chunk
-    mock_chunk = MagicMock(spec=ClientResponse)
-    mock_chunk.raw_content = '{"content": "chunk1", "items": ["x", "y"]}'
-    mock_chunk.is_valid = True
-    mock_chunk.parsed_model = model_instance
+    # Create valid parse result
+    parse_result = ParseResult(
+        raw_content='{"content": "chunk1", "items": ["x", "y"]}',
+        parsed_content={"content": "chunk1", "items": ["x", "y"]},
+        model=model_instance,
+        validation_error=None,
+        json_error=None
+    )
+    chunk = ClientResponse.from_parse_result(parse_result)
 
-    # Execute function
     result = format_streaming_chunk(
-        chunk=mock_chunk, 
+        chunk=chunk, 
         model_class=SampleResponseModel
     )
 
@@ -77,17 +70,35 @@ def test_format_streaming_chunk_with_valid_model():
 
 def test_format_streaming_chunk_with_valid_model_no_parsed_model():
     """Formats streaming chunk when model class provided, is_valid=True but no parsed_model."""
-    # Create mock chunk
-    mock_chunk = MagicMock(spec=ClientResponse)
-    mock_chunk.raw_content = "Some chunk content"
-    mock_chunk.is_valid = True
-    mock_chunk.parsed_model = None
+    # Create parse result that's valid but no model (edge case)
+    parse_result = ParseResult(
+        raw_content="Some chunk content",
+        parsed_content={},
+        model=None,
+        validation_error=None,
+        json_error=None
+    )
+    chunk = ClientResponse.from_parse_result(parse_result)
 
-    # Execute function
     result = format_streaming_chunk(
-        chunk=mock_chunk, 
+        chunk=chunk, 
         model_class=SampleResponseModel
     )
 
-    # Verify result
-    assert result == "PARTIAL RESULT (UNSTRUCTURED): Some chunk content" 
+    # Should fall back to raw content since no parsed_model
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): Some chunk content"
+
+
+def test_format_streaming_chunk_with_tool_call_content_blocks(sample_client_response_with_tool_call):
+    """Formats streaming chunk with tool call content blocks."""
+    result = format_streaming_chunk(
+        chunk=sample_client_response_with_tool_call,
+        model_class=None
+    )
+
+    expected = (
+        "PARTIAL RESULT (UNSTRUCTURED):\n"
+        "I'll check the weather for you.\n"
+        'TOOL CALL: get_weather\nINPUTS: {"location": "Chicago"}'
+    )
+    assert result == expected

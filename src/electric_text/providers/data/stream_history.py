@@ -29,7 +29,7 @@ class StreamHistory:
                 chunk.type
                 in [
                     StreamChunkType.PREFILLED_CONTENT,
-                    StreamChunkType.CONTENT_CHUNK,
+                    # StreamChunkType.CONTENT_CHUNK,
                 ]
                 and chunk.content
             ):

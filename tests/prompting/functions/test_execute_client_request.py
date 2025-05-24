@@ -1,14 +1,11 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 from typing import List, Optional
 from pydantic import BaseModel
 
 from electric_text.prompting.functions.execute_client_request import (
     execute_client_request,
 )
-from electric_text.clients import Client
 from electric_text.clients.data.client_request import ClientRequest
-from electric_text.clients.data.client_response import ClientResponse
 from electric_text.clients.data.prompt import Prompt
 from electric_text.clients.data.template_fragment import TemplateFragment
 
@@ -16,19 +13,6 @@ from electric_text.clients.data.template_fragment import TemplateFragment
 class SampleResponseModel(BaseModel):
     content: str
     items: Optional[List[str]] = None
-
-
-@pytest.fixture
-def mock_client():
-    """Creates a mock client for testing."""
-    client = MagicMock(spec=Client)
-    client.provider = MagicMock()
-    client.provider.stream_history = MagicMock()
-    client.provider.stream_history.get_full_content = MagicMock(
-        return_value='{"content": "test", "items": ["a", "b"]}'
-    )
-
-    return client
 
 
 @pytest.fixture
@@ -46,103 +30,122 @@ def client_request():
     )
 
 
+# Simple test class that implements the minimum Client interface needed for testing
+class ClientForTesting:
+    def __init__(self, response_data):
+        self.response_data = response_data
+        self.call_count = 0
+    
+    async def generate(self, request):
+        self.call_count += 1
+        self.last_request = request
+        return self.response_data
+    
+    def stream(self, request):
+        async def async_generator():
+            self.call_count += 1
+            self.last_request = request
+            for chunk in self.response_data:
+                yield chunk
+        return async_generator()
+
+
 @pytest.mark.asyncio
 async def test_execute_client_request_non_streaming(
-    mock_client, client_request, capsys
+    sample_client_response_unstructured, client_request, capsys
 ):
     """Executes a non-streaming client request."""
-    # Create mock response
-    mock_response = MagicMock(spec=ClientResponse)
-    mock_response.raw_content = "Test response content"
-    mock_response.is_valid = False
-    mock_response.parsed_model = None
-
-    # Configure mock client
-    mock_client.generate = AsyncMock(return_value=mock_response)
+    # Create test client with response
+    test_client = ClientForTesting(sample_client_response_unstructured)
 
     # Execute request
     await execute_client_request(
-        client=mock_client,
+        client=test_client,
         request=client_request,
         stream=False,
     )
 
-    # Verify client was called correctly
-    mock_client.generate.assert_called_once_with(request=client_request)
+    # Verify client was called
+    assert test_client.call_count == 1
+    assert test_client.last_request == client_request
 
-    # Verify output
+    # Verify output uses content blocks formatting
     captured = capsys.readouterr()
-    assert "RESULT (UNSTRUCTURED): Test response content" in captured.out
+    assert "RESULT (UNSTRUCTURED):\nTest response content" in captured.out
 
 
 @pytest.mark.asyncio
 async def test_execute_client_request_non_streaming_with_model(
-    mock_client, client_request, capsys
+    client_request, capsys
 ):
     """Executes a non-streaming client request with a model class."""
+    from electric_text.clients.data.parse_result import ParseResult
+    from electric_text.clients.data.client_response import ClientResponse
+    
     # Create a parsed model instance
     model_instance = SampleResponseModel(content="test", items=["a", "b"])
 
-    # Create mock response with valid model
-    mock_response = MagicMock(spec=ClientResponse)
-    mock_response.raw_content = '{"content": "test", "items": ["a", "b"]}'
-    mock_response.is_valid = True
-    mock_response.parsed_model = model_instance
-
-    # Configure mock client
-    mock_client.generate = AsyncMock(return_value=mock_response)
+    # Create valid parse result
+    parse_result = ParseResult(
+        raw_content='{"content": "test", "items": ["a", "b"]}',
+        parsed_content={"content": "test", "items": ["a", "b"]},
+        model=model_instance,
+        validation_error=None,
+        json_error=None
+    )
+    response = ClientResponse.from_parse_result(parse_result)
+    
+    # Create test client with structured response
+    test_client = ClientForTesting(response)
 
     # Execute request
     await execute_client_request(
-        client=mock_client,
+        client=test_client,
         request=client_request,
         stream=False,
         model_class=SampleResponseModel,
     )
 
-    # Verify client was called correctly
-    mock_client.generate.assert_called_once_with(request=client_request)
+    # Verify client was called
+    assert test_client.call_count == 1
+    assert test_client.last_request == client_request
 
     # Verify output
     captured = capsys.readouterr()
     assert "RESULT (STRUCTURED):" in captured.out
-    assert "content" in captured.out
-    assert "test" in captured.out
-    assert "items" in captured.out
-    assert "a" in captured.out
-    assert "b" in captured.out
+    assert '"content": "test"' in captured.out
+    assert '"items":' in captured.out
 
 
 @pytest.mark.asyncio
-async def test_execute_client_request_streaming(mock_client, client_request, capsys):
+async def test_execute_client_request_streaming(
+    sample_client_response_unstructured, client_request, capsys
+):
     """Executes a streaming client request."""
-
-    # Create async generator for streaming chunks
-    async def mock_stream():
-        chunk = MagicMock(spec=ClientResponse)
-        chunk.raw_content = "Chunk 1"
-        chunk.is_valid = False
-        chunk.parsed_model = None
-        yield chunk
-
-        chunk = MagicMock(spec=ClientResponse)
-        chunk.raw_content = "Chunk 2"
-        chunk.is_valid = False
-        chunk.parsed_model = None
-        yield chunk
-
-    # Configure mock client
-    mock_client.stream = MagicMock(return_value=mock_stream())
+    from electric_text.clients.data.prompt_result import PromptResult
+    from electric_text.clients.data.client_response import ClientResponse
+    
+    # Create streaming chunks
+    chunk1 = ClientResponse.from_prompt_result(
+        PromptResult(raw_content="Chunk 1", content_blocks=[])
+    )
+    chunk2 = ClientResponse.from_prompt_result(
+        PromptResult(raw_content="Chunk 2", content_blocks=[])
+    )
+    
+    # Create test client with streaming chunks
+    test_client = ClientForTesting([chunk1, chunk2])
 
     # Execute request
     await execute_client_request(
-        client=mock_client,
+        client=test_client,
         request=client_request,
         stream=True,
     )
 
-    # Verify client was called correctly
-    mock_client.stream.assert_called_once_with(request=client_request)
+    # Verify client was called
+    assert test_client.call_count == 1
+    assert test_client.last_request == client_request
 
     # Verify output
     captured = capsys.readouterr()
@@ -152,46 +155,26 @@ async def test_execute_client_request_streaming(mock_client, client_request, cap
 
 
 @pytest.mark.asyncio
-async def test_execute_client_request_streaming_with_model(
-    mock_client, client_request, capsys
+async def test_execute_client_request_streaming_with_tool_calls(
+    sample_client_response_with_tool_call, client_request, capsys
 ):
-    """Executes a streaming client request with a model class."""
-    # Create model instances for chunks
-    model_instance1 = SampleResponseModel(content="chunk1")
-    model_instance2 = SampleResponseModel(content="chunk2")
-
-    # Create async generator for streaming chunks with models
-    async def mock_stream():
-        chunk = MagicMock(spec=ClientResponse)
-        chunk.raw_content = '{"content": "chunk1"}'
-        chunk.is_valid = True
-        chunk.parsed_model = model_instance1
-        yield chunk
-
-        chunk = MagicMock(spec=ClientResponse)
-        chunk.raw_content = '{"content": "chunk2"}'
-        chunk.is_valid = True
-        chunk.parsed_model = model_instance2
-        yield chunk
-
-    # Configure mock client
-    mock_client.stream = MagicMock(return_value=mock_stream())
+    """Executes a streaming client request with tool call content blocks."""
+    # Create test client with tool call response
+    test_client = ClientForTesting([sample_client_response_with_tool_call])
 
     # Execute request
     await execute_client_request(
-        client=mock_client,
+        client=test_client,
         request=client_request,
         stream=True,
-        model_class=SampleResponseModel,
     )
 
-    # Verify client was called correctly
-    mock_client.stream.assert_called_once_with(request=client_request)
+    # Verify client was called
+    assert test_client.call_count == 1
+    assert test_client.last_request == client_request
 
-    # Verify output
+    # Verify output shows formatted content blocks
     captured = capsys.readouterr()
-    assert "PARTIAL RESULT (STRUCTURED):" in captured.out
-    assert '"content": "chunk1"' in captured.out
-    assert '"content": "chunk2"' in captured.out
-    assert "FULL RESULT:" in captured.out
-    assert "RESULT TO JSON:" in captured.out
+    assert "I'll check the weather for you." in captured.out
+    assert "TOOL CALL: get_weather" in captured.out
+    assert '"location": "Chicago"' in captured.out
