@@ -1,4 +1,4 @@
-from electric_text.formatting.functions.format_content_blocks import (
+from electric_text.providers.functions.format_content_blocks import (
     format_content_blocks,
     format_single_content_block,
 )

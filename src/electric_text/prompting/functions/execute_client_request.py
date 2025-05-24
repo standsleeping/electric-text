@@ -37,7 +37,9 @@ async def execute_client_request(
     if not stream:
         response: ClientResponse[Any] = await client.generate(request=request)
         formatted_output = format_non_streaming_response(
-            response=response,
+            content=response.get_formatted_content(),
+            is_valid=response.is_valid,
+            parsed_model=response.parsed_model,
             model_class=model_class,
         )
         print(formatted_output)
@@ -46,8 +48,8 @@ async def execute_client_request(
     # Handle streaming execution - choose appropriate streaming method
     if request.response_model is not None:
         # Use structured streaming for requests with response models
-        stream_generator: AsyncGenerator[ClientResponse[Any], None] = client.stream_structured(
-            request=request
+        stream_generator: AsyncGenerator[ClientResponse[Any], None] = (
+            client.stream_structured(request=request)
         )
     else:
         # Use regular streaming for unstructured requests
@@ -57,14 +59,17 @@ async def execute_client_request(
 
     # Keep track of the last chunk for final output
     last_chunk = None
-    
+
     async for chunk in stream_generator:
         formatted_chunk = format_streaming_chunk(
-            chunk=chunk,
+            content=chunk.get_formatted_content(),
+            is_valid=chunk.is_valid,
+            parsed_model=chunk.parsed_model,
             model_class=model_class,
         )
+
         print(formatted_chunk)
-        
+
         # Keep the last chunk to get final content
         last_chunk = chunk
 
@@ -73,17 +78,18 @@ async def execute_client_request(
         if request.response_model is not None:
             # For structured responses, use the last chunk as the final result
             formatted_final_output = format_non_streaming_response(
-                response=last_chunk,
+                content=last_chunk.get_formatted_content(),
+                is_valid=last_chunk.is_valid,
+                parsed_model=last_chunk.parsed_model,
                 model_class=model_class,
             )
         else:
             # For unstructured responses, extract content from content blocks
             full_content = ""
-            if hasattr(last_chunk.raw_result, 'content_blocks') and last_chunk.raw_result.content_blocks:
-                from electric_text.formatting.functions.format_content_blocks import format_content_blocks
-                full_content = format_content_blocks(content_blocks=last_chunk.raw_result.content_blocks)
+            full_content = last_chunk.get_formatted_content()
             formatted_final_output = format_streaming_final_output(
                 full_content=full_content,
                 model_class=model_class,
             )
+
         print(formatted_final_output)

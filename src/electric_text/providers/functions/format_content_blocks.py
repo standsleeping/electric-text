@@ -42,12 +42,12 @@ def format_single_content_block(*, content_block: ContentBlock) -> str:
             if isinstance(text_data, TextData):
                 return text_data.text
             return str(text_data)
-        
+
         case ContentBlockType.TOOL_CALL:
             tool_data = content_block.data
             if isinstance(tool_data, ToolCallData):
                 return f"TOOL CALL: {tool_data.name}\nINPUTS: {tool_data.input_json_string}"
             return str(tool_data)
-        
+
         case _:
             return f"UNKNOWN CONTENT BLOCK: {content_block}"

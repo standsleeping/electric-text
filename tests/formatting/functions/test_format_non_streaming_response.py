@@ -14,29 +14,27 @@ class SampleResponseModel(BaseModel):
     items: Optional[List[str]] = None
 
 
-def test_format_non_streaming_response_without_model(sample_client_response_unstructured):
+def test_format_non_streaming_response_without_model():
     """Formats non-streaming response when no model class is provided."""
     result = format_non_streaming_response(
-        response=sample_client_response_unstructured, 
+        content="Test response content",
         model_class=None
     )
 
-    # Should use content blocks formatting since they're available
+    # Should use content formatting since content is available
     assert result == "RESULT (UNSTRUCTURED):\nTest response content"
 
 
 def test_format_non_streaming_response_with_invalid_model():
     """Formats non-streaming response when model class provided but response is invalid."""
-    # Create response with empty content blocks to test fallback
-    prompt_result = PromptResult(content_blocks=[])
-    response = ClientResponse.from_prompt_result(prompt_result)
-
     result = format_non_streaming_response(
-        response=response, 
+        content="",
+        is_valid=False,
+        parsed_model=None,
         model_class=SampleResponseModel
     )
 
-    # Should fall back to no content message since no content blocks
+    # Should fall back to no content message since no content
     assert result == "RESULT (UNSTRUCTURED): [No content available]"
 
 
@@ -45,17 +43,10 @@ def test_format_non_streaming_response_with_valid_model():
     # Create model instance
     model_instance = SampleResponseModel(content="test", items=["a", "b"])
 
-    # Create valid parse result
-    parse_result = ParseResult(
-        parsed_content={"content": "test", "items": ["a", "b"]},
-        model=model_instance,
-        validation_error=None,
-        json_error=None
-    )
-    response = ClientResponse.from_parse_result(parse_result)
-
     result = format_non_streaming_response(
-        response=response, 
+        content="",
+        is_valid=True,
+        parsed_model=model_instance,
         model_class=SampleResponseModel
     )
 
@@ -69,28 +60,26 @@ def test_format_non_streaming_response_with_valid_model():
 
 def test_format_non_streaming_response_with_valid_model_no_parsed_model():
     """Formats non-streaming response when model class provided, is_valid=True but no parsed_model."""
-    # Create parse result that's valid but no model (edge case)
-    parse_result = ParseResult(
-        parsed_content={},
-        model=None,
-        validation_error=None,
-        json_error=None
-    )
-    response = ClientResponse.from_parse_result(parse_result)
-
     result = format_non_streaming_response(
-        response=response, 
+        content="",
+        is_valid=True,
+        parsed_model=None,
         model_class=SampleResponseModel
     )
 
-    # Should fall back to no content message since no parsed_model or content blocks
+    # Should fall back to no content message since no parsed_model or content
     assert result == "RESULT (UNSTRUCTURED): [No content available]"
 
 
-def test_format_non_streaming_response_with_tool_call_content_blocks(sample_client_response_with_tool_call):
-    """Formats non-streaming response with tool call content blocks."""
+def test_format_non_streaming_response_with_tool_call_content():
+    """Formats non-streaming response with tool call content."""
+    content = (
+        "I'll check the weather for you.\n"
+        'TOOL CALL: get_weather\nINPUTS: {"location": "Chicago"}'
+    )
+    
     result = format_non_streaming_response(
-        response=sample_client_response_with_tool_call,
+        content=content,
         model_class=None
     )
 

@@ -1,28 +1,26 @@
 from typing import Any, Optional, Type
 
-from electric_text.clients.data.client_response import ClientResponse
-from electric_text.formatting.functions.format_content_blocks import format_content_blocks
-
 
 def format_non_streaming_response(
-    *, response: ClientResponse[Any], model_class: Optional[Type[Any]]
+    *, content: str, is_valid: bool = False, parsed_model: Optional[Any] = None, model_class: Optional[Type[Any]] = None
 ) -> str:
-    """Format a non-streaming client response for output.
+    """Format a non-streaming response for output.
 
     Args:
-        response: The ClientResponse to format
+        content: The formatted content string
+        is_valid: Whether the parsed model is valid
+        parsed_model: The parsed model instance if available
         model_class: Optional model class for structured outputs
 
     Returns:
         Formatted string ready for output
     """
-    if model_class and response.is_valid and response.parsed_model:
-        formatted_model = response.parsed_model.model_dump_json(indent=2)
-        return f"RESULT (STRUCTURED): {response.parsed_model}\n{formatted_model}"
+    if model_class and is_valid and parsed_model:
+        formatted_model = parsed_model.model_dump_json(indent=2)
+        return f"RESULT (STRUCTURED): {parsed_model}\n{formatted_model}"
     else:
-        # Format using content blocks
-        if hasattr(response.raw_result, 'content_blocks') and response.raw_result.content_blocks:
-            formatted_content = format_content_blocks(content_blocks=response.raw_result.content_blocks)
-            return f"RESULT (UNSTRUCTURED):\n{formatted_content}"
+        # Format using provided content
+        if content:
+            return f"RESULT (UNSTRUCTURED):\n{content}"
         else:
             return "RESULT (UNSTRUCTURED): [No content available]"

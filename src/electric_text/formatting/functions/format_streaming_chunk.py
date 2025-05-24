@@ -1,28 +1,26 @@
 from typing import Any, Optional, Type
 
-from electric_text.clients.data.client_response import ClientResponse
-from electric_text.formatting.functions.format_content_blocks import format_content_blocks
-
 
 def format_streaming_chunk(
-    *, chunk: ClientResponse[Any], model_class: Optional[Type[Any]]
+    *, content: str, is_valid: bool = False, parsed_model: Optional[Any] = None, model_class: Optional[Type[Any]] = None
 ) -> str:
     """Format a streaming chunk for output.
 
     Args:
-        chunk: The ClientResponse chunk to format
+        content: The formatted content string
+        is_valid: Whether the parsed model is valid
+        parsed_model: The parsed model instance if available
         model_class: Optional model class for structured outputs
 
     Returns:
         Formatted string ready for output
     """
-    if model_class and chunk.is_valid and chunk.parsed_model:
-        formatted_model = chunk.parsed_model.model_dump_json(indent=2)
-        return f"PARTIAL RESULT (STRUCTURED): {chunk.parsed_model}\n{formatted_model}"
+    if model_class and is_valid and parsed_model:
+        formatted_model = parsed_model.model_dump_json(indent=2)
+        return f"PARTIAL RESULT (STRUCTURED): {parsed_model}\n{formatted_model}"
     else:
-        # Format using content blocks
-        if hasattr(chunk.raw_result, 'content_blocks') and chunk.raw_result.content_blocks:
-            formatted_content = format_content_blocks(content_blocks=chunk.raw_result.content_blocks)
-            return f"PARTIAL RESULT (UNSTRUCTURED):\n{formatted_content}"
+        # Format using provided content
+        if content:
+            return f"PARTIAL RESULT (UNSTRUCTURED):\n{content}"
         else:
             return "PARTIAL RESULT (UNSTRUCTURED): [No content available]"

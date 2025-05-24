@@ -55,6 +55,13 @@ class ClientResponse(Generic[ResponseModel]):
         """Create a ClientResponse from a PromptResult."""
         return cls(raw_result=result)
 
+    def get_formatted_content(self) -> str:
+        """Get formatted content from the response for display purposes."""
+        if hasattr(self.raw_result, 'content_blocks') and self.raw_result.content_blocks:
+            from electric_text.providers.functions.format_content_blocks import format_content_blocks
+            return format_content_blocks(content_blocks=self.raw_result.content_blocks)
+        return ""
+
     @classmethod
     def from_parse_result(
         cls, result: ParseResult[ResponseModel]

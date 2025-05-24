@@ -101,11 +101,11 @@ class Client:
             # Extract text content from content blocks for structured parsing
             content = ""
             if history.content_blocks:
-                from electric_text.formatting.functions.format_content_blocks import (
-                    format_content_blocks,
+                from electric_text.clients.functions.extract_text_content import (
+                    extract_text_content,
                 )
 
-                content = format_content_blocks(content_blocks=history.content_blocks)
+                content = extract_text_content(content_blocks=history.content_blocks)
             parse_result = create_parse_result(content, request.response_model)
             yield ClientResponse.from_parse_result(parse_result)
 
@@ -135,11 +135,11 @@ class Client:
         # Extract text content from content blocks for structured parsing
         content = ""
         if history.content_blocks:
-            from electric_text.formatting.functions.format_content_blocks import (
-                format_content_blocks,
+            from electric_text.clients.functions.extract_text_content import (
+                extract_text_content,
             )
 
-            content = format_content_blocks(content_blocks=history.content_blocks)
+            content = extract_text_content(content_blocks=history.content_blocks)
         parse_result = create_parse_result(content, request.response_model)
         return ClientResponse.from_parse_result(parse_result)
 
