@@ -17,6 +17,6 @@ def format_non_streaming_response(
     """
     if model_class and response.is_valid and response.parsed_model:
         formatted_model = response.parsed_model.model_dump_json(indent=2)
-        return f"Result: {response.parsed_model}\n{formatted_model}"
+        return f"RESULT (STRUCTURED): {response.parsed_model}\n{formatted_model}"
     else:
-        return f"Raw content (no model class): {response.raw_content}"
+        return f"RESULT (UNSTRUCTURED): {response.raw_content}"

@@ -14,14 +14,14 @@ def format_streaming_final_output(
     Returns:
         Formatted string ready for output
     """
-    result = f"Full content: {full_content}"
+    result = f"FULL RESULT: {full_content}"
 
     if model_class:
         try:
             parsed_json = json.loads(full_content)
-            result += f"\nJSON: {parsed_json}"
+            result += f"\nRESULT TO JSON: {parsed_json}"
         except json.JSONDecodeError as e:
-            result += f"\nError parsing JSON: {e}"
-            result += f"\nStructured full content: {full_content}"
+            result += f"\nERROR PARSING JSON: {e}"
+            result += f"\nSTRUCTURED FULL RESULT: {full_content}"
 
     return result

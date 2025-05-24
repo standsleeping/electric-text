@@ -28,7 +28,7 @@ def test_format_non_streaming_response_without_model():
     )
 
     # Verify result
-    assert result == "Raw content (no model class): Test response content"
+    assert result == "RESULT (UNSTRUCTURED): Test response content"
 
 
 def test_format_non_streaming_response_with_invalid_model():
@@ -46,7 +46,7 @@ def test_format_non_streaming_response_with_invalid_model():
     )
 
     # Verify result
-    assert result == "Raw content (no model class): Invalid JSON content"
+    assert result == "RESULT (UNSTRUCTURED): Invalid JSON content"
 
 
 def test_format_non_streaming_response_with_valid_model():
@@ -67,7 +67,7 @@ def test_format_non_streaming_response_with_valid_model():
     )
 
     # Verify result contains expected parts
-    assert "Result:" in result
+    assert "RESULT (STRUCTURED):" in result
     assert '"content": "test"' in result
     assert '"items":' in result
     assert '"a"' in result
@@ -89,4 +89,4 @@ def test_format_non_streaming_response_with_valid_model_no_parsed_model():
     )
 
     # Verify result
-    assert result == "Raw content (no model class): Some content" 
+    assert result == "RESULT (UNSTRUCTURED): Some content" 

@@ -17,6 +17,6 @@ def format_streaming_chunk(
     """
     if model_class and chunk.is_valid and chunk.parsed_model:
         formatted_model = chunk.parsed_model.model_dump_json(indent=2)
-        return f"Valid chunk: {chunk.parsed_model}\n{formatted_model}"
+        return f"PARTIAL RESULT (STRUCTURED): {chunk.parsed_model}\n{formatted_model}"
     else:
-        return f"Raw chunk content: {chunk.raw_content}"
+        return f"PARTIAL RESULT (UNSTRUCTURED): {chunk.raw_content}"

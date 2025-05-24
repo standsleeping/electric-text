@@ -72,7 +72,7 @@ async def test_execute_client_request_non_streaming(
 
     # Verify output
     captured = capsys.readouterr()
-    assert "Raw content (no model class): Test response content" in captured.out
+    assert "RESULT (UNSTRUCTURED): Test response content" in captured.out
 
 
 @pytest.mark.asyncio
@@ -105,7 +105,7 @@ async def test_execute_client_request_non_streaming_with_model(
 
     # Verify output
     captured = capsys.readouterr()
-    assert "Result:" in captured.out
+    assert "RESULT (STRUCTURED):" in captured.out
     assert "content" in captured.out
     assert "test" in captured.out
     assert "items" in captured.out
@@ -146,9 +146,9 @@ async def test_execute_client_request_streaming(mock_client, client_request, cap
 
     # Verify output
     captured = capsys.readouterr()
-    assert "Raw chunk content: Chunk 1" in captured.out
-    assert "Raw chunk content: Chunk 2" in captured.out
-    assert "Full content:" in captured.out
+    assert "PARTIAL RESULT (UNSTRUCTURED): Chunk 1" in captured.out
+    assert "PARTIAL RESULT (UNSTRUCTURED): Chunk 2" in captured.out
+    assert "FULL RESULT:" in captured.out
 
 
 @pytest.mark.asyncio
@@ -190,8 +190,8 @@ async def test_execute_client_request_streaming_with_model(
 
     # Verify output
     captured = capsys.readouterr()
-    assert "Valid chunk:" in captured.out
+    assert "PARTIAL RESULT (STRUCTURED):" in captured.out
     assert '"content": "chunk1"' in captured.out
     assert '"content": "chunk2"' in captured.out
-    assert "Full content:" in captured.out
-    assert "JSON:" in captured.out
+    assert "FULL RESULT:" in captured.out
+    assert "RESULT TO JSON:" in captured.out

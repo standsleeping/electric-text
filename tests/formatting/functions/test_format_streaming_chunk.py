@@ -29,7 +29,7 @@ def test_format_streaming_chunk_without_model():
     )
 
     # Verify result
-    assert result == "Raw chunk content: Chunk content"
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): Chunk content"
 
 
 def test_format_streaming_chunk_with_invalid_model():
@@ -47,7 +47,7 @@ def test_format_streaming_chunk_with_invalid_model():
     )
 
     # Verify result
-    assert result == "Raw chunk content: Invalid chunk"
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): Invalid chunk"
 
 
 def test_format_streaming_chunk_with_valid_model():
@@ -68,7 +68,7 @@ def test_format_streaming_chunk_with_valid_model():
     )
 
     # Verify result contains expected parts
-    assert "Valid chunk:" in result
+    assert "PARTIAL RESULT (STRUCTURED):" in result
     assert '"content": "chunk1"' in result
     assert '"items":' in result
     assert '"x"' in result
@@ -90,4 +90,4 @@ def test_format_streaming_chunk_with_valid_model_no_parsed_model():
     )
 
     # Verify result
-    assert result == "Raw chunk content: Some chunk content" 
+    assert result == "PARTIAL RESULT (UNSTRUCTURED): Some chunk content" 
