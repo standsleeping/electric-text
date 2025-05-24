@@ -101,7 +101,7 @@ Additional general testing rules:
 - Tests focus on input/output pairs for our functional codebase.
 - Single pytest assertion per test where possible.
 - Never write code until tests have been written.
-- Never `patch` code! Integration tests *fully* run *all* user code.
+- Never patch/mock/stub code! Integration tests run *all* dependent code.
 
 ## "Integrators" and "Units"
 
@@ -125,7 +125,7 @@ Notes on integrators:
 - Can use if/else but ONLY to conditionally (i.e. early) return its return type.
 - Simple integration tests: one test function/suite-of-functions for each `return` inside integrator body.
 - Size of test suite is proportional to variety of return conditions.
-- Never mocks or stubs user code, always runs code that it depends on.
+- Tests NEVER mock or stub user code; always RUNS code that integrator depends on.
 
 ## Workflows
 
