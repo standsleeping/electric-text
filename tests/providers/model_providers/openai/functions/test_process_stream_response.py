@@ -432,5 +432,82 @@ def test_structured_content():
 
 
 def test_tool_calls():
-    # TODO: Implement this test
-    pass
+    history: StreamHistory = StreamHistory()
+
+    chunks: list[str] = [
+        "event: response.created",
+        'data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_6830e39d617c81918485ea84f37b566a093d752c9f4db954","object":"response","created_at":1748034461,"status":"in_progress","background":false,"error":null,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"model":"gpt-4o-mini-2024-07-18","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"service_tier":"auto","store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[{"type":"function","description":"Get the current weather in a given location","name":"get_current_weather","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"unit":{"type":"string","enum":["celsius","fahrenheit"]}},"required":["location"]},"strict":true},{"type":"function","description":"Get the forecast for a given location","name":"get_forecast","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"days":{"type":"integer","description":"The number of days to forecast","minimum":1,"maximum":7}}},"strict":true}],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}}}',
+        "",
+        "event: response.in_progress",
+        'data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_6830e39d617c81918485ea84f37b566a093d752c9f4db954","object":"response","created_at":1748034461,"status":"in_progress","background":false,"error":null,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"model":"gpt-4o-mini-2024-07-18","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"service_tier":"auto","store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[{"type":"function","description":"Get the current weather in a given location","name":"get_current_weather","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"unit":{"type":"string","enum":["celsius","fahrenheit"]}},"required":["location"]},"strict":true},{"type":"function","description":"Get the forecast for a given location","name":"get_forecast","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"days":{"type":"integer","description":"The number of days to forecast","minimum":1,"maximum":7}}},"strict":true}],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}}}',
+        "",
+        "event: response.output_item.added",
+        'data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","type":"function_call","status":"in_progress","arguments":"","call_id":"call_oDsjdfRkPUYpFtfwiWgwVDAQ","name":"get_current_weather"}}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":3,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"{\\""}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":4,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"location"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":5,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"\\":\\""}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":6,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"O"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":7,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"ma"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":8,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"ha"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":9,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":","}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":10,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":" NE"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":11,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"\\",\\""}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":12,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"unit"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":13,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"\\":\\""}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":14,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"fahren"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":15,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"heit"}',
+        "",
+        "event: response.function_call_arguments.delta",
+        'data: {"type":"response.function_call_arguments.delta","sequence_number":16,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"delta":"\\"}"}',
+        "",
+        "event: response.function_call_arguments.done",
+        'data: {"type":"response.function_call_arguments.done","sequence_number":17,"item_id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","output_index":0,"arguments":"{\\"location\\":\\"Omaha, NE\\",\\"unit\\":\\"fahrenheit\\"}"}',
+        "",
+        "event: response.output_item.done",
+        'data: {"type":"response.output_item.done","sequence_number":18,"output_index":0,"item":{"id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","type":"function_call","status":"completed","arguments":"{\\"location\\":\\"Omaha, NE\\",\\"unit\\":\\"fahrenheit\\"}","call_id":"call_oDsjdfRkPUYpFtfwiWgwVDAQ","name":"get_current_weather"}}',
+        "",
+        "event: response.completed",
+        'data: {"type":"response.completed","sequence_number":19,"response":{"id":"resp_6830e39d617c81918485ea84f37b566a093d752c9f4db954","object":"response","created_at":1748034461,"status":"completed","background":false,"error":null,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"model":"gpt-4o-mini-2024-07-18","output":[{"id":"fc_6830e3a431dc81918ea2dab9fd743c46093d752c9f4db954","type":"function_call","status":"completed","arguments":"{\\"location\\":\\"Omaha, NE\\",\\"unit\\":\\"fahrenheit\\"}","call_id":"call_oDsjdfRkPUYpFtfwiWgwVDAQ","name":"get_current_weather"}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"service_tier":"default","store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[{"type":"function","description":"Get the current weather in a given location","name":"get_current_weather","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"unit":{"type":"string","enum":["celsius","fahrenheit"]}},"required":["location"]},"strict":true},{"type":"function","description":"Get the forecast for a given location","name":"get_forecast","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The city and state, e.g. Omaha, NE"},"days":{"type":"integer","description":"The number of days to forecast","minimum":1,"maximum":7}}},"strict":true}],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":140,"input_tokens_details":{"cached_tokens":0},"output_tokens":25,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":165},"user":null,"metadata":{}}}',
+        "",
+    ]
+
+    for chunk in chunks:
+        history: StreamHistory = process_stream_response(chunk, history)
+
+    first_block = history.content_blocks[0]
+
+    assert first_block.type == ContentBlockType.TOOL_CALL
+
+    assert first_block.data.name == "get_current_weather"
+
+    expected_input_json_string: str = '{"location":"Omaha, NE","unit":"fahrenheit"}'
+
+    actual_input_json_string: str = first_block.data.input_json_string
+
+    assert actual_input_json_string == expected_input_json_string

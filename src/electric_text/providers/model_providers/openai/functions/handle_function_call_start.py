@@ -9,17 +9,17 @@ from electric_text.providers.data.stream_chunk import StreamChunk
 from electric_text.providers.data.stream_chunk_type import StreamChunkType
 
 
-def handle_tool_start(
+def handle_function_call_start(
     raw_line: str,
     data: dict[str, Any],
     history: StreamHistory,
 ) -> StreamHistory:
     """
-    Handle the start of a tool call in OpenAI stream responses.
+    Handle the start of a function call in OpenAI stream responses.
 
-    This function creates a new ContentBlock for a tool call and adds it to the
-    StreamHistory content_blocks. It is triggered when a response.content_part.added
-    event with type="tool_use" is received from OpenAI.
+    This function creates a new ContentBlock for a function call and adds it to the
+    StreamHistory content_blocks. It is triggered when a response.output_item.added
+    event with type="function_call" is received from OpenAI.
 
     Args:
         raw_line: The raw line received from the stream
@@ -29,25 +29,19 @@ def handle_tool_start(
     Returns:
         Updated StreamHistory with the new content block and chunk
     """
-    # Extract the tool name and initial input
-    part = data.get("part", {})
-    name = part.get("name", "")
-    input_data = part.get("input", {})
+    item = data.get("item", {})
+    name = item.get("name", "")
 
-    # Use the output_index from the event data or default to the end of the list
-    output_index = data.get("output_index", 0)
-
-    # Create a ContentBlock with ToolCallData
     new_content_block = ContentBlock(
         type=ContentBlockType.TOOL_CALL,
         data=ToolCallData(
             name=name,
-            input=input_data,
+            input={},  # Will be populated when arguments are complete
             input_json_string="",  # Will be populated with deltas
         ),
     )
 
-    history.content_blocks.insert(output_index, new_content_block)
+    history.content_blocks.append(new_content_block)
 
     return history.add_chunk(
         StreamChunk(

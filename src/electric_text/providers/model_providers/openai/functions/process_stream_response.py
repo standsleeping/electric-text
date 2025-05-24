@@ -10,11 +10,15 @@ from electric_text.providers.model_providers.openai.functions.handle_text_start 
 from electric_text.providers.model_providers.openai.functions.handle_text_delta import (
     handle_text_delta,
 )
-from electric_text.providers.model_providers.openai.functions.handle_tool_start import (
-    handle_tool_start,
+
+from electric_text.providers.model_providers.openai.functions.handle_function_call_start import (
+    handle_function_call_start,
 )
-from electric_text.providers.model_providers.openai.functions.handle_tool_delta import (
-    handle_tool_delta,
+from electric_text.providers.model_providers.openai.functions.handle_function_call_arguments_delta import (
+    handle_function_call_arguments_delta,
+)
+from electric_text.providers.model_providers.openai.functions.handle_function_call_arguments_done import (
+    handle_function_call_arguments_done,
 )
 
 
@@ -62,8 +66,20 @@ def process_stream_response(
                     content_type = part.get("type", "")
                     if content_type == "output_text":
                         return handle_text_start(raw_line, data, history)
-                    elif content_type == "tool_use":
-                        return handle_tool_start(raw_line, data, history)
+                    else:
+                        return history.add_chunk(
+                            StreamChunk(
+                                type=StreamChunkType.UNHANDLED_EVENT,
+                                raw_line=raw_line,
+                                parsed_data=data,
+                                content="",
+                            )
+                        )
+                case "response.output_item.added":
+                    item = data.get("item", {})
+                    item_type = item.get("type", "")
+                    if item_type == "function_call":
+                        return handle_function_call_start(raw_line, data, history)
                     else:
                         return history.add_chunk(
                             StreamChunk(
@@ -75,8 +91,10 @@ def process_stream_response(
                         )
                 case "response.output_text.delta":
                     return handle_text_delta(raw_line, data, history)
-                case "response.tool_input.delta":
-                    return handle_tool_delta(raw_line, data, history)
+                case "response.function_call_arguments.delta":
+                    return handle_function_call_arguments_delta(raw_line, data, history)
+                case "response.function_call_arguments.done":
+                    return handle_function_call_arguments_done(raw_line, data, history)
                 case "response.done":
                     return history.add_chunk(
                         StreamChunk(
