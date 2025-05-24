@@ -49,7 +49,7 @@ def process_completion_response(
 
                     history.add_chunk(
                         StreamChunk(
-                            type=StreamChunkType.CONTENT_CHUNK,
+                            type=StreamChunkType.FULL_TEXT,
                             raw_line=line,
                             parsed_data=data,
                             content=text_content,

@@ -61,7 +61,7 @@ def process_stream_response(
     if content:
         history.add_chunk(
             StreamChunk(
-                type=StreamChunkType.CONTENT_CHUNK,
+                type=StreamChunkType.TEXT_DELTA,
                 raw_line=raw_line,
                 parsed_data=chunk_data,
                 content=content,
@@ -92,7 +92,7 @@ def process_stream_response(
     if chunk_data.get("done", False):
         history.add_chunk(
             StreamChunk(
-                type=StreamChunkType.COMPLETION_END,
+                type=StreamChunkType.STREAM_STOP,
                 raw_line=raw_line,
                 parsed_data=chunk_data,
                 content=None,

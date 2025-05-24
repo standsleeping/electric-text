@@ -193,10 +193,13 @@ def test_structured_content():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 145
-    assert history.chunks[0].type == StreamChunkType.CONTENT_CHUNK
-    assert history.chunks[1].type == StreamChunkType.CONTENT_CHUNK
-    assert history.chunks[-1].type == StreamChunkType.COMPLETION_END
+    assert len(history.content_blocks) == 1
+    assert history.content_blocks[0].type == ContentBlockType.TEXT
+
+    expected_text = '{\n  "response_annotation": "Car attributes",\n  "created_json_schema_definition": {\n    "type": "object",\n    "properties": {\n      "weight": {\n        "type": "integer",\n        "description": "The weight of the car in pounds"\n      },\n      "price": {\n        "type": "number",\n        "description": "The price of the car"\n      },\n      "range": {\n        "type": "number",\n        "description": "The driving range of the car in miles"\n      }\n    },\n    "required": ["weight", "price", "range"],\n    "additionalProperties": false\n  }\n}'
+
+    actual_text = history.content_blocks[0].data.text
+    assert actual_text == expected_text
 
 
 def test_tool_calls():
@@ -210,6 +213,10 @@ def test_tool_calls():
     for chunk in chunks:
         history: StreamHistory = process_stream_response(chunk, history)
 
-    assert len(history.chunks) == 2
-    assert history.chunks[0].type == StreamChunkType.FULL_TOOL_CALL
-    assert history.chunks[1].type == StreamChunkType.COMPLETION_END
+    assert len(history.content_blocks) == 1
+    assert history.content_blocks[0].type == ContentBlockType.TOOL_CALL
+
+    tool_block = history.content_blocks[0]
+    assert tool_block.data.name == "get_weather"
+    assert tool_block.data.input == {"city": "Omaha"}
+    assert tool_block.data.input_json_string == '{"city": "Omaha"}'

@@ -125,7 +125,7 @@ def process_stream_response(
     else:
         return history.add_chunk(
             StreamChunk(
-                type=StreamChunkType.UNHANDLED_LINE,
+                type=StreamChunkType.UNHANDLED_EVENT,
                 raw_line=raw_line,
                 parsed_data=None,
                 content="",

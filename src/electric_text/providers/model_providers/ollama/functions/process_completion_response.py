@@ -57,7 +57,7 @@ def process_completion_response(
     if content:
         history.add_chunk(
             StreamChunk(
-                type=StreamChunkType.CONTENT_CHUNK,
+                type=StreamChunkType.FULL_TEXT,
                 raw_line=line,
                 parsed_data=data,
                 content=content,
@@ -74,7 +74,7 @@ def process_completion_response(
     if data.get("done", False):
         history.add_chunk(
             StreamChunk(
-                type=StreamChunkType.COMPLETION_END,
+                type=StreamChunkType.STREAM_STOP,
                 raw_line=line,
             )
         )
