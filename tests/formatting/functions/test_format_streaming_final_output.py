@@ -3,7 +3,7 @@ import json
 from typing import Optional, List
 from pydantic import BaseModel
 
-from electric_text.prompting.functions.format_streaming_final_output import (
+from electric_text.formatting.functions.format_streaming_final_output import (
     format_streaming_final_output,
 )
 

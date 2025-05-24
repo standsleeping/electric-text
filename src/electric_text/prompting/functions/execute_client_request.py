@@ -4,13 +4,13 @@ from electric_text.clients import Client
 from electric_text.clients.data.client_request import ClientRequest
 from electric_text.clients.data.client_response import ClientResponse
 from electric_text.logging import get_logger
-from electric_text.prompting.functions.format_non_streaming_response import (
+from electric_text.formatting.functions.format_non_streaming_response import (
     format_non_streaming_response,
 )
-from electric_text.prompting.functions.format_streaming_chunk import (
+from electric_text.formatting.functions.format_streaming_chunk import (
     format_streaming_chunk,
 )
-from electric_text.prompting.functions.format_streaming_final_output import (
+from electric_text.formatting.functions.format_streaming_final_output import (
     format_streaming_final_output,
 )
 

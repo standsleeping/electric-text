@@ -65,6 +65,7 @@ The following dependencies are allowed:
 
 #### `prompting` depends on:
 - `tools`
+- `formatting` (for output formatting functions)
 - `clients` (in: `ClientRequest`, out: `ClientResponse`)
 
 #### `clients` depends on:
@@ -75,6 +76,8 @@ The following dependencies are allowed:
 #### `tools` depends on nothing.
 
 #### `shorthand` depends on nothing.
+
+#### `formatting` depends on nothing.
 
 ## Testing
 

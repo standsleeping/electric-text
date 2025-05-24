@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from typing import Optional, List
 from pydantic import BaseModel
 
-from electric_text.prompting.functions.format_non_streaming_response import (
+from electric_text.formatting.functions.format_non_streaming_response import (
     format_non_streaming_response,
 )
 from electric_text.clients.data.client_response import ClientResponse
