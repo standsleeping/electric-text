@@ -1,17 +1,17 @@
 from typing import Dict, Any, List
 
-from electric_text.providers.model_providers.openai.openai_provider import OpenaiProvider
+from electric_text.providers.model_providers.openai.functions.create_payload import (
+    create_payload,
+)
 
 
 def test_create_payload_includes_tools():
     """Creates payload with tools when tools are provided."""
-    provider = OpenaiProvider(api_key="test-key")
-    
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "What's the weather?"},
     ]
-    
+
     tools: List[Dict[str, Any]] = [
         {
             "type": "function",
@@ -29,44 +29,42 @@ def test_create_payload_includes_tools():
             },
         }
     ]
-    
-    payload = provider.create_payload(
-        messages=messages,
+
+    payload = create_payload(
         model="test-model",
+        default_model="gpt-3.5-turbo",
+        messages=messages,
         stream=True,
         tools=tools,
     )
-    
+
     assert payload["tools"] == tools
 
 
 def test_create_payload_omits_tools_when_none_provided():
     """Omits tools from payload when no tools are provided."""
-    provider = OpenaiProvider(api_key="test-key")
-    
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
     ]
-    
-    payload = provider.create_payload(
-        messages=messages,
+
+    payload = create_payload(
         model="test-model",
+        default_model="gpt-3.5-turbo",
+        messages=messages,
         stream=True,
     )
-    
+
     assert "tools" not in payload
 
 
 def test_create_payload_includes_tools_with_format_schema():
     """Includes both tools and format_schema in payload when both are provided."""
-    provider = OpenaiProvider(api_key="test-key")
-    
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "What's the weather?"},
     ]
-    
+
     tools: List[Dict[str, Any]] = [
         {
             "type": "function",
@@ -84,7 +82,7 @@ def test_create_payload_includes_tools_with_format_schema():
             },
         }
     ]
-    
+
     format_schema = {
         "type": "object",
         "properties": {
@@ -93,14 +91,15 @@ def test_create_payload_includes_tools_with_format_schema():
         },
         "required": ["name", "age"],
     }
-    
-    payload = provider.create_payload(
-        messages=messages,
+
+    payload = create_payload(
         model="test-model",
+        default_model="gpt-3.5-turbo",
+        messages=messages,
         stream=True,
         format_schema=format_schema,
         tools=tools,
     )
-    
+
     assert payload["tools"] == tools
-    assert "text" in payload 
+    assert "text" in payload

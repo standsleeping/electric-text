@@ -1,7 +1,7 @@
 import json
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, AsyncGenerator, List, Union
+from typing import Any, AsyncGenerator
 import logging
 
 from electric_text.providers import ModelProvider
@@ -25,6 +25,9 @@ from electric_text.providers.model_providers.openai.functions.set_text_format im
 )
 from electric_text.providers.model_providers.openai.functions.process_completion_response import (
     process_completion_response,
+)
+from electric_text.providers.model_providers.openai.functions.create_payload import (
+    create_payload,
 )
 
 
@@ -66,43 +69,6 @@ class OpenaiProvider(ModelProvider):
             **kwargs,
         }
 
-    def create_payload(
-        self,
-        messages: list[dict[str, str]],
-        model: Optional[str],
-        stream: bool,
-        format_schema: Optional[Dict[str, Any]] = None,
-        strict_schema: bool = True,
-        tools: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Create the API request payload.
-
-        Args:
-            messages: The list of messages to send
-            model: Model override (optional)
-            stream: Whether to stream the response
-            format_schema: Optional JSON schema for structured outputs
-            strict_schema: Whether to enforce strict schema validation (default: True)
-            tools: Optional list of tools to make available to the model
-
-        Returns:
-            Dict containing the formatted payload
-        """
-        payload = {
-            "model": model or self.default_model,
-            "input": messages,
-            "stream": stream,
-        }
-
-        if format_schema:
-            payload["text"] = set_text_format(format_schema, strict=strict_schema)
-
-        if tools:
-            payload["tools"] = tools
-
-        return payload
-
     @asynccontextmanager
     async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
         """Context manager for httpx client."""
@@ -133,9 +99,10 @@ class OpenaiProvider(ModelProvider):
         strict_schema = getattr(openai_inputs, "strict_schema", True)
         tools = openai_inputs.tools
 
-        payload = self.create_payload(
-            messages=messages,
-            model=model,
+        payload = create_payload(
+            model,
+            self.default_model,
+            messages,
             stream=True,
             format_schema=format_schema,
             strict_schema=strict_schema,
@@ -185,9 +152,10 @@ class OpenaiProvider(ModelProvider):
         strict_schema = getattr(openai_inputs, "strict_schema", True)
         tools = openai_inputs.tools
 
-        payload = self.create_payload(
-            messages=messages,
-            model=model,
+        payload = create_payload(
+            model,
+            self.default_model,
+            messages,
             stream=False,
             format_schema=format_schema,
             strict_schema=strict_schema,

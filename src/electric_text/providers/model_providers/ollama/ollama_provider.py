@@ -1,6 +1,6 @@
 import httpx
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, AsyncGenerator, List
+from typing import Any, AsyncGenerator
 from electric_text.providers import ModelProvider
 from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.data.stream_chunk import StreamChunk
@@ -19,6 +19,9 @@ from electric_text.providers.model_providers.ollama.functions.process_completion
 )
 from electric_text.providers.model_providers.ollama.functions.process_stream_response import (
     process_stream_response,
+)
+from electric_text.providers.model_providers.ollama.functions.create_payload import (
+    create_payload,
 )
 
 
@@ -61,43 +64,6 @@ class OllamaProvider(ModelProvider):
             **kwargs,
         }
 
-    def create_payload(
-        self,
-        messages: list[dict[str, str]],
-        model: Optional[str],
-        stream: bool,
-        format_schema: Optional[Dict[str, Any]] = None,
-        tools: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Create the API request payload.
-
-        Args:
-            messages: The list of messages to send
-            model: Model override (optional)
-            stream: Whether to stream the response
-            format_schema: Optional JSON schema for structured output (already converted to dict)
-            tools: Optional list of tools to make available to the model
-
-        Returns:
-            Dict containing the formatted payload
-        """
-        payload = {
-            "model": model or self.default_model,
-            "messages": messages,
-            "stream": stream,
-        }
-
-        # Add format if schema is provided (already converted to dict)
-        if format_schema is not None:
-            payload["format"] = format_schema
-
-        # Add tools if provided
-        if tools is not None and len(tools) > 0:
-            payload["tools"] = tools
-
-        return payload
-
     @asynccontextmanager
     async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
         """Context manager for httpx client."""
@@ -126,9 +92,10 @@ class OllamaProvider(ModelProvider):
         format_schema = ollama_inputs.format_schema
         tools = ollama_inputs.tools
 
-        payload = self.create_payload(
-            messages,
+        payload = create_payload(
             model,
+            self.default_model,
+            messages,
             stream=True,
             format_schema=format_schema,
             tools=tools,
@@ -175,9 +142,10 @@ class OllamaProvider(ModelProvider):
         format_schema = ollama_inputs.format_schema
         tools = ollama_inputs.tools
 
-        payload = self.create_payload(
-            messages,
+        payload = create_payload(
             model,
+            self.default_model,
+            messages,
             stream=False,
             format_schema=format_schema,
             tools=tools,
