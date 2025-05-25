@@ -48,4 +48,9 @@ class StreamHistory:
         if not self.content_blocks:
             return "[No content]"
 
-        return "\n".join(str(block) for block in self.content_blocks)
+        joined: str = "\n".join(str(block) for block in self.content_blocks)
+
+        if joined == "":
+            return "[Empty content]"
+
+        return joined
