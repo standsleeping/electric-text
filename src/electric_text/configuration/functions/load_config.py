@@ -1,7 +1,7 @@
 import os
 import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional, cast
+from typing import Dict, Any, Optional
 
 
 from electric_text.configuration.data.config import Config
@@ -48,9 +48,13 @@ def load_config(config_path: Optional[str] = None) -> Config:
         if path.exists():
             with open(path, "r") as f:
                 loaded_config = yaml.safe_load(f)
-                if loaded_config:
-                    config_dict = cast(Dict[str, Any], loaded_config)
-                    break
+                if loaded_config is not None:
+                    if isinstance(loaded_config, dict):
+                        config_dict = loaded_config
+                        break
+                    else:
+                        err: str = f"{path} must contain YAML, not {type(loaded_config).__name__}"
+                        raise ValueError(err)
 
     # Create Config instance from dictionary
     return Config.from_dict(config_dict)
