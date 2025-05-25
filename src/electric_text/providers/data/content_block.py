@@ -12,6 +12,9 @@ class ContentBlockType(Enum):
 class TextData:
     text: str
 
+    def __str__(self) -> str:
+        return self.text
+
 
 @dataclass
 class ToolCallData:
@@ -19,8 +22,14 @@ class ToolCallData:
     input: dict[str, Any]
     input_json_string: str
 
+    def __str__(self) -> str:
+        return f"TOOL CALL: {self.name}\nINPUTS: {self.input_json_string}"
+
 
 @dataclass
 class ContentBlock:
     type: ContentBlockType
     data: Union[TextData, ToolCallData]
+
+    def __str__(self) -> str:
+        return str(self.data)

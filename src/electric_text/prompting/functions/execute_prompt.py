@@ -1,38 +1,18 @@
-from typing import Any, List, Optional, Type, Tuple
+from typing import Any, List, Optional
 
 from electric_text.logging import get_logger
-from electric_text.prompting.functions.get_prompt_by_name import get_prompt_by_name
-from electric_text.prompting.functions.create_client_request import create_client_request
-from electric_text.prompting.functions.execute_client_request import execute_client_request
 from electric_text.clients import Client
+from electric_text.clients.data.default_output_schema import DefaultOutputSchema
+from electric_text.prompting.functions.create_client_request import (
+    create_client_request,
+)
+from electric_text.prompting.functions.execute_client_request import (
+    execute_client_request,
+)
+from electric_text.prompting.functions.get_prompt_config_and_model import get_prompt_config_and_model
+
 
 logger = get_logger(__name__)
-
-
-async def get_prompt_config_and_model(
-    prompt_name: str,
-) -> Tuple[Any, Optional[Type[Any]]]:
-    """Get prompt config and model class if available.
-
-    Args:
-        prompt_name: Name of the prompt to use
-
-    Returns:
-        Tuple of (prompt_config, model_class) where model_class may be None
-    """
-    prompt_config = get_prompt_by_name(prompt_name)
-    if not prompt_config:
-        logger.error(f"{prompt_name} prompt config not found")
-        return None, None
-
-    # Try to get the model class, but it's okay if there isn't one
-    model_result = prompt_config.get_model_class()
-    if model_result.is_valid and model_result.model_class:
-        return prompt_config, model_result.model_class
-
-    # Return the prompt config without a model class if no valid model
-    return prompt_config, None
-
 
 async def execute_prompt(
     *,
@@ -64,28 +44,29 @@ async def execute_prompt(
     """
     # If no prompt_name, handle as a simple request with default system message
     if not prompt_name:
-        request = create_client_request(
+        no_prompt_request = create_client_request(
             provider_name=provider_name,
             model_name=model_name,
             text_input=text_input,
             tools=tools,
             max_tokens=max_tokens,
+            output_schema=DefaultOutputSchema,
         )
-        
+
         await execute_client_request(
             client=client,
-            request=request,
+            request=no_prompt_request,
             stream=stream,
         )
-        
+
         return
 
     # Get prompt config and model if needed for structured prompts
-    config_result = await get_prompt_config_and_model(prompt_name)
-    if not config_result[0]:
-        return
+    prompt_config, model_class = await get_prompt_config_and_model(prompt_name)
 
-    prompt_config, model_class = config_result
+    if not prompt_config:
+        logger.error(f"{prompt_name} prompt config not found")
+        return
 
     # Create request with custom system message from prompt config
     request = create_client_request(
@@ -95,13 +76,12 @@ async def execute_prompt(
         system_message=prompt_config.get_system_message(),
         tools=tools,
         max_tokens=max_tokens,
-        response_model=model_class,
+        output_schema=model_class,
     )
-    
+
     # Execute the request with the appropriate model class
     await execute_client_request(
         client=client,
         request=request,
         stream=stream,
-        model_class=model_class,
     )

@@ -19,13 +19,13 @@ def convert_provider_inputs(
     Returns:
         OllamaProviderInputs instance
     """
-    # Convert response_model (Type) to format_schema (Dict)
+    # Convert output_schema (Type) to format_schema (Dict)
     format_schema: Optional[Dict[str, Any]] = None
 
-    if request.response_model is not None:
-        # Check if response_model is a Pydantic model with model_json_schema method
-        if hasattr(request.response_model, "model_json_schema"):
-            format_schema = request.response_model.model_json_schema()
+    if request.has_custom_output_schema and request.output_schema is not None:
+        # Check if output_schema is a Pydantic model with model_json_schema method
+        if hasattr(request.output_schema, "model_json_schema"):
+            format_schema = request.output_schema.model_json_schema()
         # We don't have a fallback case because we're expecting a Pydantic model
         # If it's not a Pydantic model, we just pass None as format_schema
 

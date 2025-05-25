@@ -13,5 +13,6 @@ class ProviderRequest:
     prompt_text: str
     system_messages: Optional[List[str]] = None
     tools: Optional[List[Dict[str, Any]]] = None
-    response_model: Optional[Type[Any]] = None
+    output_schema: Optional[Type[Any]] = None
     max_tokens: Optional[int] = None
+    has_custom_output_schema: bool = False

@@ -1,5 +1,3 @@
-from electric_text.clients.data import ParseResult
-from electric_text.clients.data import PromptResult
 from electric_text.clients.data import ClientResponse
 from electric_text.clients.client import Client
 from electric_text.clients.functions.build_simple_prompt import build_simple_prompt
@@ -12,8 +10,6 @@ from electric_text.clients.functions.resolve_api_key import resolve_api_key
 
 __all__ = [
     "Client",
-    "ParseResult",
-    "PromptResult",
     "ClientResponse",
     "parse_partial_response",
     "build_simple_prompt",

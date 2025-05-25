@@ -25,10 +25,7 @@ def convert_provider_inputs(
         system_messages=request.system_messages, prompt_text=request.prompt_text
     )
 
-    if request.response_model:
-        structured_prefill = True
-    else:
-        structured_prefill = False
+    structured_prefill = request.has_custom_output_schema
 
     # Convert tools from the standard format to Anthropic's format
     anthropic_tools = convert_tools(request.tools)

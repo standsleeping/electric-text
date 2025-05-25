@@ -11,15 +11,15 @@ from electric_text.providers.model_providers.ollama.data.ollama_provider_inputs 
 
 
 # Test Pydantic model
-class SampleResponseModel(BaseModel):
+class SampleOutputSchema(BaseModel):
     name: str
     age: int
     tags: List[str] = []
     metadata: Optional[Dict[str, Any]] = None
 
 
-def test_convert_without_response_model():
-    """Test conversion of ProviderRequest to OllamaProviderInputs without response_model."""
+def test_convert_without_output_schema():
+    """Test conversion of ProviderRequest to OllamaProviderInputs without output_schema."""
 
     request = ProviderRequest(
         provider_name="ollama",
@@ -36,15 +36,16 @@ def test_convert_without_response_model():
     assert result.format_schema is None
 
 
-def test_convert_with_pydantic_response_model():
-    """Test conversion of ProviderRequest to OllamaProviderInputs with a Pydantic response_model."""
+def test_convert_with_pydantic_output_schema():
+    """Test conversion of ProviderRequest to OllamaProviderInputs with a Pydantic output_schema."""
 
     request = ProviderRequest(
         provider_name="ollama",
         prompt_text="Hello",
         model_name="test-model",
         system_messages=["You are a helpful assistant"],
-        response_model=SampleResponseModel,
+        output_schema=SampleOutputSchema,
+        has_custom_output_schema=True,
     )
 
     result = convert_provider_inputs(request)
@@ -66,15 +67,15 @@ def test_convert_with_pydantic_response_model():
     assert schema["type"] == "object"
 
 
-def test_convert_with_none_response_model():
-    """Test conversion of ProviderRequest to OllamaProviderInputs with response_model=None."""
+def test_convert_with_none_output_schema():
+    """Test conversion of ProviderRequest to OllamaProviderInputs with output_schema=None."""
 
     request = ProviderRequest(
         provider_name="ollama",
         prompt_text="Hello",
         model_name="test-model",
         system_messages=["You are a helpful assistant"],
-        response_model=None,
+        output_schema=None,
     )
 
     result = convert_provider_inputs(request)

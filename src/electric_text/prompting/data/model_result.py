@@ -3,20 +3,29 @@ from typing import Optional, Type, Any
 
 from electric_text.clients.data.model_load_result import ModelLoadResult
 from electric_text.prompting.data.model_load_error import ModelLoadError
+from electric_text.clients.data.default_output_schema import DefaultOutputSchema
+from pydantic import BaseModel
 
 
 @dataclass
 class ModelResult:
     """Result of loading a validation model from a Python file."""
 
-    model_class: Optional[Type[Any]] = None
+    loaded_model_class: Optional[Type[BaseModel]] = None
     error: Optional[ModelLoadError] = None
     error_message: Optional[str] = None
 
     @property
+    def model_class(self) -> Type[BaseModel]:
+        """Returns the loaded model class if it exists."""
+        if self.loaded_model_class is None:
+            return DefaultOutputSchema
+        return self.loaded_model_class
+
+    @property
     def is_valid(self) -> bool:
         """Returns True if a valid model was loaded."""
-        return self.model_class is not None and self.error is None
+        return self.loaded_model_class is not None and self.error is None
 
     @classmethod
     def from_load_result(cls, result: ModelLoadResult) -> "ModelResult":
@@ -33,7 +42,7 @@ class ModelResult:
                 error = ModelLoadError.OTHER
 
         return cls(
-            model_class=result.model_class,
+            loaded_model_class=result.model_class,
             error=error,
             error_message=result.error_message,
         )

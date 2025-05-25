@@ -135,7 +135,7 @@ class AnthropicProvider(ModelProvider):
         Yields:
             A generator of StreamHistory objects containing the full stream history after each chunk
         """
-        self.stream_history = StreamHistory()  # Reset stream history
+        self.stream_history = StreamHistory()
 
         anthropic_inputs: AnthropicProviderInputs = convert_provider_inputs(request)
 
@@ -202,7 +202,7 @@ class AnthropicProvider(ModelProvider):
         Returns:
             StreamHistory containing the complete response
         """
-        history = StreamHistory()
+        self.stream_history = StreamHistory()
 
         anthropic_inputs: AnthropicProviderInputs = convert_provider_inputs(request)
 
@@ -220,7 +220,7 @@ class AnthropicProvider(ModelProvider):
                 content=prefill,
             )
 
-            history.add_chunk(prefill_chunk)
+            self.stream_history.add_chunk(prefill_chunk)
 
         final_messages = self.transform_messages(messages, prefill)
         tools = anthropic_inputs.tools
@@ -239,9 +239,9 @@ class AnthropicProvider(ModelProvider):
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
                 line: str = response.text
-                return process_completion_response(line, history)
+                return process_completion_response(line, self.stream_history)
         except httpx.HTTPError as e:
-            return history.add_chunk(
+            return self.stream_history.add_chunk(
                 StreamChunk(
                     type=StreamChunkType.HTTP_ERROR,
                     raw_line="",

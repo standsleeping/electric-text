@@ -1,6 +1,6 @@
 import sys
 import importlib.util
-from electric_text.clients.data.validation_model import ValidationModel
+from pydantic import BaseModel
 from electric_text.clients.data.model_load_result import ModelLoadResult
 
 
@@ -27,13 +27,13 @@ def load_validation_model(model_path: str) -> ModelLoadResult:
         sys.modules["schema_module"] = module
         spec.loader.exec_module(module)
 
-        # Find the first class that implements the ValidationModel protocol
+        # Find the first class that extends BaseModel
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
             if (
                 isinstance(attr, type)
-                and issubclass(attr, ValidationModel)
-                and attr.__name__ != "ValidationModel"
+                and issubclass(attr, BaseModel)
+                and attr.__name__ != "BaseModel"
                 and attr.__module__ == "schema_module"
             ):
                 return ModelLoadResult(model_class=attr)

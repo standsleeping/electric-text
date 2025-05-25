@@ -72,9 +72,9 @@ def test_convert_with_max_tokens():
     assert result.tools is None
 
 
-def test_convert_with_response_model():
-    """Test conversion of ProviderRequest with response_model to AnthropicProviderInputs."""
-    # The Anthropic converter doesn't currently use response_model, but the test
+def test_convert_with_output_schema():
+    """Test conversion of ProviderRequest with output_schema to AnthropicProviderInputs."""
+    # The Anthropic converter doesn't currently use output_schema, but the test
     # ensures it handles the parameter without errors
 
     class ExampleModel(BaseModel):
@@ -86,7 +86,8 @@ def test_convert_with_response_model():
         prompt_text="Hello",
         model_name="test-model",
         system_messages=["You are a helpful assistant"],
-        response_model=ExampleModel,
+        output_schema=ExampleModel,
+        has_custom_output_schema=True,
     )
 
     result = convert_provider_inputs(request)

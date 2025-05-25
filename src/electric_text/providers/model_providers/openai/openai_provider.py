@@ -174,7 +174,7 @@ class OpenaiProvider(ModelProvider):
         Returns:
             StreamHistory containing the complete response
         """
-        history = StreamHistory()
+        self.stream_history = StreamHistory()
 
         # Convert the request to OpenAI inputs
         openai_inputs: OpenAIProviderInputs = convert_provider_inputs(request)
@@ -204,9 +204,9 @@ class OpenaiProvider(ModelProvider):
                 response = await client.post(self.base_url, json=payload)
                 response.raise_for_status()
                 line = response.text
-                return process_completion_response(line, history)
+                return process_completion_response(line, self.stream_history)
         except httpx.HTTPError as e:
-            return history.add_chunk(
+            return self.stream_history.add_chunk(
                 StreamChunk(
                     type=StreamChunkType.HTTP_ERROR,
                     raw_line="",

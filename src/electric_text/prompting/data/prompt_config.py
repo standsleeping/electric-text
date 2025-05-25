@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
 from electric_text.clients.functions.load_validation_model import load_validation_model
+from electric_text.clients.data.model_load_result import ModelLoadResult
 from electric_text.prompting.data.model_load_error import ModelLoadError
 from electric_text.prompting.data.model_result import ModelResult
 
@@ -33,14 +34,14 @@ class PromptConfig:
 
         Returns:
             Optional[Dict[str, Any]]: The JSON schema derived from the validation model,
-                                     or None if no model_path is specified or an error occurred.
+                                      or None if no model_path is specified or an error occurred.
         """
         result = self.get_model_class()
         if result.is_valid and result.model_class:
             schema = result.model_class.model_json_schema()
             if isinstance(schema, dict):
                 return schema
-            return None
+
         return None
 
     def get_model_class(self) -> ModelResult:
@@ -52,8 +53,10 @@ class PromptConfig:
         """
         if not self.model_path:
             return ModelResult(
-                error=ModelLoadError.NOT_FOUND, error_message="No model path specified"
+                error=ModelLoadError.NOT_FOUND,
+                error_message="No model path specified",
             )
 
-        load_result = load_validation_model(self.model_path)
+        load_result: ModelLoadResult = load_validation_model(self.model_path)
+
         return ModelResult.from_load_result(load_result)

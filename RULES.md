@@ -24,7 +24,7 @@ uv run python -m pytest
 
 This project follows a strict "hexagonal" architecture. Other names for this architectural style include "functional core, imperative shell" and "ports and adapters."
 
-The codebase is organized into a set of subpackages. Each subpackage is an independent unit, often with a clear/independent API, complete with types, usage guidelines, and documentation. Circular dependencies between subpackages are strictly forbidden!
+The codebase is organized into a set of subpackages. Each subpackage is an independent unit, often with a clear/independent API, complete with types, usage guidelines, and documentation. Circular dependencies between subpackages are strictly forbidden.
 
 Each subpackage keeps an internally strict separation between functions and data.
 
@@ -97,11 +97,11 @@ Tests are written before implementation with declarative assertion documentation
 
 Additional general testing rules:
 
-- Fixtures are ALWAYS centralized and shared in tests/fixtures.py. No exceptions!
+- Fixtures are ALWAYS centralized and shared in tests/fixtures.py. No exceptions.
 - Tests focus on input/output pairs for our functional codebase.
 - Single pytest assertion per test where possible.
 - Never write code until tests have been written.
-- Never patch/mock/stub code! Integration tests run *all* dependent code.
+- Never patch/mock/stub code. Integration tests run *all* dependent code.
 
 ## "Integrators" and "Units"
 
@@ -131,7 +131,7 @@ Notes on integrators:
 
 "Simple things should be simple, complex things should be possible." — Alan Kay
 
-Code changes in this project should typically start at the end-user's request, and cascade "all the way down" to the lower levels of, for example, a provider API call, making architectural and code changes as necessary along that path through the layers of abstraction. The reasoning behind this order of operations follows from the ultimate aim of this software: ease of use and power of expression. If we decide to add a feature or extend certain behavior of the system, we should first focus on how that specific behavior is *expressed* by the user of the software. How do _they_ see the world, how do they express the outcome they desire, and how then can our system most naturally model their intent? Always start with the user!
+Code changes in this project should typically start at the highest level, where we model the system's user's request or command, and cascade "all the way down" into the lower levels of the system, making architectural and code changes as necessary along that path down through all layers of abstraction. The reasoning behind this order of operations follows from the ultimate aim of this project: ease of use and power of expression. If we decide to add a feature or extend certain behavior of the system, we should first focus on how that specific behavior is *expressed* by the user of the software. How do _they_ see the world, how do they express the outcome they desire, and how then can our system most naturally model their intent? Always start with the user, and work backwards from there. As we proceed through the layers of abstraction, we can think of each interface boundary as having users/clients/consumers in isolation, more abstractly. For example: if some other higher-level package were using this interface, what would feel most natural?
 
 ### "Follow the Data"
 
@@ -152,6 +152,9 @@ We follow a strictly functional programming style:
 
 There are a few other general rules for how we write code:
 1. Always use `dedent` for multi-line strings.
+2. Always prefer modern Python (3.12+) language and type features.
+3. Prefer generic type parameter syntax (`class Foo[T]:` instead of `TypeVar`).
+4. Prefer union types with `|` syntax (`str | None` instead of `Union[str, None]`).
 
 ## Progress
 
