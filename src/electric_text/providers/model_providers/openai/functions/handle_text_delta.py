@@ -39,6 +39,5 @@ def handle_text_delta(
             type=StreamChunkType.TEXT_DELTA,
             raw_line=raw_line,
             parsed_data=data,
-            content="",
         )
     )

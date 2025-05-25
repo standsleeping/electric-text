@@ -54,7 +54,6 @@ def process_stream_response(
                             type=StreamChunkType.STREAM_START,
                             raw_line=raw_line,
                             parsed_data=data,
-                            content="",
                         )
                     )
 
@@ -71,7 +70,6 @@ def process_stream_response(
                                 type=StreamChunkType.UNHANDLED_EVENT,
                                 raw_line=raw_line,
                                 parsed_data=data,
-                                content="",
                             )
                         )
 
@@ -88,7 +86,6 @@ def process_stream_response(
                                 type=StreamChunkType.UNHANDLED_EVENT,
                                 raw_line=raw_line,
                                 parsed_data=data,
-                                content="",
                             )
                         )
 
@@ -98,7 +95,6 @@ def process_stream_response(
                             type=StreamChunkType.STREAM_STOP,
                             raw_line=raw_line,
                             parsed_data=data,
-                            content="",
                         )
                     )
 
@@ -108,7 +104,6 @@ def process_stream_response(
                             type=StreamChunkType.UNHANDLED_EVENT,
                             raw_line="",
                             parsed_data=data,
-                            content="",
                         )
                     )
 
@@ -118,7 +113,6 @@ def process_stream_response(
                     type=StreamChunkType.PARSE_ERROR,
                     raw_line=raw_line,
                     parsed_data=None,
-                    content="",
                 )
             )
     else:
@@ -127,6 +121,5 @@ def process_stream_response(
                 type=StreamChunkType.UNHANDLED_EVENT,
                 raw_line=raw_line,
                 parsed_data=None,
-                content="",
             )
         )

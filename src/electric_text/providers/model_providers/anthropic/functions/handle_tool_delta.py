@@ -25,6 +25,5 @@ def handle_tool_delta(
             type=StreamChunkType.TOOL_DELTA,
             raw_line=raw_line,
             parsed_data=data,
-            content="",
         )
     )

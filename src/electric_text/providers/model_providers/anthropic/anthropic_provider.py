@@ -151,7 +151,6 @@ class AnthropicProvider(ModelProvider):
                 type=StreamChunkType.PREFILLED_CONTENT,
                 raw_line="",
                 parsed_data=None,
-                content=prefill,
             )
 
             self.stream_history.add_chunk(prefill_chunk)
@@ -217,7 +216,6 @@ class AnthropicProvider(ModelProvider):
                 type=StreamChunkType.PREFILLED_CONTENT,
                 raw_line="",
                 parsed_data=None,
-                content=prefill,
             )
 
             self.stream_history.add_chunk(prefill_chunk)

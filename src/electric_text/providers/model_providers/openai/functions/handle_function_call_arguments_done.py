@@ -49,6 +49,5 @@ def handle_function_call_arguments_done(
             type=StreamChunkType.TOOL_DELTA,  # or we could add a TOOL_DONE type
             raw_line=raw_line,
             parsed_data=data,
-            content="",
         )
     )

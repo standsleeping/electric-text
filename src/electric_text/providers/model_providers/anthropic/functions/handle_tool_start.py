@@ -35,6 +35,5 @@ def handle_tool_start(
             type=StreamChunkType.TOOL_START,
             raw_line=raw_line,
             parsed_data=data,
-            content="",
         )
     )

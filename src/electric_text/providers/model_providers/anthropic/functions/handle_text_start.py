@@ -31,6 +31,5 @@ def handle_text_start(
             type=StreamChunkType.TEXT_START,
             raw_line=raw_line,
             parsed_data=data,
-            content="",
         )
     )

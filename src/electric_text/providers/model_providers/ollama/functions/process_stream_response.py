@@ -42,7 +42,6 @@ def process_stream_response(
                     type=StreamChunkType.FULL_TOOL_CALL,
                     raw_line=raw_line,
                     parsed_data=tool_call,
-                    content=json.dumps(function),
                 )
             )
 
@@ -64,7 +63,6 @@ def process_stream_response(
                 type=StreamChunkType.TEXT_DELTA,
                 raw_line=raw_line,
                 parsed_data=chunk_data,
-                content=content,
             )
         )
 
@@ -95,7 +93,6 @@ def process_stream_response(
                 type=StreamChunkType.STREAM_STOP,
                 raw_line=raw_line,
                 parsed_data=chunk_data,
-                content=None,
             )
         )
 

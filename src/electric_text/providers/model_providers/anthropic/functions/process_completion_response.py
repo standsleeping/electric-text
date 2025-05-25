@@ -39,7 +39,6 @@ def process_completion_response(
                     type=StreamChunkType.FULL_TOOL_CALL,
                     raw_line=line,
                     parsed_data=data,
-                    content="",
                 )
             )
         case "end_turn":
@@ -57,7 +56,6 @@ def process_completion_response(
                     type=StreamChunkType.FULL_TEXT,
                     raw_line=line,
                     parsed_data=data,
-                    content="",
                 )
             )
 
@@ -67,7 +65,6 @@ def process_completion_response(
                     type=StreamChunkType.UNHANDLED_EVENT,
                     raw_line=line,
                     parsed_data=data,
-                    content="",
                 )
             )
 

@@ -9,5 +9,4 @@ class StreamChunk:
     type: StreamChunkType
     raw_line: str
     parsed_data: Optional[dict[str, str]] = None
-    content: Optional[str] = None
     error: Optional[str] = None

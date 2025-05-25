@@ -52,7 +52,6 @@ def process_completion_response(
                             type=StreamChunkType.FULL_TEXT,
                             raw_line=line,
                             parsed_data=data,
-                            content=text_content,
                         )
                     )
 
@@ -77,7 +76,6 @@ def process_completion_response(
                             type=StreamChunkType.TOOL_START,
                             raw_line=line,
                             parsed_data=data,
-                            content="",
                         )
                     )
 
@@ -103,7 +101,6 @@ def process_completion_response(
                     type=StreamChunkType.TOOL_START,
                     raw_line=line,
                     parsed_data=data,
-                    content="",
                 )
             )
 

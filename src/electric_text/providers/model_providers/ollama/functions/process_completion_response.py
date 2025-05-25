@@ -39,7 +39,6 @@ def process_completion_response(
                     type=StreamChunkType.FULL_TOOL_CALL,
                     raw_line=line,
                     parsed_data=tool_call,
-                    content=json.dumps(function),
                 )
             )
 
@@ -60,7 +59,6 @@ def process_completion_response(
                 type=StreamChunkType.FULL_TEXT,
                 raw_line=line,
                 parsed_data=data,
-                content=content,
             )
         )
 
