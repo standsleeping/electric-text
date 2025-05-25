@@ -1,4 +1,4 @@
-from typing import Type, cast
+from typing import Type
 from pydantic import BaseModel
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.clients.data import ClientResponse
@@ -25,7 +25,7 @@ async def history_to_client_response[OutputSchema: BaseModel](
     return ClientResponse[OutputSchema](
         stream_history=history,
         parsed_content=parsed_content,
-        validated_output=cast(OutputSchema | None, validated_instance),
+        validated_output=validated_instance,
         validation_error=validation_error,
         json_error=json_error,
     )

@@ -6,11 +6,11 @@ from electric_text.clients.functions.parse_partial_response import (
 )
 
 
-def create_parse_result(
-    content: str, output_schema: Type[BaseModel]
+def create_parse_result[OutputSchema: BaseModel](
+    content: str, output_schema: Type[OutputSchema]
 ) -> Tuple[
     Dict[str, Any],
-    Optional[BaseModel],
+    Optional[OutputSchema],
     Optional[Union[ValidationError, TypeError]],
     Optional[json.JSONDecodeError],
 ]:
