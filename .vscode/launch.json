@@ -2,28 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "No prompt (env vars)",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "electric_text",
-      "args": [
-        "Write a haiku about how rain smells when early summer arrives in the American Midwest.",
-        "-m",
-        "31",
-      ],
-      "env": {
-        "OLLAMA_PROVIDER_NAME_SHORTHAND": "lma",
-        "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
-        "ANTHROPIC_PROVIDER_NAME_SHORTHAND": "ant",
-        "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
-        "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
-        "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
-      }
-    },
-    {
-      "name": "No prompt (config)",
+      "name": "Poetry",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
@@ -37,7 +16,7 @@
       }
     },
     {
-      "name": "Poetry",
+      "name": "Poetry (with prompt)",
       "type": "debugpy",
       "request": "launch",
       "module": "electric_text",
