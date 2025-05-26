@@ -184,3 +184,45 @@ def temp_tool_configs_dir():
             os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = original_env
         else:
             del os.environ["USER_TOOL_CONFIGS_DIRECTORY"]
+
+
+@pytest.fixture
+def sample_http_log_entry():
+    """Sample HttpLogEntry for testing."""
+    from electric_text.providers.logging.data.http_log_entry import HttpLogEntry
+    
+    return HttpLogEntry(
+        timestamp="2024-01-01T12:00:00Z",
+        url="https://api.example.com/chat",
+        method="POST",
+        request_headers={"Content-Type": "application/json", "Authorization": "Bearer token"},
+        request_body={"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]},
+        response_status=200,
+        response_headers={"Content-Type": "application/json"},
+        response_body={"choices": [{"message": {"content": "Hi there!"}}]},
+        duration_ms=1222.2,
+        provider="openai",
+        model="gpt-4",
+        error=None,
+    )
+
+
+@pytest.fixture
+def minimal_http_log_entry():
+    """Minimal HttpLogEntry with None values for testing."""
+    from electric_text.providers.logging.data.http_log_entry import HttpLogEntry
+    
+    return HttpLogEntry(
+        timestamp="2024-01-01T12:00:00Z",
+        url="https://api.example.com/chat",
+        method="GET",
+        request_headers={},
+        request_body=None,
+        response_status=404,
+        response_headers={},
+        response_body=None,
+        duration_ms=100.0,
+        provider=None,
+        model=None,
+        error="HTTP 404",
+    )
