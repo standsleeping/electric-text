@@ -155,6 +155,7 @@ There are a few other general rules for how we write code:
 2. Always prefer modern Python (3.12+) language and type features.
 3. Prefer generic type parameter syntax (`class Foo[T]:` instead of `TypeVar`).
 4. Prefer union types with `|` syntax (`str | None` instead of `Union[str, None]`).
+5. Avoid underscore method patterns (e.g. prefer `this_func` over `_this_func`).
 
 ## Progress
 

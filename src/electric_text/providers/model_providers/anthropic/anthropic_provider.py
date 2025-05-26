@@ -1,8 +1,10 @@
 import httpx
+import os
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Optional
 
 from electric_text.providers import ModelProvider
+from electric_text.providers.logging import HttpLogger, LoggingAsyncClient
 from electric_text.providers.data.provider_request import ProviderRequest
 from electric_text.providers.model_providers.anthropic.data.anthropic_provider_inputs import (
     AnthropicProviderInputs,
@@ -72,6 +74,14 @@ class AnthropicProvider(ModelProvider):
             **kwargs,
         }
 
+        # Initialize HTTP logger if enabled via environment variable
+        self.http_logger: Optional[HttpLogger] = None
+        if os.getenv("ELECTRIC_TEXT_HTTP_LOGGING", "false").lower() == "true":
+            from pathlib import Path
+
+            log_dir = Path(os.getenv("ELECTRIC_TEXT_HTTP_LOG_DIR", "./http_logs"))
+            self.http_logger = HttpLogger(log_dir=log_dir, enabled=True)
+
     def prefill_content(self) -> str:
         """
         Provide a standard prefill content for all response types.
@@ -117,10 +127,19 @@ class AnthropicProvider(ModelProvider):
         return transformed_messages
 
     @asynccontextmanager
-    async def get_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
+    async def get_client(
+        self,
+    ) -> AsyncGenerator[httpx.AsyncClient | LoggingAsyncClient, None]:
         """Context manager for httpx client."""
-        async with httpx.AsyncClient(**self.client_kwargs) as client:
-            yield client
+        if self.http_logger:
+            # Create a logging client with the same kwargs
+            async with LoggingAsyncClient(
+                logger=self.http_logger, provider="anthropic", **self.client_kwargs
+            ) as client:
+                yield client
+        else:
+            async with httpx.AsyncClient(**self.client_kwargs) as client:
+                yield client
 
     async def generate_stream(
         self,

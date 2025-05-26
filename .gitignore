@@ -16,3 +16,6 @@ wheels/
 .ruff_cache
 scratch/
 electric_text.svg
+
+# HTTP logging
+http_logs/

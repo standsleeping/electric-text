@@ -293,6 +293,68 @@ python -m electric_text config --no-validate
 
 For more details, see the [Configuration System Documentation](src/electric_text/configuration/README.md).
 
+## HTTP Logging
+
+Electric Text includes built-in HTTP logging functionality that captures all API requests and responses for debugging.
+
+### Quick Start
+
+Enable HTTP logging by setting environment variables:
+
+```bash
+# Enable logging
+export ELECTRIC_TEXT_HTTP_LOGGING=true
+
+# Optionally set custom log directory (defaults to ./http_logs)
+export ELECTRIC_TEXT_HTTP_LOG_DIR=/path/to/logs
+
+# Run your code
+python -m electric_text "Write a haiku about rain" --model gpt-4o
+```
+
+### Using with VS Code Debugger
+
+Add these environment variables to your `.vscode/launch.json` configuration:
+
+```json
+{
+  "name": "My Config",
+  "type": "debugpy",
+  "request": "launch",
+  "module": "electric_text",
+  "args": ["Your prompt here", "-m", "ollama:llama3.1:8b"],
+  "env": {
+    "ELECTRIC_TEXT_HTTP_LOGGING": "true",
+    "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
+  }
+}
+```
+
+### Log Format
+
+Each HTTP interaction is saved as a JSON file with the following structure:
+
+```json
+{
+  "timestamp": "2024-01-01T10:10:10.123456",
+  "method": "POST",
+  "url": "https://api.openai.com/v1/chat/completions",
+  "request": {
+    "headers": { ... },
+    "body": { ... }
+  },
+  "response": {
+    "status": 200,
+    "headers": { ... },
+    "body": { ... }
+  },
+  "duration_ms": 123.45,
+  "provider": "openai",
+  "model": "gpt-4o",
+  "error": null
+}
+```
+
 ## Note for AI Coding Assistants
 
 Are you an AI coding assistant?
