@@ -19,6 +19,7 @@ dev = [
     "pydeps>=3.0.1",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.25.3",
+    "respx>=0.22.0",
     "ruff>=0.11.0",
     "ty>=0.0.1a1",
     "types-pyyaml>=6.0.12.20250402",

@@ -3,6 +3,14 @@ import json
 import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import respx
+
+
+@pytest.fixture(autouse=True)
+def fake_http():
+    """Block all HTTP requests during tests unless explicitly mocked."""
+    with respx.mock(assert_all_called=False) as respx_mock:
+        yield respx_mock
 
 
 @pytest.fixture
