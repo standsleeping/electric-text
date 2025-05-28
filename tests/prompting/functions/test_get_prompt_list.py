@@ -105,7 +105,7 @@ def test_get_prompt_list_with_models(monkeypatch):
         setup_prompt_dir_with_model(temp_dir)
 
         # Set environment variable to point to temp directory
-        monkeypatch.setenv("USER_PROMPT_DIRECTORY", temp_dir)
+        monkeypatch.setenv("ELECTRIC_TEXT_PROMPT_DIRECTORY", temp_dir)
 
         # Call the function
         prompt_configs = get_prompt_list()
@@ -151,7 +151,7 @@ def test_get_prompt_list_with_models(monkeypatch):
 def test_get_prompt_list(temp_prompt_dir, monkeypatch):
     """Test that get_prompt_list correctly loads prompt configs from JSON files (legacy test)."""
     # Set environment variable to point to temp directory
-    monkeypatch.setenv("USER_PROMPT_DIRECTORY", temp_prompt_dir)
+    monkeypatch.setenv("ELECTRIC_TEXT_PROMPT_DIRECTORY", temp_prompt_dir)
 
     # Capture print output to verify warning message about schema_path
     with patch("builtins.print") as mock_print:
@@ -202,19 +202,19 @@ def test_get_prompt_list(temp_prompt_dir, monkeypatch):
 def test_get_prompt_list_env_not_set():
     """Test that get_prompt_list raises an error when USER_PROMPT_DIRECTORY is not set."""
     # Ensure environment variable is not set
-    if "USER_PROMPT_DIRECTORY" in os.environ:
-        del os.environ["USER_PROMPT_DIRECTORY"]
+    if "ELECTRIC_TEXT_PROMPT_DIRECTORY" in os.environ:
+        del os.environ["ELECTRIC_TEXT_PROMPT_DIRECTORY"]
 
     # Check that the function raises a ValueError
     with pytest.raises(
-        ValueError, match="USER_PROMPT_DIRECTORY environment variable is not set"
+        ValueError, match="ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set"
     ):
         get_prompt_list()
 
 
 def test_handle_invalid_json(invalid_prompt_dir, monkeypatch):
     """Test that get_prompt_list gracefully handles invalid JSON files."""
-    monkeypatch.setenv("USER_PROMPT_DIRECTORY", invalid_prompt_dir)
+    monkeypatch.setenv("ELECTRIC_TEXT_PROMPT_DIRECTORY", invalid_prompt_dir)
 
     # Capture print output to verify error message
     with patch("builtins.print") as mock_print:
@@ -234,7 +234,7 @@ def test_handle_invalid_json(invalid_prompt_dir, monkeypatch):
 def test_no_json_files(monkeypatch):
     """Test behavior when the directory has no JSON files."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        monkeypatch.setenv("USER_PROMPT_DIRECTORY", temp_dir)
+        monkeypatch.setenv("ELECTRIC_TEXT_PROMPT_DIRECTORY", temp_dir)
 
         # Create a file with a different extension
         with open(Path(temp_dir) / "not_json.txt", "w") as f:

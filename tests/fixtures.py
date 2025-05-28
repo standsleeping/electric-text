@@ -19,9 +19,9 @@ def clean_env():
     # Save current environment
     env_backup = os.environ.copy()
 
-    # Clear relevant environment variables
+    # Clear all ELECTRIC_TEXT_ environment variables
     for key in list(os.environ.keys()):
-        if "_PROVIDER_NAME_SHORTHAND" in key or "_MODEL_SHORTHAND_" in key:
+        if key.startswith("ELECTRIC_TEXT_"):
             del os.environ[key]
 
     yield
@@ -174,16 +174,16 @@ def temp_tool_configs_dir():
             json.dump(test_tool2, f)
 
         # Set environment variable for testing
-        original_env = os.environ.get("USER_TOOL_CONFIGS_DIRECTORY")
-        os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = temp_dir
+        original_env = os.environ.get("ELECTRIC_TEXT_TOOLS_DIRECTORY")
+        os.environ["ELECTRIC_TEXT_TOOLS_DIRECTORY"] = temp_dir
 
         yield temp_dir
 
         # Restore original environment variable
         if original_env:
-            os.environ["USER_TOOL_CONFIGS_DIRECTORY"] = original_env
+            os.environ["ELECTRIC_TEXT_TOOLS_DIRECTORY"] = original_env
         else:
-            del os.environ["USER_TOOL_CONFIGS_DIRECTORY"]
+            del os.environ["ELECTRIC_TEXT_TOOLS_DIRECTORY"]
 
 
 @pytest.fixture

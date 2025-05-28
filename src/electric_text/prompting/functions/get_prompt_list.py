@@ -8,7 +8,7 @@ from electric_text.prompting.data.prompt_config import PromptConfig
 
 def get_prompt_list() -> List[PromptConfig]:
     """
-    Get a list of all prompt configurations from the directory specified in USER_PROMPT_DIRECTORY.
+    Get a list of all prompt configurations from the directory specified in ELECTRIC_TEXT_PROMPT_DIRECTORY.
 
     Loads configurations from JSON files, where each config specifies:
     - name: Name of the prompt
@@ -19,9 +19,9 @@ def get_prompt_list() -> List[PromptConfig]:
     Returns:
         List[PromptConfig]: A list of prompt configurations.
     """
-    prompt_dir = os.environ.get("USER_PROMPT_DIRECTORY")
+    prompt_dir = os.environ.get("ELECTRIC_TEXT_PROMPT_DIRECTORY")
     if not prompt_dir:
-        raise ValueError("USER_PROMPT_DIRECTORY environment variable is not set")
+        raise ValueError("ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set")
 
     prompt_configs = []
     json_files = glob.glob(os.path.join(prompt_dir, "*.json"))

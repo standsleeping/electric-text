@@ -13,8 +13,8 @@ def resolve_api_key(
 
     The function will:
     1. First check if an explicit API key was provided
-    2. If not, look for an environment variable in the format [PROVIDER_NAME]_API_KEY
-       (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY)
+    2. If not, look for an environment variable in the format ELECTRIC_TEXT_[PROVIDER_NAME]_API_KEY
+       (e.g., ELECTRIC_TEXT_OPENAI_API_KEY, ELECTRIC_TEXT_ANTHROPIC_API_KEY)
 
     Args:
         provider_name: Name of the provider (e.g., "openai", "anthropic")
@@ -28,7 +28,7 @@ def resolve_api_key(
         return explicit_api_key
 
     # Then check environment variables
-    env_key = f"{provider_name.upper()}_API_KEY"
+    env_key = f"ELECTRIC_TEXT_{provider_name.upper()}_API_KEY"
     env_api_key = os.environ.get(env_key)
 
     if env_api_key:

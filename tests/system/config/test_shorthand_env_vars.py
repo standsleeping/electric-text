@@ -12,7 +12,7 @@ async def test_cli_with_env_var_shorthand(fake_http, capsys, monkeypatch):
 
     env_val = f"claude-3-7-sonnet-20250219++{custom_shorthand}"
 
-    monkeypatch.setenv("ANTHROPIC_MODEL_SHORTHAND_ABC", env_val)
+    monkeypatch.setenv("ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_ABC", env_val)
 
     fake_http.post("https://api.anthropic.com/v1/messages").mock(
         return_value=Response(

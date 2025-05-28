@@ -76,41 +76,72 @@ You can also specify a different configuration file:
 python -m electric_text config --config path/to/config.yaml
 ```
 
-## Environment
+## Environment Variables
 
-Behavior can also be controlled by environment variables. Currently, the only config that may ONLY be set in environment variables are provider API keys. See below for examples on how these are used.
+Electric Text uses environment variables with the `ELECTRIC_TEXT_` prefix for configuration.
+
+### Configuration Variables
 
 ```bash
-# Specify the path to your configuration file.
-export ELECTRIC_TEXT_CONFIG=path/to/your/config.yaml
+# Configuration file path
+export ELECTRIC_TEXT_CONFIG=/path/to/your/config.yaml
 
-# Specify a provider API key.
-# General pattern: [PROVIDER]_API_KEY=your_api_key
-export ANTHROPIC_API_KEY=your_api_key
-
-# Specify shorthands for a provider name.
-# General pattern: [PROVIDER]_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
-export OLLAMA_PROVIDER_NAME_SHORTHAND=lma
-
-# Specify shorthands for a model name.
-# General pattern: [PROVIDER]_MODEL_SHORTHAND_*=canonical_model++shorthand
-export OLLAMA_MODEL_SHORTHAND_SMALL=llama3.1:8b++31
-
-# Specify the path to your prompt configs.
-export USER_PROMPT_DIRECTORY=path/to/your/prompt_configs
-
-# Specify the path to your tool configurations.
-export USER_TOOL_CONFIGS_DIRECTORY=path/to/your/tool_configs
+# Logging level
+export ELECTRIC_TEXT_LOG_LEVEL=INFO
 ```
+
+### API Keys
+
+```bash
+# Provider API keys
+export ELECTRIC_TEXT_ANTHROPIC_API_KEY=your_anthropic_key
+export ELECTRIC_TEXT_OPENAI_API_KEY=your_openai_key
+export ELECTRIC_TEXT_OLLAMA_API_KEY=your_ollama_key
+```
+
+### Directory Paths
+
+```bash
+# Directory containing your custom prompt configurations
+export ELECTRIC_TEXT_PROMPT_DIRECTORY=/path/to/your/prompt_configs
+
+# Directory containing your custom tool configurations  
+export ELECTRIC_TEXT_TOOLS_DIRECTORY=/path/to/your/tool_configs
+```
+
+### HTTP Logging
+
+```bash
+# Enable HTTP request/response logging for debugging
+export ELECTRIC_TEXT_HTTP_LOGGING=true
+
+# Directory for HTTP log files (defaults to ./http_logs)
+export ELECTRIC_TEXT_HTTP_LOG_DIR=/path/to/http/logs
+```
+
+### Model Shorthands
+
+```bash
+# Provider name shorthands
+# Pattern: ELECTRIC_TEXT_{PROVIDER}_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
+export ELECTRIC_TEXT_OLLAMA_PROVIDER_NAME_SHORTHAND=ollama++lma
+
+# Model shorthands  
+# Pattern: ELECTRIC_TEXT_{PROVIDER}_MODEL_SHORTHAND_{NAME}=canonical_model++shorthand
+export ELECTRIC_TEXT_OLLAMA_MODEL_SHORTHAND_SMALL=llama3.1:8b++31
+export ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_SONNET=claude-3-7-sonnet-20250219++claude3
+export ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_GPT4=gpt-4o++gpt4
+```
+
 
 ## Reusable Prompts
 
-Configure reusable prompts with structured responses by creating a JSON file in the `USER_PROMPT_DIRECTORY` directory.
+Configure reusable prompts with structured responses by creating a JSON file in the `ELECTRIC_TEXT_PROMPT_DIRECTORY` directory.
 
-**Note:** Before using these prompt examples, you need to set the `USER_PROMPT_DIRECTORY` environment variable to point to the directory containing your prompt configurations.
+**Note:** Before using these prompt examples, you need to set the `ELECTRIC_TEXT_PROMPT_DIRECTORY` environment variable to point to the directory containing your prompt configurations.
 
 ```bash
-export USER_PROMPT_DIRECTORY="/path/to/electric-text/examples/prompt_configs"
+export ELECTRIC_TEXT_PROMPT_DIRECTORY="/path/to/electric-text/examples/prompt_configs"
 ```
 
 ### Examples
@@ -144,10 +175,10 @@ Electric Text supports tool boxes, which are collections of tools that can be us
 
 Tool boxes are defined in JSON files in the tool configs directory. Each tool box is a collection of tools that can be used together.
 
-**Note:** Before using tool boxes, set the `USER_TOOL_CONFIGS_DIRECTORY` environment variable to point to your tool configs directory. If not set, the system will use the default `examples/tool_configs` directory.
+**Note:** Before using tool boxes, set the `ELECTRIC_TEXT_TOOLS_DIRECTORY` environment variable to point to your tool configs directory. If not set, the system will use the default `examples/tool_configs` directory.
 
 ```bash
-export USER_TOOL_CONFIGS_DIRECTORY="/path/to/electric-text/examples/tool_configs"
+export ELECTRIC_TEXT_TOOLS_DIRECTORY="/path/to/electric-text/examples/tool_configs"
 ```
 
 The directory should contain:
@@ -239,25 +270,25 @@ You can also define custom shorthands by setting environment variables:
 
 1. **Provider Shorthands**: Maps a shorthand to a provider name
    ```
-   export PROVIDER_PROVIDER_NAME_SHORTHAND="canonical_provider++shorthand"
+   export ELECTRIC_TEXT_{PROVIDER}_PROVIDER_NAME_SHORTHAND="canonical_provider++shorthand"
    ```
 
 2. **Model Shorthands**: Maps a shorthand to a specific provider and model
    ```
-   export PROVIDER_MODEL_SHORTHAND_NAME="canonical_model++shorthand"
+   export ELECTRIC_TEXT_{PROVIDER}_MODEL_SHORTHAND_{NAME}="canonical_model++shorthand"
    ```
 
 #### Examples
 
 ```bash
 # Define "antro" as a shorthand for "anthropic" provider
-export ANTHROPIC_PROVIDER_NAME_SHORTHAND="anthropic++antro"
+export ELECTRIC_TEXT_ANTHROPIC_PROVIDER_NAME_SHORTHAND="anthropic++antro"
 
 # Define "claude3" as a shorthand for Claude 3 Sonnet
-export ANTHROPIC_MODEL_SHORTHAND_SONNET="claude-3-7-sonnet-20250219++claude3"
+export ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_SONNET="claude-3-7-sonnet-20250219++claude3"
 
 # Define "gpt4" as a shorthand for GPT-4o
-export OPENAI_MODEL_SHORTHAND_GPT4="gpt-4o++gpt4"
+export ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_GPT4="gpt-4o++gpt4"
 ```
 
 After setting these environment variables, you can use the shorthands in your commands:

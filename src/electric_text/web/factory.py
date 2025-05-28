@@ -9,7 +9,7 @@ from electric_text.web.routes import routes
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"),
+        level=os.getenv("ELECTRIC_TEXT_LOG_LEVEL", "INFO"),
         format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
         handlers=[logging.StreamHandler()],
     )

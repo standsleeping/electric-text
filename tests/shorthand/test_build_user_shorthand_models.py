@@ -12,8 +12,8 @@ def test_empty_env(clean_env):
 
 def test_provider_shorthand(clean_env):
     """Test with provider shorthand environment variables."""
-    os.environ["OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai++oai"
-    os.environ["ANTHROPIC_PROVIDER_NAME_SHORTHAND"] = "anthropic++ant"
+    os.environ["ELECTRIC_TEXT_OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai++oai"
+    os.environ["ELECTRIC_TEXT_ANTHROPIC_PROVIDER_NAME_SHORTHAND"] = "anthropic++ant"
 
     result = build_user_shorthand_models()
 
@@ -26,9 +26,9 @@ def test_provider_shorthand(clean_env):
 
 def test_model_shorthand(clean_env):
     """Test with model shorthand environment variables."""
-    os.environ["OPENAI_MODEL_SHORTHAND_FOUR"] = "gpt-4++g4"
-    os.environ["OPENAI_MODEL_SHORTHAND_FOUR_MINI"] = "gpt-4-mini++g4mini"
-    os.environ["ANTHROPIC_MODEL_SHORTHAND_CLAUDE"] = "claude-3-opus++c3"
+    os.environ["ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_FOUR"] = "gpt-4++g4"
+    os.environ["ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_FOUR_MINI"] = "gpt-4-mini++g4mini"
+    os.environ["ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_CLAUDE"] = "claude-3-opus++c3"
 
     result = build_user_shorthand_models()
 
@@ -45,10 +45,10 @@ def test_model_shorthand(clean_env):
 def test_precedence(clean_env):
     """Test that model shorthands take precedence over provider shorthands."""
     # Provider shorthand
-    os.environ["OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai++oai"
+    os.environ["ELECTRIC_TEXT_OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai++oai"
 
     # Model shorthand with same shorthand name
-    os.environ["ANTHROPIC_MODEL_SHORTHAND_TEST"] = "claude-3++oai"
+    os.environ["ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_TEST"] = "claude-3++oai"
 
     result = build_user_shorthand_models()
 
@@ -60,11 +60,11 @@ def test_precedence(clean_env):
 def test_malformed_entries(clean_env):
     """Test handling of malformed environment variables."""
     # Missing semicolon
-    os.environ["OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai-no-semicolon"
-    os.environ["ANTHROPIC_MODEL_SHORTHAND_TEST"] = "claude-no-semicolon"
+    os.environ["ELECTRIC_TEXT_OPENAI_PROVIDER_NAME_SHORTHAND"] = "openai-no-semicolon"
+    os.environ["ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_TEST"] = "claude-no-semicolon"
 
     # Valid entries
-    os.environ["OPENAI_MODEL_SHORTHAND_VALID"] = "gpt-4++g4"
+    os.environ["ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_VALID"] = "gpt-4++g4"
 
     result = build_user_shorthand_models()
 

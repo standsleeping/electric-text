@@ -6,10 +6,10 @@ def build_user_shorthand_models() -> Dict[str, Tuple[str, str]]:
     """Build a lookup dictionary for user-defined model and provider shorthands.
 
     Scans environment variables for:
-    1. [PROVIDER]_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
+    1. ELECTRIC_TEXT_[PROVIDER]_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
        - Maps provider shorthand to canonical provider name
 
-    2. [PROVIDER]_MODEL_SHORTHAND_*=canonical_model++shorthand
+    2. ELECTRIC_TEXT_[PROVIDER]_MODEL_SHORTHAND_*=canonical_model++shorthand
        - Maps model shorthand to canonical model name for a specific provider
 
     Returns:
@@ -22,7 +22,7 @@ def build_user_shorthand_models() -> Dict[str, Tuple[str, str]]:
     # Scan environment variables
     for env_var, value in os.environ.items():
         # Look for provider name shorthands
-        if env_var.endswith("_PROVIDER_NAME_SHORTHAND"):
+        if env_var.startswith("ELECTRIC_TEXT_") and env_var.endswith("_PROVIDER_NAME_SHORTHAND"):
             try:
                 canonical_provider, shorthand = value.split("++", 1)
                 provider_shorthands[shorthand.strip()] = canonical_provider.strip()
@@ -31,8 +31,10 @@ def build_user_shorthand_models() -> Dict[str, Tuple[str, str]]:
                 continue
 
         # Look for model shorthands
-        elif "_MODEL_SHORTHAND_" in env_var:
-            parts = env_var.split("_MODEL_SHORTHAND_", 1)
+        elif env_var.startswith("ELECTRIC_TEXT_") and "_MODEL_SHORTHAND_" in env_var:
+            # Remove ELECTRIC_TEXT_ prefix and split
+            env_var_clean = env_var[14:]  # Remove "ELECTRIC_TEXT_"
+            parts = env_var_clean.split("_MODEL_SHORTHAND_", 1)
             if len(parts) != 2:
                 continue
 
