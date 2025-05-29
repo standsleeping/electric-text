@@ -34,6 +34,7 @@ from electric_text.providers.model_providers.openai.functions.create_payload imp
 from electric_text.providers.functions.is_http_logging_enabled import (
     is_http_logging_enabled,
 )
+from electric_text.providers.functions.get_http_log_dir import get_http_log_dir
 
 
 class ModelProviderError(Exception):
@@ -77,9 +78,7 @@ class OpenaiProvider(ModelProvider):
         # Initialize HTTP logger if enabled via environment variable
         self.http_logger: Optional[HttpLogger] = None
         if is_http_logging_enabled():
-            from pathlib import Path
-
-            log_dir = Path(os.getenv("ELECTRIC_TEXT_HTTP_LOG_DIR", "./http_logs"))
+            log_dir = get_http_log_dir()
             self.http_logger = HttpLogger(log_dir=log_dir, enabled=True)
 
     @asynccontextmanager
