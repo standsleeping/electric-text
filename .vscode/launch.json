@@ -11,8 +11,6 @@
       ],
       "env": {
         "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -35,8 +33,6 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -60,8 +56,6 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -84,8 +78,6 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -108,8 +100,6 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -133,8 +123,6 @@
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_PROVIDER_NAME_SHORTHAND": "oai",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -155,8 +143,6 @@
         "OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
         "ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       }
     },
     {
@@ -199,8 +185,6 @@
         "VIRTUAL_ENV": "${workspaceFolder}/.venv",
         "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
         "LOG_LEVEL": "DEBUG",
-        "ELECTRIC_TEXT_HTTP_LOGGING": "true",
-        "ELECTRIC_TEXT_HTTP_LOG_DIR": "${workspaceFolder}/http_logs"
       },
       "python": "${workspaceFolder}/.venv/bin/python"
     }

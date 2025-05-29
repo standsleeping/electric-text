@@ -4,6 +4,9 @@ from electric_text.configuration.data.config import Config
 from electric_text.configuration.functions.validate_logging_section import (
     validate_logging_section,
 )
+from electric_text.configuration.functions.validate_http_logging_section import (
+    validate_http_logging_section,
+)
 from electric_text.configuration.functions.validate_tool_boxes_section import (
     validate_tool_boxes_section,
 )
@@ -35,6 +38,11 @@ def validate_configuration(config: Config) -> List[str]:
     logging_config = config.logging
     if logging_config:
         issues.extend(validate_logging_section(logging_config))
+
+    # Validate HTTP logging configuration (if present)
+    http_logging_config = config.http_logging
+    if http_logging_config:
+        issues.extend(validate_http_logging_section(http_logging_config))
 
     # Validate tool box configuration (if present)
     tool_boxes = config.tool_boxes

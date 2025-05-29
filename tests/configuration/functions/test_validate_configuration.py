@@ -8,6 +8,7 @@ def test_validate_configuration_valid() -> None:
         provider_defaults={"default_model": "ollama:llama3.1:8b"},
         tool_boxes={"default": ["tool1", "tool2"]},
         logging={"level": "INFO"},
+        http_logging={"enabled": True, "log_dir": "./logs"},
         raw_config={},
     )
     
@@ -21,6 +22,7 @@ def test_validate_configuration_missing_required_section() -> None:
         provider_defaults={},  # Empty provider_defaults
         tool_boxes={"default": ["tool1", "tool2"]},
         logging={},
+        http_logging={},
         raw_config={},
     )
     
@@ -36,6 +38,7 @@ def test_validate_configuration_multiple_issues() -> None:
         provider_defaults={"some_setting": "value"},  # Missing default_model
         tool_boxes={"default": "not_a_list"},  # Not a list
         logging={"level": "INVALID"},  # Invalid log level
+        http_logging={},
         raw_config={},
     )
     

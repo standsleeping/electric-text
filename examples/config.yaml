@@ -11,4 +11,9 @@ provider_defaults:
 
 # Logging configuration
 logging:
-  level: "ERROR" 
+  level: "ERROR"
+
+# HTTP logging configuration
+http_logging:
+  enabled: true
+  log_dir: "./http_logs"
