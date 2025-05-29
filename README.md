@@ -386,6 +386,49 @@ Each HTTP interaction is saved as a JSON file with the following structure:
 }
 ```
 
+## Python Interface
+
+You can import and use the `generate` function directly:
+
+```python
+
+from electric_text import generate
+
+result = await generate(
+    text_input="Some prompt input",
+    provider_name="ollama",
+    model_name="llama3.1:8b"
+)
+
+# Access the result
+print(result.text.content)
+
+# Or check the response type
+if result.response_type.value == "TEXT":
+    print("Got text response:", result.text.content)
+elif result.response_type.value == "DATA":
+    print("Got structured data:", result.data.data)
+elif result.response_type.value == "TOOL_CALL":
+    print("Got tool call:", result.tool_call.name)
+```
+
+### Parameters
+
+All the same parameters from the CLI are available as function arguments:
+
+```python
+result = await generate(
+    text_input="Analyze this data: temperature=72, humidity=45%",
+    provider_name="anthropic",
+    model_name="claude-3-7-sonnet-20250219",
+    api_key="your-api-key-here",  # Optional, can use env vars
+    max_tokens=1000,
+    prompt_name="prose_to_schema",  # Use custom prompts
+    tool_boxes="meteorology,analysis",  # Use tool boxes
+    log_level="DEBUG"
+)
+```
+
 ## Note for AI Coding Assistants
 
 Are you an AI coding assistant?

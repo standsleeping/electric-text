@@ -4,6 +4,8 @@ import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import respx
+from httpx import Response
+from textwrap import dedent
 
 
 @pytest.fixture(autouse=True)
@@ -29,6 +31,80 @@ def clean_env():
     # Restore original environment
     os.environ.clear()
     os.environ.update(env_backup)
+
+
+@pytest.fixture
+def basic_ollama_response():
+    """Fixture providing a basic Ollama API response for testing."""
+
+    def _create_response(content: str = "Hello, world!", done: bool = True):
+        return Response(
+            200,
+            json={
+                "model": "llama3.1:8b",
+                "created_at": "2024-01-01T12:00:00Z",
+                "message": {"role": "assistant", "content": content},
+                "done": done,
+            },
+        )
+
+    return _create_response
+
+
+@pytest.fixture
+def streaming_ollama_response():
+    """Fixture providing a streaming Ollama API response for testing."""
+
+    def _create_streaming_response(chunks: list[str] | None = None):
+        if chunks is None:
+            chunks = ["Hello", ", streaming", " world!"]
+
+        lines = []
+        for i, chunk in enumerate(chunks):
+            is_done = i == len(chunks) - 1
+            line = {
+                "model": "llama3.1:8b",
+                "created_at": f"2024-01-01T12:00:0{i}Z",
+                "message": {"role": "assistant", "content": chunk},
+                "done": is_done,
+            }
+            lines.append(json.dumps(line))
+
+        return Response(
+            200,
+            content=dedent("""
+                {}
+            """)
+            .format("\n".join(lines))
+            .strip(),
+            headers={"content-type": "application/x-ndjson"},
+        )
+
+    return _create_streaming_response
+
+
+@pytest.fixture
+def mock_basic_response(fake_http, basic_ollama_response):
+    """Fixture that sets up HTTP mocking for basic Ollama responses."""
+
+    def _mock_response(content: str = "Hello, world!", done: bool = True):
+        fake_http.post("http://localhost:11434/api/chat").mock(
+            return_value=basic_ollama_response(content, done)
+        )
+
+    return _mock_response
+
+
+@pytest.fixture
+def mock_streaming_response(fake_http, streaming_ollama_response):
+    """Fixture that sets up HTTP mocking for streaming Ollama responses."""
+
+    def _mock_streaming(chunks: list[str] | None = None):
+        fake_http.post("http://localhost:11434/api/chat").mock(
+            return_value=streaming_ollama_response(chunks)
+        )
+
+    return _mock_streaming
 
 
 @pytest.fixture
@@ -190,13 +266,19 @@ def temp_tool_configs_dir():
 def sample_http_log_entry():
     """Sample HttpLogEntry for testing."""
     from electric_text.providers.logging.data.http_log_entry import HttpLogEntry
-    
+
     return HttpLogEntry(
         timestamp="2024-01-01T12:00:00Z",
         url="https://api.example.com/chat",
         method="POST",
-        request_headers={"Content-Type": "application/json", "Authorization": "Bearer token"},
-        request_body={"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]},
+        request_headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token",
+        },
+        request_body={
+            "model": "gpt-4",
+            "messages": [{"role": "user", "content": "Hello"}],
+        },
         response_status=200,
         response_headers={"Content-Type": "application/json"},
         response_body={"choices": [{"message": {"content": "Hi there!"}}]},
@@ -211,7 +293,7 @@ def sample_http_log_entry():
 def minimal_http_log_entry():
     """Minimal HttpLogEntry with None values for testing."""
     from electric_text.providers.logging.data.http_log_entry import HttpLogEntry
-    
+
     return HttpLogEntry(
         timestamp="2024-01-01T12:00:00Z",
         url="https://api.example.com/chat",
