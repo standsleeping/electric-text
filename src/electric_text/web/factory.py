@@ -1,15 +1,15 @@
-import os
 import logging
 from pathlib import Path
 from starlette.applications import Starlette
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 from electric_text.web.routes import routes
+from electric_text.web.functions.get_log_level import get_log_level
 
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=os.getenv("ELECTRIC_TEXT_LOG_LEVEL", "INFO"),
+        level=get_log_level(),
         format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
         handlers=[logging.StreamHandler()],
     )
