@@ -24,6 +24,9 @@ from electric_text.providers.model_providers.anthropic.functions.process_complet
 from electric_text.providers.model_providers.anthropic.functions.create_payload import (
     create_payload,
 )
+from electric_text.providers.functions.is_http_logging_enabled import (
+    is_http_logging_enabled,
+)
 
 
 class ModelProviderError(Exception):
@@ -76,7 +79,7 @@ class AnthropicProvider(ModelProvider):
 
         # Initialize HTTP logger if enabled via environment variable
         self.http_logger: Optional[HttpLogger] = None
-        if os.getenv("ELECTRIC_TEXT_HTTP_LOGGING", "false").lower() == "true":
+        if is_http_logging_enabled():
             from pathlib import Path
 
             log_dir = Path(os.getenv("ELECTRIC_TEXT_HTTP_LOG_DIR", "./http_logs"))
