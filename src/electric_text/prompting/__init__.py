@@ -4,7 +4,6 @@ from electric_text.prompting.functions import (
     get_prompt_by_name,
     execute_prompt,
     get_prompt_config_and_model,
-    process_text,
     generate,
     split_model_string,
 )
@@ -15,7 +14,6 @@ __all__ = [
     "get_prompt_by_name",
     "execute_prompt",
     "get_prompt_config_and_model",
-    "process_text",
     "generate",
     "split_model_string",
 ]

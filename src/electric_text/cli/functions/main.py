@@ -1,11 +1,15 @@
+import json
 import logging
 import traceback
-from typing import List, Optional
+from typing import AsyncGenerator, List, Optional
 
-from electric_text.prompting import process_text
+from electric_text.prompting import generate
 from electric_text.logging import configure_logging, get_logger
 from electric_text.cli.functions.parse_args import parse_args
 from electric_text.prompting.data.system_input import SystemInput
+from electric_text.prompting.functions.output_conversion.system_output_to_dict import (
+    system_output_to_dict,
+)
 
 
 async def main(args: Optional[List[str]] = None) -> int:
@@ -26,7 +30,26 @@ async def main(args: Optional[List[str]] = None) -> int:
     try:
         logger.debug(f"Processing with system input: {system_input}")
 
-        await process_text(system_input)
+        result = await generate(
+            text_input=system_input.text_input,
+            provider_name=system_input.provider_name,
+            model_name=system_input.model_name,
+            log_level=system_input.log_level,
+            api_key=system_input.api_key,
+            max_tokens=system_input.max_tokens,
+            prompt_name=system_input.prompt_name,
+            stream=system_input.stream,
+            tool_boxes=system_input.tool_boxes,
+        )
+
+        # Handle both streaming and non-streaming results
+        if isinstance(result, AsyncGenerator):
+            async for output in result:
+                output_dict = system_output_to_dict(output)
+                print(json.dumps(output_dict))
+        else:
+            output_dict = system_output_to_dict(result)
+            print(json.dumps(output_dict))
 
         return 0
     except Exception as e:
