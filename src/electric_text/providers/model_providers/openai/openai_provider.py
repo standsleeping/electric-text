@@ -1,6 +1,5 @@
 import json
 import httpx
-import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
 import logging
@@ -22,19 +21,12 @@ from electric_text.providers.data.stream_history import (
 from electric_text.providers.model_providers.openai.functions.process_stream_response import (
     process_stream_response,
 )
-from electric_text.providers.model_providers.openai.functions.set_text_format import (
-    set_text_format,
-)
 from electric_text.providers.model_providers.openai.functions.process_completion_response import (
     process_completion_response,
 )
 from electric_text.providers.model_providers.openai.functions.create_payload import (
     create_payload,
 )
-from electric_text.providers.functions.is_http_logging_enabled import (
-    is_http_logging_enabled,
-)
-from electric_text.providers.functions.get_http_log_dir import get_http_log_dir
 
 
 class ModelProviderError(Exception):
@@ -50,6 +42,8 @@ class OpenaiProvider(ModelProvider):
         base_url: str = "https://api.openai.com/v1/responses",
         default_model: str = "gpt-4o-mini",
         timeout: float = 30.0,
+        http_logging_enabled: bool = False,
+        http_log_dir: str = "./http_logs",
         **kwargs: Any,
     ):
         """
@@ -75,11 +69,11 @@ class OpenaiProvider(ModelProvider):
             **kwargs,
         }
 
-        # Initialize HTTP logger if enabled via environment variable
+        # Initialize HTTP logger if enabled
         self.http_logger: Optional[HttpLogger] = None
-        if is_http_logging_enabled():
-            log_dir = get_http_log_dir()
-            self.http_logger = HttpLogger(log_dir=log_dir, enabled=True)
+        if http_logging_enabled:
+            from pathlib import Path
+            self.http_logger = HttpLogger(log_dir=Path(http_log_dir), enabled=True)
 
     @asynccontextmanager
     async def get_client(

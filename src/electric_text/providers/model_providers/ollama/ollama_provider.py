@@ -1,5 +1,4 @@
 import httpx
-import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
 from electric_text.providers import ModelProvider
@@ -25,10 +24,6 @@ from electric_text.providers.model_providers.ollama.functions.process_stream_res
 from electric_text.providers.model_providers.ollama.functions.create_payload import (
     create_payload,
 )
-from electric_text.providers.functions.is_http_logging_enabled import (
-    is_http_logging_enabled,
-)
-from electric_text.providers.functions.get_http_log_dir import get_http_log_dir
 
 
 class ModelProviderError(Exception):
@@ -49,6 +44,8 @@ class OllamaProvider(ModelProvider):
         base_url: str = "http://localhost:11434/api/chat",
         default_model: str = "llama3.1:8b",
         timeout: float = 30.0,
+        http_logging_enabled: bool = False,
+        http_log_dir: str = "./http_logs",
         **kwargs: Any,
     ):
         """
@@ -70,11 +67,12 @@ class OllamaProvider(ModelProvider):
             **kwargs,
         }
 
-        # Initialize HTTP logger if enabled via environment variable
+        # Initialize HTTP logger if enabled
         self.http_logger: Optional[HttpLogger] = None
-        if is_http_logging_enabled():
-            log_dir = get_http_log_dir()
-            self.http_logger = HttpLogger(log_dir=log_dir, enabled=True)
+        if http_logging_enabled:
+            from pathlib import Path
+
+            self.http_logger = HttpLogger(log_dir=Path(http_log_dir), enabled=True)
 
     @asynccontextmanager
     async def get_client(

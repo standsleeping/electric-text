@@ -1,8 +1,7 @@
 import pytest
 from tempfile import TemporaryDirectory
-from pathlib import Path
 
-from electric_text.providers.functions.get_http_log_dir import get_http_log_dir
+from electric_text.prompting.functions.get_http_log_dir import get_http_log_dir
 
 
 @pytest.mark.asyncio
@@ -18,4 +17,4 @@ async def test_electric_text_http_log_dir_env_var(monkeypatch):
         result = get_http_log_dir()
 
         # Verify correct directory returned
-        assert result == Path(temp_dir)
+        assert result == temp_dir

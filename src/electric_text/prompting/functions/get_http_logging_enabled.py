@@ -3,17 +3,8 @@ import os
 from electric_text.configuration.functions.get_cached_config import get_cached_config
 
 
-def is_http_logging_enabled() -> bool:
-    """Check if HTTP logging is enabled via config or environment variable.
-
-    Priority order:
-    1. ELECTRIC_TEXT_HTTP_LOGGING environment variable
-    2. http_logging.enabled in config file
-    3. Default: False
-
-    Returns:
-        bool: True if HTTP logging is enabled, False otherwise
-    """
+def get_http_logging_enabled() -> bool:
+    """Check if HTTP logging is enabled via config or environment variable."""
     # Environment variable takes precedence
     env_value = os.getenv("ELECTRIC_TEXT_HTTP_LOGGING")
     if env_value is not None:

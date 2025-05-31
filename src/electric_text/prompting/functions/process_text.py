@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from electric_text.logging import get_logger
@@ -6,6 +7,8 @@ from electric_text.clients import Client
 from electric_text.tools import load_tools_from_tool_boxes
 from electric_text.prompting.functions.execute_prompt import execute_prompt
 from electric_text.prompting.data.system_input import SystemInput
+from electric_text.prompting.functions.get_http_logging_enabled import get_http_logging_enabled
+from electric_text.prompting.functions.get_http_log_dir import get_http_log_dir
 
 logger = get_logger(__name__)
 
@@ -29,9 +32,15 @@ async def process_text(system_input: SystemInput) -> None:
     if resolved_api_key:
         config["api_key"] = resolved_api_key
 
+    # Resolve HTTP logging configuration
+    http_logging_enabled = get_http_logging_enabled()
+    http_log_dir = get_http_log_dir()
+    
     client = Client(
         provider_name=system_input.provider_name,
         config=config,
+        http_logging_enabled=http_logging_enabled,
+        http_log_dir=http_log_dir,
     )
 
     # Parse tool_boxes string into a list if provided

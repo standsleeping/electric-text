@@ -19,12 +19,25 @@ class Client:
     provider: ModelProvider
     provider_name: str
 
-    def __init__(self, provider_name: str, config: dict[str, str] = {}) -> None:
+    def __init__(
+        self,
+        provider_name: str,
+        config: dict[str, str] = {},
+        http_logging_enabled: bool = False,
+        http_log_dir: str = "./http_logs",
+    ) -> None:
         self.provider_name = provider_name
         provider_module = f"electric_text.providers.model_providers.{provider_name}"
         module = importlib.import_module(provider_module)
         provider_class = getattr(module, f"{provider_name.title()}Provider")
-        self.provider = provider_class(**config)
+
+        # Pass HTTP logging config to provider
+        provider_config = {
+            **config,
+            "http_logging_enabled": http_logging_enabled,
+            "http_log_dir": http_log_dir,
+        }
+        self.provider = provider_class(**provider_config)
 
     async def stream_raw[OutputSchema: BaseModel](
         self, request: ClientRequest[OutputSchema]

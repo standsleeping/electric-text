@@ -24,10 +24,6 @@ from electric_text.providers.model_providers.anthropic.functions.process_complet
 from electric_text.providers.model_providers.anthropic.functions.create_payload import (
     create_payload,
 )
-from electric_text.providers.functions.is_http_logging_enabled import (
-    is_http_logging_enabled,
-)
-from electric_text.providers.functions.get_http_log_dir import get_http_log_dir
 
 
 class ModelProviderError(Exception):
@@ -50,6 +46,8 @@ class AnthropicProvider(ModelProvider):
         default_model: str = "claude-3-sonnet-20240229",
         api_version: str = "2023-06-01",
         timeout: float = 30.0,
+        http_logging_enabled: bool = False,
+        http_log_dir: str = "./http_logs",
         **kwargs: Any,
     ):
         """
@@ -78,11 +76,11 @@ class AnthropicProvider(ModelProvider):
             **kwargs,
         }
 
-        # Initialize HTTP logger if enabled via environment variable
+        # Initialize HTTP logger if enabled
         self.http_logger: Optional[HttpLogger] = None
-        if is_http_logging_enabled():
-            log_dir = get_http_log_dir()
-            self.http_logger = HttpLogger(log_dir=log_dir, enabled=True)
+        if http_logging_enabled:
+            from pathlib import Path
+            self.http_logger = HttpLogger(log_dir=Path(http_log_dir), enabled=True)
 
     def prefill_content(self) -> str:
         """

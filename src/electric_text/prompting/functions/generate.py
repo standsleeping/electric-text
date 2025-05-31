@@ -9,6 +9,8 @@ from electric_text.prompting.data.system_output import SystemOutput
 from electric_text.prompting.functions.execute_prompt_with_return import (
     execute_prompt_with_return,
 )
+from electric_text.prompting.functions.get_http_logging_enabled import get_http_logging_enabled
+from electric_text.prompting.functions.get_http_log_dir import get_http_log_dir
 
 logger = get_logger(__name__)
 
@@ -98,9 +100,15 @@ async def generate(
     if resolved_api_key:
         config["api_key"] = resolved_api_key
 
+    # Resolve HTTP logging configuration
+    http_logging_enabled = get_http_logging_enabled()
+    http_log_dir = get_http_log_dir()
+    
     client = Client(
         provider_name=system_input.provider_name,
         config=config,
+        http_logging_enabled=http_logging_enabled,
+        http_log_dir=http_log_dir,
     )
 
     # Parse tool_boxes string into a list if provided

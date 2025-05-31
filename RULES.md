@@ -67,6 +67,7 @@ The following dependencies are allowed:
 - `tools`
 - `formatting` (for output formatting functions)
 - `clients` (in: `ClientRequest`, out: `ClientResponse`)
+- `configuration`
 
 #### `clients` depends on:
 - `providers` (in: `ProviderRequest`, out: `StreamHistory`)
