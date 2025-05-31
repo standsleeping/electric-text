@@ -22,7 +22,6 @@ dev = [
     "respx>=0.22.0",
     "ruff>=0.11.0",
     "ty>=0.0.1a1",
-    "types-pyyaml>=6.0.12.20250402",
 ]
 
 [tool.mypy]
@@ -60,6 +59,10 @@ enable_error_code = [
 [[tool.mypy.overrides]]
 module = "tests.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

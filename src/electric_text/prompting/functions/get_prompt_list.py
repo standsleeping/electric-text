@@ -53,7 +53,18 @@ def get_prompt_list() -> List[PromptConfig]:
             if "name" not in config_data:
                 config_data["name"] = Path(json_file).stem
 
-            prompt_config = PromptConfig(**config_data)
+            # Validate required fields are present
+            required_fields = ["name", "description", "system_message_path"]
+            missing_fields = [field for field in required_fields if field not in config_data]
+            if missing_fields:
+                raise ValueError(f"Missing required fields {missing_fields} in {json_file}")
+
+            prompt_config = PromptConfig(
+                name=config_data["name"],
+                description=config_data["description"],
+                system_message_path=config_data["system_message_path"],
+                model_path=config_data.get("model_path")
+            )
             prompt_configs.append(prompt_config)
 
         except Exception as e:

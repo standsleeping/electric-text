@@ -55,7 +55,7 @@ def client_response_to_system_output[OutputSchema: BaseModel](
         return SystemOutput(
             response_type=SystemOutputType.DATA,
             data=DataOutput(
-                data=response.parsed_content,
+                data=response.parsed_content or {},
                 is_valid=False,
                 validation_error=validation_error_msg,
             ),

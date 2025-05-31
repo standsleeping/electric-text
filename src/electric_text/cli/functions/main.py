@@ -1,7 +1,7 @@
 import json
 import logging
 import traceback
-from typing import AsyncGenerator, List, Optional
+from typing import List, Optional
 
 from electric_text.prompting import generate
 from electric_text.logging import configure_logging, get_logger
@@ -30,24 +30,36 @@ async def main(args: Optional[List[str]] = None) -> int:
     try:
         logger.debug(f"Processing with system input: {system_input}")
 
-        result = await generate(
-            text_input=system_input.text_input,
-            provider_name=system_input.provider_name,
-            model_name=system_input.model_name,
-            log_level=system_input.log_level,
-            api_key=system_input.api_key,
-            max_tokens=system_input.max_tokens,
-            prompt_name=system_input.prompt_name,
-            stream=system_input.stream,
-            tool_boxes=system_input.tool_boxes,
-        )
+        if system_input.stream:
+            stream_result = await generate(
+                text_input=system_input.text_input,
+                provider_name=system_input.provider_name,
+                model_name=system_input.model_name,
+                log_level=system_input.log_level,
+                api_key=system_input.api_key,
+                max_tokens=system_input.max_tokens,
+                prompt_name=system_input.prompt_name,
+                stream=True,
+                tool_boxes=system_input.tool_boxes,
+            )
 
-        # Handle both streaming and non-streaming results
-        if isinstance(result, AsyncGenerator):
-            async for output in result:
+            async for output in stream_result:
                 output_dict = system_output_to_dict(output)
                 print(json.dumps(output_dict))
+
         else:
+            result = await generate(
+                text_input=system_input.text_input,
+                provider_name=system_input.provider_name,
+                model_name=system_input.model_name,
+                log_level=system_input.log_level,
+                api_key=system_input.api_key,
+                max_tokens=system_input.max_tokens,
+                prompt_name=system_input.prompt_name,
+                stream=False,
+                tool_boxes=system_input.tool_boxes,
+            )
+
             output_dict = system_output_to_dict(result)
             print(json.dumps(output_dict))
 

@@ -14,13 +14,12 @@ def convert_to_provider_request(client_request: ClientRequest[Any]) -> ProviderR
         The provider request
     """
     system_messages: Optional[List[str]] = None
-    if client_request.prompt.system_message is not None:
-        system_messages = [fragment.text for fragment in client_request.prompt.system_message]
+    if client_request.prompt.system_message:
+        system_messages = [
+            fragment.text for fragment in client_request.prompt.system_message
+        ]
 
-    has_custom_schema = (
-        client_request.output_schema is not None and 
-        client_request.output_schema is not DefaultOutputSchema
-    )
+    has_custom_schema = client_request.output_schema is not DefaultOutputSchema
 
     return ProviderRequest(
         provider_name=client_request.provider_name,

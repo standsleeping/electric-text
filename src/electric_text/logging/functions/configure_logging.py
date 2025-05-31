@@ -26,7 +26,7 @@ def configure_logging(level: Optional[int] = None) -> None:
     root_logger.setLevel(level)
 
     # Create handler to stderr (standard practice)
-    handler = logging.StreamHandler(sys.stderr)
+    handler = logging.StreamHandler()
 
     # Set up formatter
     formatter = logging.Formatter("%(asctime)s [%(name)s] [%(levelname)s] %(message)s")

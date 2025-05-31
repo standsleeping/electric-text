@@ -76,7 +76,6 @@ dev = [
     { name = "respx" },
     { name = "ruff" },
     { name = "ty" },
-    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -98,7 +97,6 @@ dev = [
     { name = "respx", specifier = ">=0.22.0" },
     { name = "ruff", specifier = ">=0.11.0" },
     { name = "ty", specifier = ">=0.0.1a1" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20250402" },
 ]
 
 [[package]]
@@ -396,15 +394,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/26/47/82b287bb9e3c567b997f5473d5d46423cd91c5b4b4374c1377caa530873d/ty-0.0.1a1-py3-none-win32.whl", hash = "sha256:5c606cb19611cb1ff431bc9fb0e8cf922af65a98c2117c66b74ba1ff26cb099b", size = 5885739 },
     { url = "https://files.pythonhosted.org/packages/b0/b3/8fb8c2eec2ddb56750e39c57fdbf2ce4cb107bf9c7402a3005a5011e2605/ty-0.0.1a1-py3-none-win_amd64.whl", hash = "sha256:89a53b0e1cccb38ef7a3d6415e5ad74e54b081e4fa71cd83fa0a5739adae524b", size = 6363056 },
     { url = "https://files.pythonhosted.org/packages/87/6b/5316705dfe92cd709e7739d65a50b7674a41d838f37571676d7cc10897d3/ty-0.0.1a1-py3-none-win_arm64.whl", hash = "sha256:4d76d626f471693f5ca607c5095616e4dd17943215c977f7436e6c051c3cb21d", size = 6022515 },
-]
-
-[[package]]
-name = "types-pyyaml"
-version = "6.0.12.20250402"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2d/68/609eed7402f87c9874af39d35942744e39646d1ea9011765ec87b01b2a3c/types_pyyaml-6.0.12.20250402.tar.gz", hash = "sha256:d7c13c3e6d335b6af4b0122a01ff1d270aba84ab96d1a1a1063ecba3e13ec075", size = 17282 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/56/1fe61db05685fbb512c07ea9323f06ea727125951f1eb4dff110b3311da3/types_pyyaml-6.0.12.20250402-py3-none-any.whl", hash = "sha256:652348fa9e7a203d4b0d21066dfb00760d3cbd5a15ebb7cf8d33c88a49546681", size = 20329 },
 ]
 
 [[package]]
