@@ -14,6 +14,7 @@ class Config:
         tool_boxes: Available tool boxes configuration
         logging: Logging configuration (primarily level)
         http_logging: HTTP logging configuration (enabled and log_dir)
+        shorthands: Shorthand configuration for providers and models
         raw_config: The raw configuration dictionary
     """
 
@@ -21,6 +22,7 @@ class Config:
     tool_boxes: Dict[str, List[str]]
     logging: Dict[str, Any]
     http_logging: Dict[str, Any]
+    shorthands: Dict[str, Any]
     raw_config: Dict[str, Any]
 
     @classmethod
@@ -38,5 +40,6 @@ class Config:
             tool_boxes=config_dict.get("tool_boxes", {}),
             logging=config_dict.get("logging", {"level": "ERROR"}),
             http_logging=config_dict.get("http_logging", {"enabled": False, "log_dir": "./http_logs"}),
+            shorthands=config_dict.get("shorthands", {"provider_names": {}, "models": {}}),
             raw_config=config_dict,
         )

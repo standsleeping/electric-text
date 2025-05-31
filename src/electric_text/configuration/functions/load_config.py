@@ -36,10 +36,19 @@ def load_config(config_path: Optional[str] = None) -> Config:
 
     # Determine paths to check in order of priority
     if config_path:
-        paths = [Path(config_path)]
+        # Explicit path provided - must exist
+        path = Path(config_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Config file not found: {config_path}")
+        paths = [path]
     elif env_config_path:
-        paths = [Path(env_config_path)]
+        # Environment variable set - must exist
+        path = Path(env_config_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Config file not found (from ELECTRIC_TEXT_CONFIG): {env_config_path}")
+        paths = [path]
     else:
+        # No explicit path - try default locations
         paths = [Path(p).expanduser() for p in DEFAULT_LOCATIONS]
 
     # Find first existing config file

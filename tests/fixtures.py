@@ -6,6 +6,9 @@ from tempfile import TemporaryDirectory
 import respx
 from httpx import Response
 from textwrap import dedent
+from electric_text.configuration.functions.get_cached_config import (
+    get_cached_config,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -26,11 +29,17 @@ def clean_env():
         if key.startswith("ELECTRIC_TEXT_"):
             del os.environ[key]
 
+    # Clear config cache
+    get_cached_config.cache_clear()
+
     yield
 
     # Restore original environment
     os.environ.clear()
     os.environ.update(env_backup)
+
+    # Clear config cache again
+    get_cached_config.cache_clear()
 
 
 @pytest.fixture

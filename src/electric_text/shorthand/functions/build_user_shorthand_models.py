@@ -1,16 +1,28 @@
 import os
 from typing import Dict, Tuple
 
+from electric_text.configuration.functions.get_cached_config import get_cached_config
+
 
 def build_user_shorthand_models() -> Dict[str, Tuple[str, str]]:
     """Build a lookup dictionary for user-defined model and provider shorthands.
 
-    Scans environment variables for:
+    Scans environment variables first, then falls back to config file values:
+    
+    Environment variables:
     1. ELECTRIC_TEXT_[PROVIDER]_PROVIDER_NAME_SHORTHAND=canonical_name++shorthand
        - Maps provider shorthand to canonical provider name
 
     2. ELECTRIC_TEXT_[PROVIDER]_MODEL_SHORTHAND_*=canonical_model++shorthand
        - Maps model shorthand to canonical model name for a specific provider
+
+    Config file structure:
+    shorthands:
+      provider_names:
+        provider_name: "shorthand"
+      models:
+        provider_name:
+          model_name: "shorthand"
 
     Returns:
         Dict mapping shorthand strings to (provider, model) tuples
@@ -19,7 +31,26 @@ def build_user_shorthand_models() -> Dict[str, Tuple[str, str]]:
     provider_shorthands: Dict[str, str] = {}  # shorthand -> canonical provider
     model_lookup: Dict[str, Tuple[str, str]] = {}  # shorthand -> (provider, model)
 
-    # Scan environment variables
+    # First, load config file values (lower precedence)
+    config = get_cached_config()
+    shorthands_config = config.shorthands
+
+    # Load provider name shorthands from config
+    provider_names = shorthands_config.get("provider_names", {})
+    for provider, shorthand in provider_names.items():
+        if isinstance(shorthand, str) and shorthand.strip():
+            provider_shorthands[shorthand.strip()] = provider.strip()
+
+    # Load model shorthands from config
+    # Format: models.provider.model_name = "shorthand"
+    models_config = shorthands_config.get("models", {})
+    for provider, models in models_config.items():
+        if isinstance(models, dict):
+            for model_name, shorthand in models.items():
+                if isinstance(shorthand, str) and shorthand.strip():
+                    model_lookup[shorthand.strip()] = (provider.strip(), model_name.strip())
+
+    # Second, scan environment variables (higher precedence - will override config)
     for env_var, value in os.environ.items():
         # Look for provider name shorthands
         if env_var.startswith("ELECTRIC_TEXT_") and env_var.endswith("_PROVIDER_NAME_SHORTHAND"):

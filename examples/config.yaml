@@ -17,3 +17,21 @@ logging:
 http_logging:
   enabled: true
   log_dir: "./http_logs"
+
+# Shorthand configuration for providers and models
+# Environment variables take precedence over these values
+shorthands:
+  # Provider name shorthands
+  provider_names:
+    ollama: "lma"
+    anthropic: "ant"
+    openai: "oai"
+
+  # Model shorthands: model name -> shorthand
+  models:
+    ollama:
+      "llama3.1:8b": "31"
+    anthropic:
+      "claude-3-7-sonnet-20250219": "37"
+    openai:
+      "gpt-4o-mini": "4o"

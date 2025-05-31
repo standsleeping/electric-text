@@ -76,12 +76,14 @@ def test_print_config_nonexistent_file() -> None:
     output = io.StringIO()
     _, issues = print_config("/nonexistent/path/to/config.yaml", output=output)
 
-    # Verify there's a "no configuration file found" issue
-    assert issues == ["No configuration file found"]
+    # Verify there's a config loading error
+    assert len(issues) == 1
+    assert "Error loading configuration" in issues[0]
+    assert "Config file not found" in issues[0]
 
     # Verify the output contains the expected message
     output_text = output.getvalue()
-    assert "No configuration file found" in output_text
+    assert "Error loading configuration" in output_text
 
 
 def test_print_config_no_validation() -> None:

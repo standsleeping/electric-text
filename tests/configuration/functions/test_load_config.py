@@ -95,12 +95,10 @@ def test_load_config_empty_file() -> None:
 
 
 def test_load_config_nonexistent_file() -> None:
-    """Returns empty config when file does not exist."""
+    """Raises error when explicit file path does not exist."""
     # Use a nonexistent file path
-    config = load_config("/nonexistent/path/to/config.yaml")
-
-    # Verify default values are used
-    assert isinstance(config, Config)
-    assert config.provider_defaults == {}
-    assert config.tool_boxes == {}
-    assert config.logging == {"level": "ERROR"}
+    try:
+        load_config("/nonexistent/path/to/config.yaml")
+        assert False, "Expected FileNotFoundError to be raised"
+    except FileNotFoundError as e:
+        assert "Config file not found" in str(e)

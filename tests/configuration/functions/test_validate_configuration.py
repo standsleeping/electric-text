@@ -1,5 +1,7 @@
 from electric_text.configuration.data.config import Config
-from electric_text.configuration.functions.validate_configuration import validate_configuration
+from electric_text.configuration.functions.validate_configuration import (
+    validate_configuration,
+)
 
 
 def test_validate_configuration_valid() -> None:
@@ -9,9 +11,10 @@ def test_validate_configuration_valid() -> None:
         tool_boxes={"default": ["tool1", "tool2"]},
         logging={"level": "INFO"},
         http_logging={"enabled": True, "log_dir": "./logs"},
+        shorthands={"provider_names": {}, "models": {}},
         raw_config={},
     )
-    
+
     issues = validate_configuration(config)
     assert issues == []
 
@@ -23,9 +26,10 @@ def test_validate_configuration_missing_required_section() -> None:
         tool_boxes={"default": ["tool1", "tool2"]},
         logging={},
         http_logging={},
+        shorthands={"provider_names": {}, "models": {}},
         raw_config={},
     )
-    
+
     issues = validate_configuration(config)
     assert len(issues) >= 1
     # The issue should mention missing default_model
@@ -39,11 +43,12 @@ def test_validate_configuration_multiple_issues() -> None:
         tool_boxes={"default": "not_a_list"},  # Not a list
         logging={"level": "INVALID"},  # Invalid log level
         http_logging={},
+        shorthands={"provider_names": {}, "models": {}},
         raw_config={},
     )
-    
+
     issues = validate_configuration(config)
-    
+
     assert len(issues) >= 3
     assert any("default_model" in issue for issue in issues)
     assert any("Invalid log level" in issue for issue in issues)
