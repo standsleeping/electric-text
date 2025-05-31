@@ -317,3 +317,30 @@ def minimal_http_log_entry():
         model=None,
         error="HTTP 404",
     )
+
+
+@pytest.fixture
+def config_with_prompt_directory(monkeypatch):
+    """Fixture that provides a mock config with prompt directory set."""
+    from tempfile import TemporaryDirectory
+    from electric_text.configuration.functions.get_cached_config import get_cached_config
+    from electric_text.configuration.data.config import Config
+    
+    with TemporaryDirectory() as temp_dir:
+        # Create a mock config file content
+        config_data = {
+            "prompts": {
+                "directory": "/custom/prompt/path"
+            }
+        }
+        
+        # Create config instance
+        config = Config.from_dict(config_data)
+        
+        # Mock get_cached_config to return our test config
+        monkeypatch.setattr(
+            "electric_text.prompting.functions.get_prompt_directory.get_cached_config",
+            lambda: config
+        )
+        
+        yield config

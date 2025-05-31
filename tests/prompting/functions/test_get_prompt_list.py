@@ -199,15 +199,21 @@ def test_get_prompt_list(temp_prompt_dir, monkeypatch):
     assert test_prompt_no_schema.model_path is None
 
 
-def test_get_prompt_list_env_not_set():
-    """Test that get_prompt_list raises an error when USER_PROMPT_DIRECTORY is not set."""
-    # Ensure environment variable is not set
-    if "ELECTRIC_TEXT_PROMPT_DIRECTORY" in os.environ:
-        del os.environ["ELECTRIC_TEXT_PROMPT_DIRECTORY"]
+def test_get_prompt_list_env_not_set(clean_env, monkeypatch):
+    """Test that get_prompt_list raises an error when no prompt directory is configured."""
+    # Mock get_prompt_directory to raise an error (simulating no config)
+    def mock_get_prompt_directory():
+        raise ValueError("ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set and prompts.directory is not configured")
+    
+    # Patch the get_prompt_directory function in the module where it's imported
+    monkeypatch.setattr(
+        "electric_text.prompting.functions.get_prompt_directory.get_prompt_directory",
+        mock_get_prompt_directory
+    )
 
     # Check that the function raises a ValueError
     with pytest.raises(
-        ValueError, match="ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set"
+        ValueError, match="ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set and prompts.directory is not configured"
     ):
         get_prompt_list()
 

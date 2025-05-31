@@ -18,6 +18,10 @@ http_logging:
   enabled: true
   log_dir: "./http_logs"
 
+# Prompt configuration
+prompts:
+  directory: "./examples/prompt_configs"
+
 # Shorthand configuration for providers and models
 # Environment variables take precedence over these values
 shorthands:

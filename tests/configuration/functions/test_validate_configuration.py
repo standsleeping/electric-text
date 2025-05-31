@@ -12,6 +12,7 @@ def test_validate_configuration_valid() -> None:
         logging={"level": "INFO"},
         http_logging={"enabled": True, "log_dir": "./logs"},
         shorthands={"provider_names": {}, "models": {}},
+        prompts={},
         raw_config={},
     )
 
@@ -27,6 +28,7 @@ def test_validate_configuration_missing_required_section() -> None:
         logging={},
         http_logging={},
         shorthands={"provider_names": {}, "models": {}},
+        prompts={},
         raw_config={},
     )
 
@@ -44,6 +46,7 @@ def test_validate_configuration_multiple_issues() -> None:
         logging={"level": "INVALID"},  # Invalid log level
         http_logging={},
         shorthands={"provider_names": {}, "models": {}},
+        prompts={},
         raw_config={},
     )
 

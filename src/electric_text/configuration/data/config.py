@@ -15,6 +15,7 @@ class Config:
         logging: Logging configuration (primarily level)
         http_logging: HTTP logging configuration (enabled and log_dir)
         shorthands: Shorthand configuration for providers and models
+        prompts: Prompt configuration (primarily directory)
         raw_config: The raw configuration dictionary
     """
 
@@ -23,6 +24,7 @@ class Config:
     logging: Dict[str, Any]
     http_logging: Dict[str, Any]
     shorthands: Dict[str, Any]
+    prompts: Dict[str, Any]
     raw_config: Dict[str, Any]
 
     @classmethod
@@ -41,5 +43,6 @@ class Config:
             logging=config_dict.get("logging", {"level": "ERROR"}),
             http_logging=config_dict.get("http_logging", {"enabled": False, "log_dir": "./http_logs"}),
             shorthands=config_dict.get("shorthands", {"provider_names": {}, "models": {}}),
+            prompts=config_dict.get("prompts", {}),
             raw_config=config_dict,
         )
