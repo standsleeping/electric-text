@@ -139,7 +139,7 @@
       ],
       "env": {
         "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
-        "ELECTRIC_TEXT_USER_TOOL_CONFIGS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
+        "ELECTRIC_TEXT_TOOLS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
         "ELECTRIC_TEXT_OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
         "ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",
@@ -160,7 +160,7 @@
       ],
       "env": {
         "ELECTRIC_TEXT_CONFIG": "${workspaceFolder}/examples/config.yaml",
-        "ELECTRIC_TEXT_USER_TOOL_CONFIGS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
+        "ELECTRIC_TEXT_TOOLS_DIRECTORY": "${workspaceFolder}/examples/tool_configs",
         "ELECTRIC_TEXT_OLLAMA_MODEL_SHORTHAND_SMALL":"llama3.1:8b++31",
         "ELECTRIC_TEXT_ANTHROPIC_MODEL_SHORTHAND_SMALL":"claude-3-7-sonnet-20250219++37",
         "ELECTRIC_TEXT_OPENAI_MODEL_SHORTHAND_SMALL":"gpt-4o-mini++4o",

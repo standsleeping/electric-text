@@ -1,9 +1,9 @@
-from typing import Tuple, Type
+from typing import Tuple, Type, Union
 
 from electric_text.clients.data.default_output_schema import DefaultOutputSchema
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 from electric_text.logging import get_logger
-from electric_text.prompting.data.model_result import ModelResult
+from electric_text.clients.data.model_result import ModelResult
 from electric_text.prompting.data.prompt_config import PromptConfig
 from electric_text.prompting.functions.get_prompt_by_name import get_prompt_by_name
 
@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 async def get_prompt_config_and_model(
     prompt_name: str,
-) -> Tuple[PromptConfig | None, Type[BaseModel]]:
+) -> Tuple[PromptConfig | None, Union[Type[ValidationModel], Type[DefaultOutputSchema]]]:
     """Get prompt config and model class if available.
 
     Args:

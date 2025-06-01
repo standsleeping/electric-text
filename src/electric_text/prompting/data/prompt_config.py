@@ -3,8 +3,8 @@ from typing import Optional, Dict, Any
 
 from electric_text.clients.functions.load_validation_model import load_validation_model
 from electric_text.clients.data.model_load_result import ModelLoadResult
-from electric_text.prompting.data.model_load_error import ModelLoadError
-from electric_text.prompting.data.model_result import ModelResult
+from electric_text.clients.data.model_load_error import ModelLoadError
+from electric_text.clients.data.model_result import ModelResult
 
 
 @dataclass

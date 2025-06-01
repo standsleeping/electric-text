@@ -5,7 +5,7 @@ try:
 except PackageNotFoundError:
     __version__ = "unknown"
 
-# Export the main notebook-friendly interface
+# Export the main interface
 from electric_text.prompting import generate
 
 __all__ = [

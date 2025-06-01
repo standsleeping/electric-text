@@ -1,6 +1,6 @@
 import importlib
 from typing import AsyncGenerator
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 from electric_text.providers import ModelProvider
 from electric_text.clients.data.client_request import ClientRequest
 from electric_text.providers.data.stream_history import StreamHistory
@@ -39,7 +39,7 @@ class Client:
         }
         self.provider = provider_class(**provider_config)
 
-    async def stream_raw[OutputSchema: BaseModel](
+    async def stream_raw[OutputSchema: ValidationModel](
         self, request: ClientRequest[OutputSchema]
     ) -> AsyncGenerator[ClientResponse[OutputSchema], None]:
         """
@@ -57,7 +57,7 @@ class Client:
         async for history in self.provider.generate_stream(provider_request):
             yield ClientResponse[OutputSchema](stream_history=history)
 
-    async def generate_raw[OutputSchema: BaseModel](
+    async def generate_raw[OutputSchema: ValidationModel](
         self,
         request: ClientRequest[OutputSchema],
     ) -> ClientResponse[OutputSchema]:
@@ -79,7 +79,7 @@ class Client:
 
         return ClientResponse[OutputSchema](stream_history=history)
 
-    async def stream_structured[OutputSchema: BaseModel](
+    async def stream_structured[OutputSchema: ValidationModel](
         self,
         request: ClientRequest[OutputSchema],
     ) -> AsyncGenerator[ClientResponse[OutputSchema], None]:
@@ -105,7 +105,7 @@ class Client:
 
             yield response
 
-    async def generate_structured[OutputSchema: BaseModel](
+    async def generate_structured[OutputSchema: ValidationModel](
         self,
         request: ClientRequest[OutputSchema],
     ) -> ClientResponse[OutputSchema]:
@@ -128,7 +128,7 @@ class Client:
 
         return await history_to_client_response(history, request.output_schema)
 
-    async def generate[OutputSchema: BaseModel](
+    async def generate[OutputSchema: ValidationModel](
         self,
         request: ClientRequest[OutputSchema],
     ) -> ClientResponse[OutputSchema]:
@@ -154,7 +154,7 @@ class Client:
 
         return raw_result
 
-    def stream[OutputSchema: BaseModel](
+    def stream[OutputSchema: ValidationModel](
         self,
         request: ClientRequest[OutputSchema],
     ) -> AsyncGenerator[ClientResponse[OutputSchema], None]:

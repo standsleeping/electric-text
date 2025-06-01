@@ -1,12 +1,13 @@
 import json
 from typing import Type, Dict, Any, Optional, Union, Tuple
-from pydantic import ValidationError, BaseModel
+from pydantic import ValidationError
+from electric_text.clients.data.validation_model import ValidationModel
 from electric_text.clients.functions.parse_partial_response import (
     parse_partial_response,
 )
 
 
-def create_parse_result[OutputSchema: BaseModel](
+def create_parse_result[OutputSchema: ValidationModel](
     content: str, output_schema: Type[OutputSchema]
 ) -> Tuple[
     Dict[str, Any],

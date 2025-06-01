@@ -3,10 +3,10 @@ from typing import Any, List, Optional, Type
 from electric_text.clients.data.client_request import ClientRequest
 from electric_text.clients.data.prompt import Prompt
 from electric_text.clients.data.template_fragment import TemplateFragment
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 
 
-def create_client_request[OutputSchema: BaseModel](
+def create_client_request[OutputSchema: ValidationModel](
     *,
     provider_name: str,
     model_name: str,

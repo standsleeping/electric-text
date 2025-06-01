@@ -1,14 +1,15 @@
 import json
 from dataclasses import dataclass
 from typing import Any
-from pydantic import ValidationError, BaseModel
+from pydantic import ValidationError
+from electric_text.clients.data.validation_model import ValidationModel
 
 from electric_text.providers.data.stream_history import StreamHistory
 from electric_text.providers.data.content_block import ContentBlockType, ToolCallData
 
 
 @dataclass
-class ClientResponse[OutputSchema: BaseModel]:
+class ClientResponse[OutputSchema: ValidationModel]:
     """
     Represents a unified response from a provider.
     Contains either a raw prompt result or a parsed structured result.
@@ -29,7 +30,7 @@ class ClientResponse[OutputSchema: BaseModel]:
     def has_tool_calls(self) -> bool:
         """Check if response contains tool calls."""
         return any(
-            block.type == ContentBlockType.TOOL_CALL 
+            block.type == ContentBlockType.TOOL_CALL
             for block in self.stream_history.content_blocks
         )
 

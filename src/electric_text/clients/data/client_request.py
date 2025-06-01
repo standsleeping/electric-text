@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, List, Dict, Optional, Type
 from electric_text.clients.data.prompt import Prompt
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 
 
 @dataclass
-class ClientRequest[OutputSchema: BaseModel]:
+class ClientRequest[OutputSchema: ValidationModel]:
     """
     Represents a client request to be sent to a provider.
     """

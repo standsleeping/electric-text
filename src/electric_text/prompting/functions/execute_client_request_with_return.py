@@ -4,7 +4,7 @@ from typing import AsyncGenerator, Union
 from electric_text.clients import Client
 from electric_text.clients.data.client_request import ClientRequest
 from electric_text.clients.data.client_response import ClientResponse
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 from electric_text.logging import get_logger
 from electric_text.prompting.data.system_output import SystemOutput
 from electric_text.prompting.functions.output_conversion.client_response_to_system_output import (
@@ -14,7 +14,7 @@ from electric_text.prompting.functions.output_conversion.client_response_to_syst
 logger: logging.Logger = get_logger(__name__)
 
 
-async def execute_client_request_with_return[Schema: BaseModel](
+async def execute_client_request_with_return[Schema: ValidationModel](
     *,
     client: Client,
     request: ClientRequest[Schema],

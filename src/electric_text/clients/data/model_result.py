@@ -1,22 +1,22 @@
 from dataclasses import dataclass
-from typing import Optional, Type, Any
+from typing import Optional, Type
 
 from electric_text.clients.data.model_load_result import ModelLoadResult
-from electric_text.prompting.data.model_load_error import ModelLoadError
+from electric_text.clients.data.model_load_error import ModelLoadError
 from electric_text.clients.data.default_output_schema import DefaultOutputSchema
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 
 
 @dataclass
 class ModelResult:
     """Result of loading a validation model from a Python file."""
 
-    loaded_model_class: Optional[Type[BaseModel]] = None
+    loaded_model_class: Optional[Type[ValidationModel]] = None
     error: Optional[ModelLoadError] = None
     error_message: Optional[str] = None
 
     @property
-    def model_class(self) -> Type[BaseModel]:
+    def model_class(self) -> Type[ValidationModel]:
         """Returns the loaded model class if it exists."""
         if self.loaded_model_class is None:
             return DefaultOutputSchema

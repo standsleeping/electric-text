@@ -1,19 +1,19 @@
 from dataclasses import dataclass
 from typing import Optional, Type
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 
 
 @dataclass
 class ModelLoadResult:
     """Result of loading a validation model from a Python file."""
 
-    model_class: Optional[Type[BaseModel]] = None
+    model_class: Optional[Type[ValidationModel]] = None
     error: Optional[str] = None
     error_message: Optional[str] = None
 
     def __init__(
         self,
-        model_class: Optional[Type[BaseModel]] = None,
+        model_class: Optional[Type[ValidationModel]] = None,
         error: Optional[str] = None,
         error_message: Optional[str] = None,
     ) -> None:

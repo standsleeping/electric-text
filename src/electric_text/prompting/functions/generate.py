@@ -9,7 +9,9 @@ from electric_text.prompting.data.system_output import SystemOutput
 from electric_text.prompting.functions.execute_prompt_with_return import (
     execute_prompt_with_return,
 )
-from electric_text.prompting.functions.get_http_logging_enabled import get_http_logging_enabled
+from electric_text.prompting.functions.get_http_logging_enabled import (
+    get_http_logging_enabled,
+)
 from electric_text.prompting.functions.get_http_log_dir import get_http_log_dir
 
 logger = get_logger(__name__)
@@ -58,8 +60,8 @@ async def generate(
 ) -> Union[SystemOutput, AsyncGenerator[SystemOutput, None]]:
     """Generate text using the electric_text system.
 
-    This function provides a notebook-friendly interface to the electric_text
-    system, returning the result as a SystemOutput object or an async generator
+    This function is the primary interface to the electric_text system,
+    returning the result as a SystemOutput object or an async generator
     of SystemOutput objects when streaming.
 
     Args:
@@ -103,7 +105,7 @@ async def generate(
     # Resolve HTTP logging configuration
     http_logging_enabled = get_http_logging_enabled()
     http_log_dir = get_http_log_dir()
-    
+
     client = Client(
         provider_name=system_input.provider_name,
         config=config,
@@ -114,8 +116,9 @@ async def generate(
     # Parse tool_boxes string into a list if provided
     tool_box_list: List[str] = []
     tools = []
-    if system_input.tool_boxes:
-        tool_box_list = [tb.strip() for tb in system_input.tool_boxes.split(",")]
+    tool_boxes = system_input.tool_boxes
+    if tool_boxes is not None:
+        tool_box_list = [tb.strip() for tb in tool_boxes.split(",")]
         logger.debug(f"Using tool boxes: {tool_box_list}")
 
         # Load and process tools from the specified tool boxes

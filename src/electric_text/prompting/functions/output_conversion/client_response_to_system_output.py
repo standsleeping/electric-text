@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from electric_text.clients.data.validation_model import ValidationModel
 
 from electric_text.clients.data.client_response import ClientResponse
 from electric_text.prompting.data.system_output import SystemOutput
@@ -8,7 +8,7 @@ from electric_text.prompting.data.data_output import DataOutput
 from electric_text.prompting.data.tool_call_output import ToolCallOutput
 
 
-def client_response_to_system_output[OutputSchema: BaseModel](
+def client_response_to_system_output[OutputSchema: ValidationModel](
     response: ClientResponse[OutputSchema],
 ) -> SystemOutput:
     """Convert ClientResponse to SystemOutput for JSON serialization.
@@ -35,14 +35,18 @@ def client_response_to_system_output[OutputSchema: BaseModel](
 
     # Check if we have structured data
     if response.validated_output is not None:
-        return SystemOutput(
-            response_type=SystemOutputType.DATA,
-            data=DataOutput(
-                data=response.validated_output.model_dump(),
-                is_valid=True,
-                schema_name=response.validated_output.__class__.__name__,
-            ),
-        )
+        # This validated_modelcould be None!
+        # See history_to_client_response.py calling create_parse_result.py for more details.
+        validated_model: OutputSchema | None = response.validated_output
+        if validated_model is not None:
+            return SystemOutput(
+                response_type=SystemOutputType.DATA,
+                data=DataOutput(
+                    data=validated_model.model_dump(),
+                    is_valid=True,
+                    schema_name=validated_model.__class__.__name__,
+                ),
+            )
 
     # Check if we have parsed content but validation failed
     if response.parsed_content is not None:
