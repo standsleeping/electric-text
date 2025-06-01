@@ -5,7 +5,7 @@ from typing import List, Optional
 from electric_text.shorthand import build_user_shorthand_models
 from electric_text.prompting.data.system_input import SystemInput
 from electric_text.cli.functions.parse_provider_model import parse_provider_model
-from electric_text.configuration import load_config, get_config_value
+from electric_text.configuration import load_config, get_config_value, get_cached_config
 
 DEFAULT_MODEL = "ollama:llama3.1:8b"
 DEFAULT_LOG_LEVEL = "ERROR"
@@ -31,7 +31,8 @@ def parse_args(args: Optional[List[str]] = None) -> SystemInput:
         help="Text to be processed",
     )
 
-    models = build_user_shorthand_models()
+    config = get_cached_config()
+    models = build_user_shorthand_models(config.shorthands)
 
     shorthands = list(models.keys())
 

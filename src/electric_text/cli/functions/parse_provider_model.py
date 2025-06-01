@@ -1,5 +1,6 @@
 from typing import Tuple
 from electric_text.prompting.functions.split_model_string import split_model_string
+from electric_text.configuration.functions.get_cached_config import get_cached_config
 from electric_text.shorthand.functions.build_user_shorthand_models import (
     build_user_shorthand_models,
 )
@@ -24,7 +25,8 @@ def parse_provider_model(model_string: str) -> Tuple[str, str]:
         return provider, model_name
     except ValueError:
         # If standard format fails, try shorthand lookup
-        shorthand_models = build_user_shorthand_models()
+        config = get_cached_config()
+        shorthand_models = build_user_shorthand_models(config.shorthands)
 
         if model_string in shorthand_models:
             provider, model_name = shorthand_models[model_string]

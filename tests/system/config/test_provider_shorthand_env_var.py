@@ -16,7 +16,7 @@ async def test_electric_text_provider_shorthand_env_var(monkeypatch):
     )
 
     # Build shorthand models
-    shorthand_models = build_user_shorthand_models()
+    shorthand_models = build_user_shorthand_models({})
 
     # Verify provider shorthand was processed
     # The function returns model shortcuts, but provider shortcuts are used internally
@@ -28,7 +28,7 @@ async def test_electric_text_provider_shorthand_env_var(monkeypatch):
     )
 
     # Rebuild with both shortcuts
-    shorthand_models = build_user_shorthand_models()
+    shorthand_models = build_user_shorthand_models({})
 
     # Verify the model shorthand works (which requires the provider shorthand to work)
     assert "test-model" in shorthand_models
