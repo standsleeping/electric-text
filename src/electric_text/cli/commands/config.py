@@ -1,7 +1,7 @@
 import argparse
 from typing import List, Optional
 
-from electric_text.configuration import print_config as print_config_function
+from electric_text.prompting.functions.print_configuration import print_configuration
 
 
 def config_command(args: Optional[List[str]] = None) -> int:
@@ -34,9 +34,9 @@ def config_command(args: Optional[List[str]] = None) -> int:
 
     parsed_args = parser.parse_args(args)
 
-    _, issues = print_config_function(
+    has_issues = print_configuration(
         config_path=parsed_args.config, validate=not parsed_args.no_validate
     )
 
     # Return error code if there are issues
-    return 1 if issues else 0
+    return 1 if has_issues else 0

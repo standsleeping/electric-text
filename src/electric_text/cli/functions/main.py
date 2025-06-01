@@ -6,7 +6,8 @@ from typing import List, Optional
 from electric_text.prompting import generate
 from electric_text.logging import configure_logging, get_logger
 from electric_text.cli.functions.parse_args import parse_args
-from electric_text.prompting.data.system_input import SystemInput
+from electric_text.prompting.functions.load_user_config import load_user_config
+from electric_text.prompting.functions.resolve_system_input import resolve_system_input
 from electric_text.prompting.functions.output_conversion.system_output_to_dict import (
     system_output_to_dict,
 )
@@ -21,7 +22,15 @@ async def main(args: Optional[List[str]] = None) -> int:
     Returns:
         Exit code
     """
-    system_input: SystemInput = parse_args(args)
+    # Parse arguments and get raw input + config path
+    raw_input, config_path = parse_args(args)
+
+    # Load user config if specified
+    if config_path:
+        load_user_config(config_path)
+
+    # Resolve configuration-dependent values
+    system_input = resolve_system_input(raw_input)
 
     log_level = getattr(logging, system_input.log_level)
     configure_logging(level=log_level)

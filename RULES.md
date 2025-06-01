@@ -60,14 +60,13 @@ The following dependencies are allowed:
 - `cli` (calls the `main` function, returns an exit code).
 
 #### `cli` depends on:
-- `shorthand`
 - `prompting` (in: `SystemInput`, out: `None` (prints content)).
 
 #### `prompting` depends on:
 - `tools`
-- `formatting` (for output formatting functions)
 - `clients` (in: `ClientRequest`, out: `ClientResponse`)
 - `configuration`
+- `shorthand`
 
 #### `clients` depends on:
 - `providers` (in: `ProviderRequest`, out: `StreamHistory`)
@@ -77,8 +76,6 @@ The following dependencies are allowed:
 #### `tools` depends on nothing.
 
 #### `shorthand` depends on nothing.
-
-#### `formatting` depends on nothing.
 
 ## Testing
 
@@ -153,7 +150,7 @@ We follow a strictly functional programming style:
 
 There are a few other general rules for how we write code:
 1. Always use `dedent` for multi-line strings.
-2. Avoid underscore method patterns (e.g. prefer `this_func` over `_this_func`).
+2. Avoid underscore method patterns; always prefer `this_func` over `_this_func`.
 3. Always prefer modern Python (3.12+) language and type features.
 4. Always use generic type parameter syntax (`class Foo[T]:` instead of `TypeVar`).
 5. Prefer union types with `|` syntax (`str | None` instead of `Union[str, None]`).
