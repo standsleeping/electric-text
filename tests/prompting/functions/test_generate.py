@@ -1,87 +1,133 @@
 import pytest
-
+from pathlib import Path
 
 from electric_text.prompting.functions.generate import generate
 from electric_text.prompting.data.system_output_type import SystemOutputType
+from tests.boundaries import (
+    mock_http,
+    mock_boundaries,
+    ollama_api_response,
+    ollama_streaming_response,
+    MockFileSystem,
+    MockFile,
+)
 
 
 @pytest.mark.asyncio
-async def test_generate_basic(mock_basic_response):
+async def test_generate_basic():
     """Generate text with basic parameters."""
-    mock_basic_response()
+    with mock_http() as http:
+        http.mock_post("http://localhost:11434/api/chat", ollama_api_response())
 
-    # Call the function with real integration
-    result = await generate(
-        text_input="Hello, test!", provider_name="ollama", model_name="llama3.1:8b"
-    )
+        # Call the function with real integration
+        result = await generate(
+            text_input="Hello, test!", provider_name="ollama", model_name="llama3.1:8b"
+        )
 
-    # Verify the result
-    assert result.response_type == SystemOutputType.TEXT
-    assert result.text is not None
-    assert result.text.content == "Hello, world!"
+        # Verify the result
+        assert result.response_type == SystemOutputType.TEXT
+        assert result.text is not None
+        assert result.text.content == "Hello, world!"
 
 
 @pytest.mark.asyncio
-async def test_generate_with_streaming(mock_streaming_response):
+async def test_generate_with_streaming():
     """Generate text with streaming enabled."""
-    mock_streaming_response()
+    with mock_http() as http:
+        http.mock_post("http://localhost:11434/api/chat", ollama_streaming_response())
 
-    # Call the function with streaming enabled
-    result_generator = await generate(
-        text_input="Hello, streaming test!",
-        provider_name="ollama",
-        model_name="llama3.1:8b",
-        stream=True,
-    )
+        # Call the function with streaming enabled
+        result_generator = await generate(
+            text_input="Hello, streaming test!",
+            provider_name="ollama",
+            model_name="llama3.1:8b",
+            stream=True,
+        )
 
-    # Collect all streaming results
-    chunks = []
-    async for chunk in result_generator:
-        chunks.append(chunk)
+        # Collect all streaming results
+        chunks = []
+        async for chunk in result_generator:
+            chunks.append(chunk)
 
-    # Verify we got multiple chunks
-    assert len(chunks) >= 1
+        # Verify we got multiple chunks
+        assert len(chunks) >= 1
 
-    # Verify each chunk is a SystemOutput
-    for chunk in chunks:
-        assert chunk.response_type == SystemOutputType.TEXT
-        assert chunk.text is not None
+        # Verify each chunk is a SystemOutput
+        for chunk in chunks:
+            assert chunk.response_type == SystemOutputType.TEXT
+            assert chunk.text is not None
 
 
 @pytest.mark.asyncio
-async def test_generate_with_tool_boxes(mock_basic_response):
+async def test_generate_with_tool_boxes():
     """Generate text with tool boxes parameter."""
-    mock_basic_response("Tool-enabled response")
+    with mock_http() as http:
+        http.mock_post(
+            "http://localhost:11434/api/chat",
+            ollama_api_response("Tool-enabled response"),
+        )
 
-    result = await generate(
-        text_input="What's the weather?",
-        provider_name="ollama",
-        model_name="llama3.1:8b",
-        tool_boxes="test_box",
-    )
+        result = await generate(
+            text_input="What's the weather?",
+            provider_name="ollama",
+            model_name="llama3.1:8b",
+            tool_boxes="test_box",
+        )
 
-    assert result.response_type == SystemOutputType.TEXT
-    assert result.text is not None
-    assert result.text.content == "Tool-enabled response"
+        assert result.response_type == SystemOutputType.TEXT
+        assert result.text is not None
+        assert result.text.content == "Tool-enabled response"
 
 
 @pytest.mark.asyncio
-async def test_generate_with_prompt_name(
-    mock_basic_response, temp_prompt_dir, monkeypatch
-):
+async def test_generate_with_prompt_name():
     """Generate text with a custom prompt name."""
-    # Set the prompt directory environment variable
-    monkeypatch.setenv("ELECTRIC_TEXT_PROMPT_DIRECTORY", temp_prompt_dir)
-
-    mock_basic_response("Custom prompt response")
-
-    result = await generate(
-        text_input="Test input",
-        provider_name="ollama",
-        model_name="llama3.1:8b",
-        prompt_name="test_prompt",
+    # Create test file structure for prompt configs
+    file_structure = MockFileSystem(
+        [
+            MockFile(Path("test_system_message.txt"), "This is a test system message."),
+            MockFile(
+                Path("schemas/test_schema.json"),
+                {
+                    "type": "object",
+                    "properties": {"response": {"type": "string"}},
+                    "required": ["response"],
+                },
+                is_json=True,
+            ),
+            MockFile(
+                Path("test_prompt.json"),
+                {
+                    "name": "test_prompt",
+                    "description": "Test prompt description",
+                    "system_message_path": "test_system_message.txt",
+                    "schema_path": "schemas/test_schema.json",
+                },
+                is_json=True,
+            ),
+        ]
     )
 
-    assert result.response_type == SystemOutputType.TEXT
-    assert result.text is not None
-    assert result.text.content == "Custom prompt response"
+    with mock_boundaries(
+        http_mocks={
+            "http://localhost:11434/api/chat": ollama_api_response(
+                "Custom prompt response"
+            )
+        },
+        filesystem=file_structure,
+        env_vars={},
+    ) as (_, temp_dir):
+        # Set the prompt directory environment variable to our temp directory
+        from tests.boundaries import mock_env
+
+        with mock_env({"ELECTRIC_TEXT_PROMPT_DIRECTORY": str(temp_dir)}):
+            result = await generate(
+                text_input="Test input",
+                provider_name="ollama",
+                model_name="llama3.1:8b",
+                prompt_name="test_prompt",
+            )
+
+            assert result.response_type == SystemOutputType.TEXT
+            assert result.text is not None
+            assert result.text.content == "Custom prompt response"

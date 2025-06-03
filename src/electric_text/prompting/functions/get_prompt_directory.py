@@ -2,6 +2,12 @@ import os
 from electric_text.configuration.functions.get_cached_config import get_cached_config
 
 
+PROMPT_DIR_NOT_CONFIGURED_MSG = (
+    "ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set "
+    "and prompts.directory is not configured"
+)
+
+
 def get_prompt_directory() -> str:
     """Get the prompt directory from config or environment variable.
 
@@ -31,6 +37,4 @@ def get_prompt_directory() -> str:
         pass
 
     # If neither env var nor config is set, raise an error
-    raise ValueError(
-        "ELECTRIC_TEXT_PROMPT_DIRECTORY environment variable is not set and prompts.directory is not configured"
-    )
+    raise ValueError(PROMPT_DIR_NOT_CONFIGURED_MSG)

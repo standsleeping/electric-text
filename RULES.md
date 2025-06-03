@@ -99,7 +99,13 @@ Additional general testing rules:
 - Tests focus on input/output pairs for our functional codebase.
 - Single pytest assertion per test where possible.
 - Never write code until tests have been written.
-- Never patch/mock/stub code. Integration tests run *all* dependent code.
+- Never patch/mock/stub code (see below)
+
+### Mocking Rules
+
+When we encounter tests that patch our own code, we should either:
+1. Refactor the code into units and integrators (see below) to make it more directly testable.
+2. Write integration tests that exercise the real code paths without mocking.
 
 ## "Integrators" and "Units"
 

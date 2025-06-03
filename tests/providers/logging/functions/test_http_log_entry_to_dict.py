@@ -1,11 +1,12 @@
 from electric_text.providers.logging.functions.http_log_entry_to_dict import (
     http_log_entry_to_dict,
 )
+from tests.fixtures import sample_http_log_entry, minimal_http_log_entry
 
 
-def test_converts_complete_log_entry_to_dict(sample_http_log_entry):
+def test_converts_complete_log_entry_to_dict():
     """Converts complete log entry to dictionary."""
-    result = http_log_entry_to_dict(sample_http_log_entry)
+    result = http_log_entry_to_dict(sample_http_log_entry())
 
     expected = {
         "timestamp": "2024-01-01T12:00:00Z",
@@ -35,9 +36,9 @@ def test_converts_complete_log_entry_to_dict(sample_http_log_entry):
     assert result == expected
 
 
-def test_converts_minimal_log_entry_to_dict(minimal_http_log_entry):
+def test_converts_minimal_log_entry_to_dict():
     """Converts minimal log entry with None values to dictionary."""
-    result = http_log_entry_to_dict(minimal_http_log_entry)
+    result = http_log_entry_to_dict(minimal_http_log_entry())
 
     expected = {
         "timestamp": "2024-01-01T12:00:00Z",
@@ -54,9 +55,9 @@ def test_converts_minimal_log_entry_to_dict(minimal_http_log_entry):
     assert result == expected
 
 
-def test_dict_structure_matches_expected_format(sample_http_log_entry):
+def test_dict_structure_matches_expected_format():
     """Dictionary structure matches expected format."""
-    result = http_log_entry_to_dict(sample_http_log_entry)
+    result = http_log_entry_to_dict(sample_http_log_entry())
 
     expected_keys = {
         "timestamp",
@@ -72,9 +73,9 @@ def test_dict_structure_matches_expected_format(sample_http_log_entry):
     assert set(result.keys()) == expected_keys
 
 
-def test_nested_request_response_structure(sample_http_log_entry):
+def test_nested_request_response_structure():
     """Nested request/response structure is correct."""
-    result = http_log_entry_to_dict(sample_http_log_entry)
+    result = http_log_entry_to_dict(sample_http_log_entry())
 
     request_dict = result["request"]
     response_dict = result["response"]

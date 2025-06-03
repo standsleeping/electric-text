@@ -1,29 +1,39 @@
-import os
-import tempfile
 from pathlib import Path
 from textwrap import dedent
-from unittest.mock import patch
 
 from electric_text.configuration.functions.load_config import load_config
 from electric_text.configuration.data.config import Config
+from tests.boundaries import (
+    mock_filesystem,
+    mock_env,
+    mock_boundaries,
+    MockFileSystem,
+    MockFile,
+)
 
 
 def test_load_config_from_explicit_path() -> None:
     """Loads configuration from explicitly provided path."""
     # Create a temporary YAML file
-    with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w+") as temp_file:
-        temp_file.write(
-            dedent("""
-            provider_defaults:
-              default_model: "ollama:llama3.1:8b"
-            logging:
-              level: "DEBUG"
-            """).strip()
-        )
-        temp_file.flush()
+    file_structure = MockFileSystem(
+        [
+            MockFile(
+                Path("config.yaml"),
+                dedent("""
+                provider_defaults:
+                  default_model: "ollama:llama3.1:8b"
+                logging:
+                  level: "DEBUG"
+                """).strip(),
+            )
+        ]
+    )
+
+    with mock_filesystem(file_structure) as temp_dir:
+        config_path = temp_dir / "config.yaml"
 
         # Load the config from the temp file
-        config = load_config(temp_file.name)
+        config = load_config(str(config_path))
 
         # Verify the config was loaded correctly
         assert isinstance(config, Config)
@@ -33,17 +43,23 @@ def test_load_config_from_explicit_path() -> None:
 
 def test_load_config_from_environment_variable() -> None:
     """Loads configuration from ELECTRIC_TEXT_CONFIG environment variable."""
-    with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w+") as temp_file:
-        temp_file.write(
-            dedent("""
-            logging:
-              level: "INFO"
-            """).strip()
-        )
-        temp_file.flush()
+    file_structure = MockFileSystem(
+        [
+            MockFile(
+                Path("config.yaml"),
+                dedent("""
+                logging:
+                  level: "INFO"
+                """).strip(),
+            )
+        ]
+    )
+
+    with mock_boundaries(filesystem=file_structure, env_vars={}) as (_, temp_dir):
+        config_path = temp_dir / "config.yaml"
 
         # Set the environment variable to point to our temp file
-        with patch.dict(os.environ, {"ELECTRIC_TEXT_CONFIG": temp_file.name}):
+        with mock_env({"ELECTRIC_TEXT_CONFIG": str(config_path)}):
             config = load_config()
 
             # Verify the config was loaded correctly
@@ -53,39 +69,36 @@ def test_load_config_from_environment_variable() -> None:
 
 def test_load_config_from_default_locations() -> None:
     """Loads configuration from default locations in order of precedence."""
-    # Create a temporary file that will be used as ./config.yaml
-    with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w+") as temp_file:
-        temp_file.write(
-            dedent("""
-            provider_defaults:
-              default_model: "ollama:llama3.1:8b"
-            """).strip()
-        )
-        temp_file.flush()
+    file_structure = MockFileSystem(
+        [
+            MockFile(
+                Path("config.yaml"),
+                dedent("""
+                provider_defaults:
+                  default_model: "ollama:llama3.1:8b"
+                """).strip(),
+            )
+        ]
+    )
 
-        # Patch the expanduser method to return our mock paths
-        with patch("pathlib.Path.expanduser", return_value=Path(temp_file.name)):
-            # Patch the DEFAULT_LOCATIONS constant
-            with patch(
-                "electric_text.configuration.functions.load_config.DEFAULT_LOCATIONS",
-                [temp_file.name],
-            ):
-                config = load_config()
+    with mock_filesystem(file_structure) as temp_dir:
+        config_path = str(temp_dir / "config.yaml")
 
-                # Verify the config was loaded correctly
-                assert isinstance(config, Config)
-                assert config.provider_defaults == {
-                    "default_model": "ollama:llama3.1:8b"
-                }
+        config = load_config(search_locations=[config_path])
+
+        # Verify the config was loaded correctly
+        assert isinstance(config, Config)
+        assert config.provider_defaults == {"default_model": "ollama:llama3.1:8b"}
 
 
 def test_load_config_empty_file() -> None:
     """Returns empty config when file is empty."""
-    with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w+") as temp_file:
-        temp_file.write("")
-        temp_file.flush()
+    file_structure = MockFileSystem([MockFile(Path("empty_config.yaml"), "")])
 
-        config = load_config(temp_file.name)
+    with mock_filesystem(file_structure) as temp_dir:
+        config_path = temp_dir / "empty_config.yaml"
+
+        config = load_config(str(config_path))
 
         # Verify default values are used
         assert isinstance(config, Config)

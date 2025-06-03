@@ -1,31 +1,30 @@
 import pytest
-import yaml
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 from electric_text.configuration.functions.load_config import load_config
+from tests.boundaries import mock_filesystem, mock_env, MockFileSystem, MockFile
 
 
 @pytest.mark.asyncio
-async def test_electric_text_config_env_var(monkeypatch):
+async def test_electric_text_config_env_var():
     """Loads configuration from ELECTRIC_TEXT_CONFIG environment variable path."""
+    
+    # Create test config file
+    file_structure = MockFileSystem([
+        MockFile(
+            Path("config.yaml"),
+            {"prompts": {"directory": "/custom/prompts"}},
+            is_json=True
+        )
+    ])
 
-    # Create temporary config file
-    with NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        config_data = {"prompts": {"directory": "/custom/prompts"}}
-        yaml.dump(config_data, f)
-        temp_config_path = f.name
-
-    try:
+    with mock_filesystem(file_structure) as temp_dir:
+        config_path = str(temp_dir / "config.yaml")
+        
         # Set environment variable
-        monkeypatch.setenv("ELECTRIC_TEXT_CONFIG", temp_config_path)
+        with mock_env({"ELECTRIC_TEXT_CONFIG": config_path}):
+            # Load config - should use env var path
+            config = load_config()
 
-        # Load config - should use env var path
-        config = load_config()
-
-        # Verify config loaded from specified path
-        assert config.raw_config["prompts"]["directory"] == "/custom/prompts"
-
-    finally:
-        # Clean up
-        Path(temp_config_path).unlink()
+            # Verify config loaded from specified path
+            assert config.raw_config["prompts"]["directory"] == "/custom/prompts"
