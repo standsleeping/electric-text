@@ -227,6 +227,81 @@ def ollama_streaming_response(
     )
 
 
+def ollama_tool_call_response(
+    tool_name: str = "get_weather",
+    tool_arguments: dict[str, Any] | None = None,
+    model: str = "llama3.1:8b",
+) -> MockHttpResponse:
+    """Create a standard Ollama chat API response with tool call."""
+    if tool_arguments is None:
+        tool_arguments = {"city": "Omaha"}
+
+    return MockHttpResponse(
+        json_data={
+            "model": model,
+            "created_at": "2024-01-01T12:00:00Z",
+            "message": {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {"function": {"name": tool_name, "arguments": tool_arguments}}
+                ],
+            },
+            "done": True,
+        }
+    )
+
+
+def ollama_streaming_tool_call_response(
+    tool_name: str = "get_weather",
+    tool_arguments: dict[str, Any] | None = None,
+    model: str = "llama3.1:8b",
+) -> MockHttpResponse:
+    """Create a streaming Ollama chat API response with tool call."""
+    if tool_arguments is None:
+        tool_arguments = {"city": "Omaha"}
+
+    lines = []
+
+    # First chunk with tool call
+    tool_call_chunk = {
+        "model": model,
+        "created_at": "2024-01-01T12:00:00Z",
+        "message": {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {"function": {"name": tool_name, "arguments": tool_arguments}}
+            ],
+        },
+        "done": False,
+    }
+
+    lines.append(json.dumps(tool_call_chunk))
+
+    # Final chunk indicating completion
+    completion_chunk = {
+        "model": model,
+        "created_at": "2024-01-01T12:00:01Z",
+        "message": {"role": "assistant", "content": ""},
+        "done_reason": "stop",
+        "done": True,
+        "total_duration": 99,
+        "load_duration": 99,
+        "prompt_eval_count": 99,
+        "prompt_eval_duration": 99,
+        "eval_count": 99,
+        "eval_duration": 99,
+    }
+
+    lines.append(json.dumps(completion_chunk))
+
+    return MockHttpResponse(
+        text_data="\n".join(lines),
+        content_type="application/x-ndjson",
+    )
+
+
 def full_tool_config() -> MockFileSystem:
     """Create a comprehensive tool configuration structure for testing."""
 
